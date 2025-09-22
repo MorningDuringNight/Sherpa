@@ -1,6 +1,14 @@
-[package]
+[workspace.package]
 name = "bevy-katsuo"
-authors = "Ket-Hwa Cheng (github: MorningDuringNight), Tingxu (github: RaineyMisty )Xiaoting (github: XtWang299), Zhuoyan (github: qhynSamuel), Jagger (github: Jagger-Hershey), Alli (github: AlliBatell), Sean (github: Sean-Shmulevich)"
+authors = [
+    "Ket-Hwa Cheng (github: MorningDuringNight)",
+    "Tingxu (github: RaineyMisty )",
+    "Xiaoting (github: XtWang299)",
+    "Zhuoyan (github: qhynSamuel)",
+    "Jagger (github: Jagger-Hershey)",
+    "Alli (github: AlliBatell)",
+    "Sean (github: Sean-Shmulevich)"
+]
 version = "0.1.0"
 edition = "2024"
 
@@ -11,6 +19,16 @@ opt-level = 1
 [profile.dev.package."*"]
 opt-level = 3
 
-[dependencies]
-
+[workspace.dependencies]
 bevy = "0.16.1"
+rand = "0.8"
+
+[workspace]
+members = [
+    "slideshow",
+    "ai",
+    "movementsystem",
+    "multiplayer",
+    "maploading",
+    "prototype",
+]

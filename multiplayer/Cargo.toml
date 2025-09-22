@@ -1,0 +1,10 @@
+[package]
+name = "mutliplayer"
+
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+
+[dependencies]
+bevy.workspace = true
+rand.workspace = true
