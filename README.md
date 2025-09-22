@@ -31,14 +31,15 @@ Lag compensation: packet loss can disrupt synchronization between client and ser
 
 Short (<200ms) – Prediction: Client predicts movement/actions locally, server later corrects small errors. Keeps gameplay responsive.
 
-Medium (200ms–1s) – Extrapolation / Freeze: temporary freezes to avoid rubberbanding. Long (>1s) – Resync or Timeout: Prediction fails, client is disconnected/ghosted until stable.
+Long (>1s) – Resync or Timeout: Prediction fails, client is disconnected/ghosted until stable.
+## midterm goal:
 
 midterm goal:
 AI - AI can move character it controls left, right, up, jump right, left jump. Meaning that at least the implementation for AI to interact with an enviorment is plausable and that while the decision tree itself may not be functional, it means that it can interact with the game world without learning yet.
 
 Multiplayer - connect to a host client and both client and server can send and receive packages on both ends.
 
-maps - 1st map platforms, moving platform, sidewall collision. Players can land on or hit the side of each of these objects and it should have hit detection such that players will not go through these objects.
+maps - 1st map platforms, moving platform, sidewall collision. Players can land on or hit the side of each of these objects and it should have hit detection such that players will not go through these objects these will be 2 vertical screens, defined as being unable to see anythin from the previous screen.
 
 rope implementation - rope physics slack, The rope implementation displays similar real world rope physics in terms of visual aesthetics, meaning the rope will be tight when farther away and grow loose when near.
 
@@ -48,14 +49,28 @@ camera movement - A 2d camera that shows the general location of where character
 
 player movement - jump left, right, up, moving left and right from farther distances will have added momentum for greater velocity if direction has been constant.
 
+## Finals goal: 
+
+AI - two AI can play together and are able to be maneuver to at least 1 platforms from the ground on their own proving partial training - 5%
+
+AI - two AI can play together and are able to be maneuver to at least 2 platforms from the ground on their own proving partial training - 7%
+
+AI - two AI can play together and are able to be maneuver to at least 3 platforms from the ground on their own proving partial training - 8%
 Finals goal:
 AI - two AI can play together and are able to be maneuver to at least 3 platforms from the ground on their own proving partial training- 20%
 
-Multiplayer - at least 2 players can connect to the game and be able to play together, with the ability to coordinate with the other outloud and complete at least 3 platforms. - 20%
+Multiplayer - at least 2 players can connect to the game and be able to play together, with the ability to coordinate with the other outloud and complete the map. - 20%
 
+completed map - with moving platforms, hazards (spikes or trampoline) and standard platforms until reaching the top of the map. Spike implementation will cause instant game over, trampoline will give a jump boost to the player upon contact with the trampoline, and standard platforms are standing grounds. - 10%
+
+completed map - The amount of these platforms with or without any hazards will be 30 platforms.  - 5%
 completed map - with moving platforms, hazards (spikes or trampoline) and standard platforms until reaching the top of the map. Spike implementation will cause instant game over, trampoline will give a jump boost to the player upon contact with the trampoline, and standard platforms are standing grounds. The amount of these platforms with or without any hazards will be 30 platforms. - 15%
 
-movement - able to jump and walk on platforms as well as jump off the other player character and wall jump once off walls. This allows for greater range of motion for the characters and interesting possible ways to climb up. The wall climbing mechanics would be a quick attach to a wall and jump up off towards the other side. - 15%
+movement - able to jump and walk on platforms - 5%
+
+movement - jump off the other player character - 5%
+
+movement - wall jump once off walls - 5%
 
 One time ability- The players each get one time ability to put down a platform next to a wall which they can stand on. This platform exists for 10 real life seconds and will disapear once time has ellapsed. - 5%
 
