@@ -1,18 +1,6 @@
-<svg width="600" height="100">
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#6d28d9;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#db2777;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <text x="50%" y="50%" font-size="48" text-anchor="middle" fill="url(#grad)">
-    Katsuo
-  </text>
-</svg>
+<img src="https://shmul.dev/assets/katsuo.svg" width="600" alt="Katsuo Gradient" />
 
 # Team
----
 **First Manager**  
 - Ket-Hwa Cheng | | [MorningDuringNight](https://github.com/MorningDuringNight) | PittID: KEC344)
 **Second Manager**  
@@ -36,7 +24,6 @@
 | **Sean Shmulevich** | [Sean-Shmulevich](https://github.com/Sean-Shmulevich) | *SZS23*  |
 
 ## Game Description
----
 It is a 2D pixel-art platformer where cooperation is necessary. Players control several characters bound by a rope, to conquer the majestic and treacherous slopes of a mysterious mountain, you must master the art of collaborative climbing to reach the top.
 
 The game is a 2d platformer where 2 players are chained together and must make it to the top of the mountain, and must collaborate to make it to the top. The player can at most move left, right, jump, jump left, and jump right and try their best to jump on platforms to ascend the mountain. But be aware there are obstacle that might or might not hinder your progress towards your goal.
@@ -52,7 +39,6 @@ Such things that you may encounter are moving platforms, spikes, large distances
 </p>
 
 ## Advanced Topics
----
 
 ### Ai
 main implementation: AI created should be a Q learning model focused as a cooperative player for platforming, using a behavior tree to solve jumping. We are using a Q learning model since it is a state based learning algorithm which we can trim branches that do not meet specifications. How we will reward the AI is by adding coins to the map as both a reward to the players and a reward for the bot. These coins are completely optional otherwise. 
@@ -69,7 +55,7 @@ Q type learning while slow can provide a rather comprehensive learning algorithm
 		- **Long (>1s)** – Resync or Timeout: Prediction fails, client is disconnected/ghosted until stable.
 
 ## Midterm Goals
----
+
 - [ ] **Ai**
   AI can move character it controls left, right, up, jump right, left jump. Meaning that at least the implementation for AI to interact with an environment is plausible and that while the decision tree itself may not be functional, it means that it can interact with the game world without learning yet.
 - [ ] **Multiplayer**  
@@ -85,7 +71,7 @@ Q type learning while slow can provide a rather comprehensive learning algorithm
   Jump left, right, up, moving left and right from farther distances will have added momentum for greater velocity if direction has been constant.
 
 ## Final Goals
----
+
 - [ ] **AI**  
   Two AI can play together and are able to be maneuver to at least 1 platforms from the ground on their own proving partial training - 5%
 - [ ] **AI**  
@@ -110,6 +96,7 @@ Q type learning while slow can provide a rather comprehensive learning algorithm
   Players finishing the first map achieve a completion screen - 5%
 
 ## Stretch Goals
+
 - [ ] **Leaderboard**  
   We will have a leaderboard that saves the top 10 ten highest scores a player has scored, as well as if they achieved the score with ai or a different player. Allowing for a quick refrence for highest point climbed to.
 - [ ] **Enemy**  
