@@ -1,12 +1,14 @@
-<img src="https://shmul.dev/assets/katsuo.svg" width="600" alt="Katsuo Gradient" />
+<p align="center">
+    <img src="https://shmul.dev/assets/katsuo.png" width="600" alt="Katsuo Gradient" />
+</p>
 
 # Team
-**First Manager**  
-- Ket-Hwa Cheng | | [MorningDuringNight](https://github.com/MorningDuringNight) | PittID: KEC344)
-**Second Manager**  
-- Jagger Hershey | [Jagger-Hershey](https://github.com/Jagger-Hershey) | PittID: JCH168
-**Third Manager**  
-- Alli Batell | [AlliBatell](https://github.com/AlliBatell) | PittID: ALB594
+- **First Manager**  
+Ket-Hwa Cheng | | [MorningDuringNight](https://github.com/MorningDuringNight) | PittID: KEC344)
+- **Second Manager**  
+Jagger Hershey | [Jagger-Hershey](https://github.com/Jagger-Hershey) | PittID: JCH168
+- **Third Manager**  
+Alli Batell | [AlliBatell](https://github.com/AlliBatell) | PittID: ALB594
 
 ### Advanced Topic Group: AI
 | Name              | GitHub                                                      | PittID   |
