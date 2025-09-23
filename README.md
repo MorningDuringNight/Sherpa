@@ -33,7 +33,7 @@ The game is a 2d platformer where 2 players are chained together and must make i
 Such things that you may encounter are moving platforms, spikes, large distances which require more effort, and even trampolines that may aid your ascent. 
 
 ## Concept Art 
----
+
 <p align="center">
   <img src="https://github.com/user-attachments/assets/37e76089-c64b-4bda-ba48-b0f3b335bc07" width="40%" />
   <img src="https://github.com/user-attachments/assets/3d582d10-5948-4b25-a33e-1673e10fc0c4" width="33%" />
