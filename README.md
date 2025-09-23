@@ -3,12 +3,19 @@
 </p>
 
 # Team
-- **First Manager**  
-Ket-Hwa Cheng | | [MorningDuringNight](https://github.com/MorningDuringNight) | PittID: KEC344)
-- **Second Manager**  
-Jagger Hershey | [Jagger-Hershey](https://github.com/Jagger-Hershey) | PittID: JCH168
-- **Third Manager**  
-Alli Batell | [AlliBatell](https://github.com/AlliBatell) | PittID: ALB594
+
+### Managers
+| Management Week  | Manager        
+|------------------|----------------|
+| 09/10 – 09/23    |Ket-Hwa Cheng|
+| 09/24 – 09/30    |Jagger Hershey|
+| 10/01 – 10/07    |Alli Batell|
+| 10/08 – 10/14    | | 
+| 10/15 – 10/21    | |
+| 10/22 – 11/04    | |
+| 11/05 – 11/18    | |
+| 11/19 – 12/02    |Sean Shmulevich|
+
 
 ### Advanced Topic Group: AI
 | Name              | GitHub                                                      | PittID   |
@@ -59,47 +66,45 @@ Q type learning while slow can provide a rather comprehensive learning algorithm
 ## Midterm Goals
 
 - [ ] **Ai**
-  AI can move character it controls left, right, up, jump right, left jump. Meaning that at least the implementation for AI to interact with an environment is plausible and that while the decision tree itself may not be functional, it means that it can interact with the game world without learning yet.
+    - AI can move character it controls left, right, up, jump right, left jump. Meaning that at least the implementation for AI to interact with an environment is plausible and that while the decision tree itself may not be functional, it means that it can interact with the game world without learning yet.
 - [ ] **Multiplayer**  
-  Connect to a host client and both client and server can send and receive packages on both ends.
+    - Connect to a host client and both client and server can send and receive packages on both ends.
 - [ ] **Maps**  
-  1st map platforms, moving platform, sidewall collision. Players can land on or hit the side of each of these objects and it should have hit detection such that players will not go through these objects these will be 2 vertical screens, defined as being unable to see anything from the previous screen.
+    - 1st map platforms, moving platform, sidewall collision. Players can land on or hit the side of each of these objects and it should have hit detection such that players will not go through these objects these will be 2 vertical screens, defined as being unable to see anything from the previous screen.
 - [ ] **Rope Implementation**  
   - Rope physics slack, The rope implementation displays similar real world rope physics in terms of visual aesthetics, meaning the rope will be tight when farther away and grow loose when near.  
-  - Rope prevents players from moving a set distance apart from each other, this is based off the character position relative to each other.
+      - Rope prevents players from moving a set distance apart from each other, this is based off the character position relative to each other.
 - [ ] **Camera Movement**  
-  A 2d camera that shows the general location of where characters on the screen and tracks as they move up and down on the screen, in a general location. There is no Left and right tracking.
+  - A 2d camera that shows the general location of where characters on the screen and tracks as they move up and down on the screen, in a general location. There is no Left and right tracking.
 - [ ] **Player Movement** 
-  Jump left, right, up, moving left and right from farther distances will have added momentum for greater velocity if direction has been constant.
+    - Jump left, right, up, moving left and right from farther distances will have added momentum for greater velocity if direction has been constant.
 
 ## Final Goals
 
-- [ ] **AI**  
-  Two AI can play together and are able to be maneuver to at least 1 platforms from the ground on their own proving partial training - 5%
-- [ ] **AI**  
-  Two AI can play together and are able to be maneuver to at least 2 platforms from the ground on their own proving partial training - 7%
-- [ ] **AI**  
-  Two AI can play together and are able to be maneuver to at least 3 platforms from the ground on their own proving partial training - 8%
-- [ ] **Multiplayer**  
-  At least 2 players can connect to the game and be able to play together, with the ability to coordinate with the other outloud and complete the map. - 20%
-- [ ] **Completed Map**  
-  With moving platforms, hazards (spikes or trampoline) and standard platforms until reaching the top of the map. Spike implementation will cause instant game over, trampoline will give a jump boost to the player upon contact with the trampoline, and standard platforms are standing grounds. - 10%
-- [ ] **Completed Map**  
-  The amount of these platforms with or without any hazards will be 30 platforms. - 5%
-- [ ] **Movement**  
-  Able to jump and walk on platforms - 5%
-- [ ] **Movement**  
-  Jump off the other player character - 5%
-- [ ] **Movement**  
-  Wall jump once off walls - 5%
-- [ ] **One Time Ability**  
-  The players each get one time ability to put down a platform next to a wall which they can stand on. This platform exists for 10 real life seconds and will disappear once time has elapsed. - 5%
-- [ ] **Finish**  
-  Players finishing the first map achieve a completion screen - 5%
+#### Ai Goals
+- [ ] **5%** : Two AI can play together and are able to be maneuver to at least 1 platforms from the ground on their own proving partial training
+- [ ] **7%** : Two AI can play together and are able to be maneuver to at least 2 platforms from the ground on their own proving partial training
+- [ ] **8%** : Two AI can play together and are able to be maneuver to at least 3 platforms from the ground on their own proving partial training
+
+#### Multiplayer
+- [ ] 20% : At least 2 players can connect to the game and be able to play together, with the ability to coordinate with the other outloud and complete the map.
+
+#### Map
+- [ ] **10%**: With moving platforms, hazards (spikes or trampoline) and standard platforms until reaching the top of the map. Spike implementation will cause instant game over, trampoline will give a jump boost to the player upon contact with the trampoline, and standard platforms are standing grounds.
+- [ ] **5%**: The amount of these platforms with or without any hazards will be 30 platforms.
+
+#### Movement
+- [ ] **5%**: Able to jump and walk on platforms
+- [ ] **5%**: Jump off the other player character
+- [ ] **5%**: Wall jump once off walls
+
+#### Other
+- [ ]  5%: **One Time Ability**: The players each get one time ability to put down a platform next to a wall which they can stand on. This platform exists for 10 real life seconds and will disappear once time has elapsed.
+- [ ] 5%: **Finish** Players finishing the first map achieve a completion screen
 
 ## Stretch Goals
 
 - [ ] **Leaderboard**  
-  We will have a leaderboard that saves the top 10 ten highest scores a player has scored, as well as if they achieved the score with ai or a different player. Allowing for a quick refrence for highest point climbed to.
+  We will have a leader-board that saves the top 10 ten highest scores a player has scored, as well as if they achieved the score with Ai or a different player. Allowing for a quick reference for highest point climbed to.
 - [ ] **Enemy**  
-  We will have an enemy that starts from the top of the screen and falls straight down, targeting to hit player, these enemies will track where player characters are located and fall directly down like a Thamp from Mario, but not come back up.
+  We will have an enemy that starts from the top of the screen and falls straight down, targeting to hit player, these enemies will track where player characters are located and fall directly down like a Thwomp from Mario, but not come back up.
