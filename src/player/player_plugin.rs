@@ -11,7 +11,7 @@ use crate::config::PlayerSpawnPoint;
 use crate::config::PlayerSpawnVelocity;
 use crate::config::PLAYER_SPAWN_MASS;
 
-use crate::components::motion::{GroundState, JumpController, Mass, Velocity};
+use crate::components::motion::{GroundState, JumpController, Mass, PlayerInput, Velocity};
 use crate::components::rope::{Rope, RopeConstraint};
 
 use crate::map::Collider;
@@ -36,9 +36,10 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, spawn_po
     };
     let jump_controller = JumpController::default();
     let ground_state = GroundState::default();
+    let player_input = PlayerInput::default();
     let mass = Mass(PLAYER_SPAWN_MASS); // make the first player heavier (deleted for now but multiply mass)
     let velocity = Velocity(spawn_velocity.velocity);
-    let p1 = commands.spawn(PlayerBundle::new(controls, texture, transform, velocity, mass, jump_controller, ground_state)).insert(FollowedPlayer).id();
+    let p1 = commands.spawn(PlayerBundle::new(controls, texture, transform, velocity, mass, jump_controller, ground_state, player_input)).insert(PlayerInput::default()).insert(FollowedPlayer).id();
     // Spawn a second player for testing
     // This is temporary and will be removed later
     // Ideally we would have a better way
@@ -53,8 +54,9 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, spawn_po
     };
     let jump_controller = JumpController::default();
     let ground_state = GroundState::default();
+    let player_input = PlayerInput::default();
     let mass = Mass(PLAYER_SPAWN_MASS);
-    let p2 = commands.spawn(PlayerBundle::new(controls, texture, transform, velocity, mass, jump_controller, ground_state)).id();
+    let p2 = commands.spawn(PlayerBundle::new(controls, texture, transform, velocity, mass, jump_controller, ground_state, player_input)).id();
 
     // Add p1 and p2 a rope component
     commands.spawn(Rope {

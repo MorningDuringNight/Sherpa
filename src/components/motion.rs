@@ -71,3 +71,11 @@ impl Default for GroundState {
         }
     }
 }
+
+#[derive(Component, Default)]
+pub struct PlayerInput {
+    pub move_left: bool,
+    pub move_right: bool,
+    pub jump_pressed: bool,
+    pub jump_released: bool,
+}

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::config::player::*;
-use crate::components::motion::{ControlForce, Gravity, GroundState, JumpController, Mass, Momentum, NetForce, RopeForce, Velocity};
+use crate::components::motion::{ControlForce, Gravity, GroundState, JumpController, Mass, Momentum, NetForce, RopeForce, Velocity, PlayerInput};
 use crate::components::collision::Aabb;
 use bevy::math::bounding::Aabb2d;
 
@@ -37,10 +37,11 @@ pub struct PlayerBundle {
     pub size: PlayerCollider,
     pub jump_controller: JumpController,
     pub ground_state: GroundState,
+    pub player_input: PlayerInput,
 }
 
 impl PlayerBundle {
-    pub fn new(controls: PlayerControls, texture: Handle<Image>, transform: Transform, velocity: Velocity, mass: Mass, jump_controller: JumpController, ground_state: GroundState) -> Self {
+    pub fn new(controls: PlayerControls, texture: Handle<Image>, transform: Transform, velocity: Velocity, mass: Mass, jump_controller: JumpController, ground_state: GroundState, player_input: PlayerInput) -> Self {
         Self {
             sprite: Sprite {
                 image: texture,
@@ -61,6 +62,7 @@ impl PlayerBundle {
             },
             jump_controller,
             ground_state,
+            player_input,
         }
     }
 }
