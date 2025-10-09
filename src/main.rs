@@ -7,6 +7,7 @@ mod multiplayer;
 mod physics;
 mod player;
 mod util;
+use bevy::tasks::{IoTaskPool, TaskPoolBuilder};
 
 use std::env;
 fn main() {

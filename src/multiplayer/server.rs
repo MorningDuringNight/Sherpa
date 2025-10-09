@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy::tasks::IoTaskPool;
+use bevy::tasks::{IoTaskPool, TaskPoolBuilder};
 use async_channel::{Sender, Receiver};
 use std::{
     collections::HashMap,
@@ -69,8 +69,12 @@ pub fn setup_udp_server(mut commands: Commands, main_player_q: Query<Entity, Wit
     commands.insert_resource(UdpServerSocket { socket });
     commands.insert_resource(registry.clone());
 
-    let task_pool = IoTaskPool::get();
-
+    let task_pool = IoTaskPool::get_or_init(|| {
+        TaskPoolBuilder::default()
+            .num_threads(4)
+            .thread_name("io-thread".into())
+            .build()
+    });
 
     let (tx_snapshots, rx_snapshots) = async_channel::unbounded::<SnapshotMsg>();
     let (tx_inputs, rx_inputs) = async_channel::unbounded::<RemoteInputEvent>();
@@ -209,6 +213,10 @@ pub fn setup_udp_server(mut commands: Commands, main_player_q: Query<Entity, Wit
                 );
             }
         }).detach();}
+        println!(
+        "[Server] IoTaskPool threads: {:?}",
+        bevy::tasks::IoTaskPool::get().thread_num()
+        );
     commands.insert_resource(NetChannels {
         tx_snapshots,
         rx_inputs,
