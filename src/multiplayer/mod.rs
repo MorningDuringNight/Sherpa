@@ -29,6 +29,8 @@ impl Plugin for UdpClientPlugin {
             .add_systems(FixedUpdate, (
                 send_input_state_system,
             ).chain())
+            .insert_resource(KeepAliveTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
+            .add_systems(Update, udp_keepalive_system)
             .add_systems(
                 FixedUpdate,
                 apply_snapshot_system.run_if(resource_exists::<ClientNetChannels>),

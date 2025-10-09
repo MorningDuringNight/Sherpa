@@ -20,9 +20,25 @@ pub struct SnapshotUpdate {
     pub positions: Vec<(f32, f32)>,
 }
 
+
+#[derive(Resource)]
+pub struct KeepAliveTimer(pub Timer);
+
 #[derive(Resource)]
 pub struct ClientNetChannels {
     pub rx_snapshots: Receiver<SnapshotUpdate>,
+}
+
+pub fn udp_keepalive_system(
+    time: Res<Time>,
+    mut timer: ResMut<KeepAliveTimer>,
+    client: Option<Res<UdpClientSocket>>,
+) {
+    if let Some(client) = client {
+        if timer.0.tick(time.delta()).just_finished() {
+            let _ = client.socket.send_to(b"KEEPALIVE", client.server_addr);
+        }
+    }
 }
 
 // send input to the socket in the main bevy ecs thread. Synchronously.
@@ -71,8 +87,7 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
         .expect("Failed to parse server address");
 
     // create client UDP socket and bind to a random available port on localhost
-    let bind_port = if is_main_player.0 { 60000 } else { 60001 };
-    let socket = UdpSocket::bind(format!( "0.0.0.0:{}", bind_port)).expect("Failed to bind UDP client socket");
+    let socket = UdpSocket::bind("0.0.0.0:0").expect("Failed to bind UDP client socket");
     socket
         .set_read_timeout(Some(Duration::from_secs(2)))
         .expect("Failed to set read timeout");

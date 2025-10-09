@@ -85,6 +85,9 @@ pub fn setup_udp_server(mut commands: Commands, main_player_q: Query<Entity, Wit
     {
         // shouldn't cause race issues; I am only setting on connection
         // and not mutating at all.
+        //
+        //
+        // Instad of sending MAIN / Player f
         let recv_socket = socket_clone.try_clone().unwrap();
         let recv_clients = registry.clone();
         task_pool.spawn(async move {
@@ -104,6 +107,16 @@ pub fn setup_udp_server(mut commands: Commands, main_player_q: Query<Entity, Wit
                                 main_player_entity,
                                 other_player_entity,
                             );
+                        }
+                        else if data == b"KEEPALIVE" {
+                            // client is sending a periodic NAT keepalive
+                            if let Some(mut client_map) = recv_clients.clients.write().ok() {
+                                if let Some(session) = client_map.get_mut(&addr) {
+                                    session.last_seen = Instant::now();
+                                    // (optional) println! for debugging:
+                                    println!("[Server] Keepalive from {}, updated last_seen", addr);
+                                }
+                            }
                         }
                         else {
                             // we received some packet which was not a hankshake acknowledgement
@@ -236,7 +249,8 @@ fn handle_handshake(
     let _ = socket.send_to(b"ACK", addr);
 }
 
-// validates packet and returns player input state struct to send to the bevy ecs thread.
+// validates packet containing user input data and returns player input state struct
+// which then gets sent through the channel to the ecs thread.
 fn parse_input_packet(
     addr: SocketAddr,
     data: &[u8],
