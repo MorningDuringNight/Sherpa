@@ -60,10 +60,14 @@ pub struct NetChannels {
 
 // make registry
 // init async_channels
-pub fn setup_udp_server(mut commands: Commands) {
+pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainPlayer>>, other_q: Query<Entity, (With<Player>, Without<MainPlayer>)>,
+    ) {
 
     let (tx_snapshots, rx_snapshots) = async_channel::unbounded::<SnapshotMsg>();
     let (tx_inputs, rx_inputs) = async_channel::unbounded::<RemoteInputEvent>();
+
+    let main_entity = main_q.single().expect("MainPlayer entity not found");
+    let other_entity = other_q.single().expect("Secondary Player entity not found");
 
     let registry = ClientRegistry::default();
     let socket = Arc::new(async_std::task::block_on(UdpSocket::bind("0.0.0.0:5000"))
@@ -77,8 +81,11 @@ pub fn setup_udp_server(mut commands: Commands) {
 
     // Receive task
     {
-        let socket = Arc::clone(&socket);
+        let socket   = Arc::clone(&socket);
         let registry = registry.clone();
+        let tx_inputs = tx_inputs.clone();
+        let main_entity  = main_entity;   // capture real entities
+        let other_entity = other_entity;
 
         IoTaskPool::get().spawn(async move {
             let mut buf = [0u8; 1024];
@@ -89,11 +96,11 @@ pub fn setup_udp_server(mut commands: Commands) {
                 };
 
                 let data = &buf[..len];
-                // println!("[UDP recv] {} bytes from {}", len, addr);
 
                 if data == b"MAIN" || data == b"PLAY" {
-                    handle_handshake(&socket, &registry, addr, data).await;
+                    handle_handshake(&socket, &registry, addr, data, main_entity, other_entity).await;
                 } else if let Some(evt) = parse_input_packet(addr, data, &registry) {
+                    // unbounded channel: try_send never blocks, only fails if closed
                     if let Err(e) = tx_inputs.try_send(evt) {
                         eprintln!("[UDP recv] Failed to send input to ECS: {}", e);
                     }
@@ -139,10 +146,11 @@ pub fn process_remote_inputs_system(
     channels: Res<NetChannels>,
     mut writer: EventWriter<PlayerInputEvent>,
 ) {
-
-    let mut count = 0;
+    let mut n = 0;
     while let Ok(remote) = channels.rx_inputs.try_recv() {
-        count += 1;
+        n += 1;
+        // quick sanity print
+        // println!("[ECS] input for entity {:?}", remote.player);
         writer.write(PlayerInputEvent {
             entity: remote.player,
             left: remote.left,
@@ -150,12 +158,6 @@ pub fn process_remote_inputs_system(
             jump_pressed: remote.jump_pressed,
             jump_just_released: remote.jump_just_released,
         });
-    }
-
-    if count == 0 {
-        println!("[ECS] No input events this frame");
-    } else {
-        println!("[ECS] Processed {} input events this frame", count);
     }
 }
 
@@ -201,20 +203,20 @@ async fn handle_handshake(
     socket: &Arc<UdpSocket>,
     registry: &ClientRegistry,
     addr: SocketAddr,
-    _msg: &[u8],
+    msg: &[u8],
+    main_entity: Entity,
+    other_entity: Entity,
 ) {
-    println!("[Server] Handshake from {}", addr);
+    let assigned = if msg == b"MAIN" { main_entity } else { other_entity };
+    println!("[Server] Handshake from {} -> {:?}", addr, if msg == b"MAIN" { "MAIN" } else { "PLAY" });
 
     {
         let mut map = registry.clients.write().unwrap();
-        map.insert(
-            addr,
-            ClientSession {
-                last_seen: Instant::now(),
-                prev_mask: 0,
-                player: Entity::PLACEHOLDER,
-            },
-        );
+        map.insert(addr, ClientSession {
+            last_seen: Instant::now(),
+            prev_mask: 0,
+            player: assigned,   // <-- real entity goes here
+        });
     }
 
     if let Err(e) = socket.send_to(b"ACK", addr).await {
