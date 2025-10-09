@@ -153,15 +153,62 @@ pub fn setup_udp_server(mut commands: Commands, main_player_q: Query<Entity, Wit
 
         task_pool.spawn(async move {
             while let Ok(msg) = rx_snapshots.recv().await {
+                // decode tick for better visibility (optional)
+                let tick = if msg.data.len() >= 4 {
+                    u32::from_be_bytes(msg.data[0..4].try_into().unwrap_or_default())
+                } else {
+                    0
+                };
+
                 let clients_guard = broadcast_clients.clients.read().unwrap();
-                for addr in clients_guard.keys() {
-                    if let Err(e) = broadcast_socket.send_to(&msg.data, addr) {
-                        eprintln!("[UDP Server] Failed to send snapshot to {}: {}", addr, e);
+                let client_count = clients_guard.len();
+
+                if client_count == 0 {
+                    println!("[UDP Server] No clients registered — skipping snapshot tick={}", tick);
+                    continue;
+                }
+
+                println!(
+                    "[UDP Server] Broadcasting snapshot tick={} ({} bytes) to {} clients:",
+                    tick,
+                    msg.data.len(),
+                    client_count
+                );
+
+                for (i, addr) in clients_guard.keys().enumerate() {
+                    println!(
+                        "    [{}] Sending to {}",
+                        i,
+                        addr
+                    );
+
+                    match broadcast_socket.send_to(&msg.data, addr) {
+                        Ok(bytes) => {
+                            println!(
+                                "    [{}] Sent {} bytes successfully to {}",
+                                i,
+                                bytes,
+                                addr
+                            );
+                        }
+                        Err(e) => {
+                            eprintln!(
+                                "    [{}] ❌ Failed to send snapshot to {}: {}",
+                                i,
+                                addr,
+                                e
+                            );
+                        }
                     }
                 }
+
+                println!(
+                    "[UDP Server] Finished broadcasting tick={} to {} clients.\n",
+                    tick,
+                    client_count
+                );
             }
-        }).detach();
-    }
+        }).detach();}
     commands.insert_resource(NetChannels {
         tx_snapshots,
         rx_inputs,
