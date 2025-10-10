@@ -71,17 +71,59 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
         .expect("Failed to parse server address");
 
     // create client UDP socket and bind to a random available port on localhost
-    let bind_port = if is_main_player.0 { 60000 } else { 60001 };
-    let socket = UdpSocket::bind(format!( "0.0.0.0:{}", bind_port)).expect("Failed to bind UDP client socket");
+    let socket = UdpSocket::bind(format!("0.0.0.0:0")).expect("Failed to bind UDP client socket");
     socket
         .set_read_timeout(Some(Duration::from_secs(2)))
         .expect("Failed to set read timeout");
 
-    let (tx_snapshots, rx_snapshots) = async_channel::unbounded::<SnapshotUpdate>();
-    let tx_snapshots_clone = tx_snapshots.clone();
+    // ecs world and networking IO world each own different ends of this channel
+    // snapshots_in -> producer: is the snapshot receiving network task  | consumer: apply_snapshot_system, which recieves on server_snapshots.recv at a fixed rate.
+    // most systems are running at about 60pps / 60 fps
+    let (ecs_snapshots_in, server_snapshots) = async_channel::unbounded::<SnapshotUpdate>();
 
     println!("[Client] Sending HELLO to {}", server_addr);
 
+    // todo player refactor.
+    // default collider on all platforms by default.
+    // It can be hardcoded to 2 players.
+    // You should be able to pick player 1 or player 2
+    // I could run some terminal commands before starting
+    // which player are you; what server ip?
+    // network mode vs local mode vs ai mode?;
+    // insert it as a resource that will conditionally
+    // impact systems and decide which systems are included
+    // instead of the server annotations (maybe still for asset loading?).
+    //  The solution is split out the parts which are reused and compose new functions and systems
+    //  and plugins
+    //  The player can be controlled by sending an event each frame; events are sent while idle;
+    //  the ovehead is okay; but a state or a resouce is a better solution; although we need to
+    //  maintain the ability to send the player input state at any frame.
+    //  component enum struct Player(LocalPlayer, NetworkedPlayer, AiPlayer)
+        //  result | we can query for Player and access the player type from within the player
+    //  player control mapping; "w'a's'd" in NetworkedMode for all LocalPlayer
+    //  for LocalPlay mode | wasd for player 1 | up down left right for player 2
+    //  for AiMode(Training, P2) player 1 is wasd | Ai sends movement events to the main event loop.
+    //  2 Ai | should probably run in headless mode.
+    //  How does the server know which players to simulate???
+        // 3 lobby's with Predetermined names
+        // no create new lobby functionality yet
+        // pick your player with (btn 1 or 2)
+        // how is player choice communicated to the server?
+        // what needs to be communicated?
+        // how should I query for a specific player on the simulation side that maps to a networked 
+        // I could use an index but better to use a name;
+        // send this message in the handshake establishment.
+        // this is when you map client socket to entity.
+        // in server mode you shouldn't initialize the entities on the server side until you agree to
+        // start the game
+        // Third player?
+        //
+        // how do we start the game at the same time;
+        // we say what tick we are on and we agree to start the game at some
+        // time in the future.
+        // or the server tells us to;
+        // your inputs should not be registered during this time
+        // the server should not be receiving packets yet
     let msg = if is_main_player.as_ref().0 {
         b"MAIN"
     } else {
@@ -93,7 +135,7 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
         .expect("Failed to send handshake message");
 
     let mut buf = [0u8; 1024];
-    // asynchronously recieve snapshots from the server
+    // asynchronously recieve snapshotsrom the server
     match socket.recv_from(&mut buf) {
         Ok((len, addr)) => {
             let msg = &buf[..len];
@@ -117,7 +159,7 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
 
                                 // parse the state out of the snapshot packet recieved from the server
                                 if snapshot.len() < 6 {
-                                    eprintln!("[Client] Invalid snapshot length {}", snapshot.len());
+                                    println!("[Client] Invalid snapshot length {}", snapshot.len());
                                     continue;
                                 }
 
@@ -139,16 +181,14 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
                                     let x = f32::from_be_bytes(snapshot[offset..offset+4].try_into().unwrap());
                                     let y = f32::from_be_bytes(snapshot[offset+4..offset+8].try_into().unwrap());
                                     offset += 8;
-
                                     positions.push((x, y));
                                 }
-                                if let Err(e) = tx_snapshots_clone.try_send(SnapshotUpdate { tick, positions }) {
+                                if let Err(e) = ecs_snapshots_in.try_send(SnapshotUpdate { tick, positions }) {
                                     eprintln!("[Client] Failed to enqueue snapshot: {}", e);
                                 }
                             }
 
                             Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                                std::thread::yield_now();
                                 continue;
                             }
                             Err(e) => {
@@ -166,7 +206,7 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
                 });
                 // channel for receiving snapshots from the server into the main thread and
                 // processing with apply_snapshot_system
-                commands.insert_resource(ClientNetChannels { rx_snapshots });
+                commands.insert_resource(ClientNetChannels { rx_snapshots: server_snapshots });
             }
         }
         Err(e) => {

@@ -1,4 +1,4 @@
-use async_std::{net::UdpSocket, sync::Mutex};
+use async_std::{net::UdpSocket};
 use crate::{
     app::MainPlayer,
     player::{Player, player_control::PlayerInputEvent},
@@ -14,13 +14,32 @@ use std::{
     time::{Duration, Instant},
 };
 
-// A snapshot message built on the ECS thread and sent to network task
+// Multiplayer improvements
+// There is non-determinism
+// Say that the game is starting
+// We need to run the simulation loop in a way where we can 
+// apply player 1 or player input to a specific simulation frame
+// in the past or present.
+// we should run the simulation loop ahead of the client by some proportion of the round trip time.
+// so that the client recieves inputs around the right moment. 
+// How would we set this up to prevent input delay on the user end.
+// Maybe we run the simulation behind the current player state?
+// Whichever way results in the client and server talking at around the same time after accounting
+// for ping
+//
+// Create a system for storing the last 4 states and applying inputs to them.
+// There is a data structure that fits well here. linked list or array ; don't over complicate
+// if we apply inputs in the past (if they we're missed) it impacts our current state so we can
+// just drop all of the states after we apply missed or late/out of order inputs.
+// 
+
+// A snapshot message built on the ECS thread (game simulation) and sent to network task
 #[derive(Debug)]
 pub struct SnapshotMsg {
     pub data: Vec<u8>,
 }
 
-// data associated with a socket mapping.
+// data associated with a socket mapping in the client registry.
 #[derive(Debug)]
 pub struct ClientSession {
     pub last_seen: Instant,
@@ -50,12 +69,12 @@ pub struct RemoteInputEvent {
     pub jump_just_released: bool,
 }
 
-// tx_snapshots for getting state out of the simulation -> UDP thread
-// rx_inputs for sending input events | UDP thread -> main game loop (inputs)
 #[derive(Resource)]
 pub struct NetChannels {
-    pub tx_snapshots: Sender<SnapshotMsg>,
-    pub rx_inputs: Receiver<RemoteInputEvent>,
+    // get snapshots from simulation to send over the net to all clients.
+    pub ecs_snapshot_sender: Sender<SnapshotMsg>,
+    // get inputs from net to simulate
+    pub user_input_receiver: Receiver<RemoteInputEvent>,
 }
 
 // make registry
@@ -63,8 +82,8 @@ pub struct NetChannels {
 pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainPlayer>>, other_q: Query<Entity, (With<Player>, Without<MainPlayer>)>,
     ) {
 
-    let (tx_snapshots, rx_snapshots) = async_channel::unbounded::<SnapshotMsg>();
-    let (tx_inputs, rx_inputs) = async_channel::unbounded::<RemoteInputEvent>();
+    let (ecs_snapshot_sender, snapshot_receiver) = async_channel::unbounded::<SnapshotMsg>();
+    let (user_input_sender, user_input_receiver) = async_channel::unbounded::<RemoteInputEvent>();
 
     let main_entity = main_q.single().expect("MainPlayer entity not found");
     let other_entity = other_q.single().expect("Secondary Player entity not found");
@@ -77,13 +96,12 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
 
     println!("[UDP] Listening on 0.0.0.0:5000");
 
-    let recv_registry = registry.clone();
-
-    // Receive task
+    // receive network inputs from clients
+    // either handshake or player input state packets.
     {
         let socket   = Arc::clone(&socket);
         let registry = registry.clone();
-        let tx_inputs = tx_inputs.clone();
+        let user_input = user_input_sender.clone();
         let main_entity  = main_entity;   // capture real entities
         let other_entity = other_entity;
 
@@ -101,7 +119,7 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
                     handle_handshake(&socket, &registry, addr, data, main_entity, other_entity).await;
                 } else if let Some(evt) = parse_input_packet(addr, data, &registry) {
                     // unbounded channel: try_send never blocks, only fails if closed
-                    if let Err(e) = tx_inputs.try_send(evt) {
+                    if let Err(e) = user_input.try_send(evt) {
                         eprintln!("[UDP recv] Failed to send input to ECS: {}", e);
                     }
                 }
@@ -109,15 +127,15 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
         }).detach();
     }
 
-    // ✅ Broadcast task
+    // receive snapshots from bevy ecs; send to all clients (as fast as you recieved them).
+    // the are sent at 1x per game frame on the client side.
     {
         let socket = Arc::clone(&socket);
         let registry = registry.clone();
 
         IoTaskPool::get().spawn(async move {
             println!("[UDP send] Broadcast task started");
-            // recive snapshots from bevy ecs; send to clients.
-            while let Ok(msg) = rx_snapshots.recv().await {
+            while let Ok(msg) = snapshot_receiver.recv().await {
                 let addrs: Vec<_> = {
                     let guard = registry.clients.read().unwrap();
                     guard.keys().cloned().collect()
@@ -131,7 +149,7 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
             }
         }).detach();
     }
-    commands.insert_resource(NetChannels { tx_snapshots, rx_inputs });
+    commands.insert_resource(NetChannels { ecs_snapshot_sender, user_input_receiver });
     commands.insert_resource(registry.clone());
 }
 
@@ -147,7 +165,7 @@ pub fn process_remote_inputs_system(
     mut writer: EventWriter<PlayerInputEvent>,
 ) {
     let mut n = 0;
-    while let Ok(remote) = channels.rx_inputs.try_recv() {
+    while let Ok(remote) = channels.user_input_receiver.try_recv() {
         n += 1;
         // quick sanity print
         // println!("[ECS] input for entity {:?}", remote.player);
@@ -170,6 +188,7 @@ pub fn has_clients(registry: Option<Res<ClientRegistry>>) -> bool {
     }
 }
 
+// get game state from the ecs world and send it over the channel to the thread.
 pub fn send_snapshots_system(
     players: Query<&Transform, With<Player>>,
     channels: Res<NetChannels>,
@@ -194,11 +213,12 @@ pub fn send_snapshots_system(
         buf.extend_from_slice(&y.to_be_bytes());
     }
 
-    if let Err(e) = channels.tx_snapshots.try_send(SnapshotMsg { data: buf }) {
+    if let Err(e) = channels.ecs_snapshot_sender.try_send(SnapshotMsg { data: buf }) {
         eprintln!("[Server] Failed to send snapshot to net task: {}", e);
     }
 }
 
+// send ACK to client when they send an handshake packet (MAIN OR PLAY).
 async fn handle_handshake(
     socket: &Arc<UdpSocket>,
     registry: &ClientRegistry,
@@ -215,7 +235,7 @@ async fn handle_handshake(
         map.insert(addr, ClientSession {
             last_seen: Instant::now(),
             prev_mask: 0,
-            player: assigned,   // <-- real entity goes here
+            player: assigned,
         });
     }
 
@@ -224,7 +244,7 @@ async fn handle_handshake(
     }
 }
 
-// validates packet and returns player input state struct to send to the bevy ecs thread.
+// validates input packets from players returns player input state struct to send to the bevy ecs thread for simulation
 fn parse_input_packet(
     addr: SocketAddr,
     data: &[u8],
@@ -237,7 +257,6 @@ fn parse_input_packet(
         data
     );
 
-    // 1️⃣ Validate packet length
     if data.len() < 5 {
         println!(
             "[UDP parse] ❌ too short ({} bytes, expected >= 5) from {}",
@@ -247,7 +266,7 @@ fn parse_input_packet(
         return None;
     }
 
-    // 2️⃣ Attempt to lock registry and find client
+    // Attempt to lock registry and find client
     let mut map = match clients.clients.write() {
         Ok(m) => m,
         Err(e) => {
@@ -271,36 +290,31 @@ fn parse_input_packet(
     let client = map.get_mut(&addr)?;
     let prev_mask = client.prev_mask;
 
-    // 3️⃣ Decode sequence + mask
+    // decode sequence + mask
     let seq_bytes = &data[0..4];
     let mask = data[4];
     let seq = u32::from_be_bytes(seq_bytes.try_into().unwrap());
 
-    println!(
-        "[UDP parse] ✅ matched client {} | seq={} | mask={:08b} | prev_mask={:08b}",
-        addr, seq, mask, prev_mask
-    );
-
-    // 4️⃣ Decode button states
+    // decode button states
     let jump_pressed = mask & (1 << 0) != 0;
     let left = mask & (1 << 1) != 0;
     let right = mask & (1 << 3) != 0;
 
-    println!(
-        "[UDP parse] state → left={} right={} jump_pressed={}",
-        left, right, jump_pressed
-    );
+    // println!(
+    //     "[UDP parse] state → left={} right={} jump_pressed={}",
+    //     left, right, jump_pressed
+    // );
 
-    // 5️⃣ Compare vs previous frame
+    // compare vs previous recieved input to see if jump was initiated or stopped.
     let jump_prev_pressed = prev_mask & (1 << 0) != 0;
     let jump_just_pressed = jump_pressed && !jump_prev_pressed;
     let jump_just_released = !jump_pressed && jump_prev_pressed;
 
-    // 6️⃣ Update client session
+    // update client session
     client.prev_mask = mask;
     client.last_seen = Instant::now();
 
-    // 7️⃣ Return event
+    // event will be sent over the channel from the receiving task to the bevy thread.
     let evt = RemoteInputEvent {
         player: client.player,
         left,
@@ -308,8 +322,6 @@ fn parse_input_packet(
         jump_pressed,
         jump_just_released,
     };
-
-    // println!("[UDP parse] ✅ emitted RemoteInputEvent: {:?}", evt);
 
     Some(evt)
 }
