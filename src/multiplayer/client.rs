@@ -79,7 +79,7 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
     // ecs world and networking IO world each own different ends of this channel
     // snapshots_in -> producer: is the snapshot receiving network task  | consumer: apply_snapshot_system, which recieves on server_snapshots.recv at a fixed rate.
     // most systems are running at about 60pps / 60 fps
-    let (ecs_snapshots_in, server_snapshots) = async_channel::unbounded::<SnapshotUpdate>();
+    let (net_snapshots_in, snapshot_receiver) = async_channel::unbounded::<SnapshotUpdate>();
 
     println!("[Client] Sending HELLO to {}", server_addr);
 
@@ -107,7 +107,7 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
     //  How does the server know which players to simulate???
         // 3 lobby's with Predetermined names
         // no create new lobby functionality yet
-        // pick your player with (btn 1 or 2)
+        // pick your player with (btn 1 or 2) after picking lobby.
         // how is player choice communicated to the server?
         // what needs to be communicated?
         // how should I query for a specific player on the simulation side that maps to a networked 
@@ -183,7 +183,7 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
                                     offset += 8;
                                     positions.push((x, y));
                                 }
-                                if let Err(e) = ecs_snapshots_in.try_send(SnapshotUpdate { tick, positions }) {
+                                if let Err(e) = net_snapshots_in.try_send(SnapshotUpdate { tick, positions }) {
                                     eprintln!("[Client] Failed to enqueue snapshot: {}", e);
                                 }
                             }
@@ -206,7 +206,7 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
                 });
                 // channel for receiving snapshots from the server into the main thread and
                 // processing with apply_snapshot_system
-                commands.insert_resource(ClientNetChannels { rx_snapshots: server_snapshots });
+                commands.insert_resource(ClientNetChannels { rx_snapshots: snapshot_receiver });
             }
         }
         Err(e) => {
