@@ -311,6 +311,7 @@ fn parse_input_packet(
     let jump_just_released = !jump_pressed && jump_prev_pressed;
 
     // update client session
+
     client.prev_mask = mask;
     client.last_seen = Instant::now();
 
