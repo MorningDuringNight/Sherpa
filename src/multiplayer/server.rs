@@ -167,8 +167,6 @@ pub fn process_remote_inputs_system(
     let mut n = 0;
     while let Ok(remote) = channels.user_input_receiver.try_recv() {
         n += 1;
-        // quick sanity print
-        // println!("[ECS] input for entity {:?}", remote.player);
         writer.write(PlayerInputEvent {
             entity: remote.player,
             left: remote.left,
@@ -208,7 +206,6 @@ pub fn send_snapshots_system(
         let x = truncate_f32(transform.translation.x, decimals);
         let y = truncate_f32(transform.translation.y, decimals);
 
-        println!("{} {}", x, y);
         buf.extend_from_slice(&x.to_be_bytes());
         buf.extend_from_slice(&y.to_be_bytes());
     }
@@ -250,16 +247,11 @@ fn parse_input_packet(
     data: &[u8],
     clients: &ClientRegistry,
 ) -> Option<RemoteInputEvent> {
-    println!(
-        "[UDP parse] incoming packet from {} ({} bytes): {:?}",
-        addr,
-        data.len(),
-        data
-    );
+
 
     if data.len() < 5 {
         println!(
-            "[UDP parse] ❌ too short ({} bytes, expected >= 5) from {}",
+            "[UDP parse] too short ({} bytes, expected >= 5) from {}",
             data.len(),
             addr
         );
@@ -270,14 +262,14 @@ fn parse_input_packet(
     let mut map = match clients.clients.write() {
         Ok(m) => m,
         Err(e) => {
-            // eprintln!("[UDP parse] ❌ failed to lock client registry: {}", e);
+            // eprintln!("[UDP parse] failed to lock client registry: {}", e);
             return None;
         }
     };
 
     if !map.contains_key(&addr) {
         println!(
-            "[UDP parse] ⚠️  ignoring input from unknown client {} (registry has {} clients)",
+            "[UDP parse] ignoring input from unknown client {} (registry has {} clients)",
             addr,
             map.len()
         );
