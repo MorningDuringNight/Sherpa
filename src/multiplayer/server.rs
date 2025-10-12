@@ -1,4 +1,3 @@
-use async_std::{net::UdpSocket};
 use crate::{
     app::MainPlayer,
     player::{Player, player_control::PlayerInputEvent},
@@ -8,7 +7,7 @@ use bevy::prelude::*;
 use bevy::tasks::{IoTaskPool, TaskPool, TaskPoolBuilder};
 use std::{
     collections::HashMap,
-    net::{SocketAddr},
+    net::{SocketAddr, UdpSocket},
     sync::{Arc, RwLock},
     thread,
     time::{Duration, Instant},
@@ -82,6 +81,8 @@ pub struct NetChannels {
 pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainPlayer>>, other_q: Query<Entity, (With<Player>, Without<MainPlayer>)>,
     ) {
 
+    let socket = UdpSocket::bind("0.0.0.0:5000").expect("Failed to bind UDP socket");
+    socket.set_nonblocking(true).unwrap();
     let (ecs_snapshot_sender, snapshot_receiver) = async_channel::unbounded::<SnapshotMsg>();
     let (user_input_sender, user_input_receiver) = async_channel::unbounded::<RemoteInputEvent>();
 
@@ -89,34 +90,38 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
     let other_entity = other_q.single().expect("Secondary Player entity not found");
 
     let registry = ClientRegistry::default();
-    let socket = Arc::new(async_std::task::block_on(UdpSocket::bind("0.0.0.0:5000"))
-        .expect("Failed to bind UDP socket"),
-    );
 
 
-    println!("[UDP] Listening on 0.0.0.0:5000");
+    println!("[SETUP UDP] Listening on 0.0.0.0:5000");
 
+    // Synchronously listen for handshake, only start sending once both players connect
+    // 
+    // 
     // receive network inputs from clients
     // either handshake or player input state packets.
     {
-        let socket   = Arc::clone(&socket);
         let registry = registry.clone();
         let user_input = user_input_sender.clone();
         let main_entity  = main_entity;   // capture real entities
         let other_entity = other_entity;
+        let socket = socket.try_clone().unwrap();
 
         IoTaskPool::get().spawn(async move {
             let mut buf = [0u8; 1024];
             loop {
-                let (len, addr) = match socket.recv_from(&mut buf).await {
+                let (len, addr) = match socket.recv_from(&mut buf) {
                     Ok(v) => v,
+                    Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                        std::thread::yield_now();
+                        continue;
+                    }
                     Err(e) => { eprintln!("[UDP recv] error: {}", e); continue; }
                 };
 
                 let data = &buf[..len];
 
                 if data == b"MAIN" || data == b"PLAY" {
-                    handle_handshake(&socket, &registry, addr, data, main_entity, other_entity).await;
+                    handle_handshake(&socket, &registry, addr, data, main_entity, other_entity);
                 } else if let Some(evt) = parse_input_packet(addr, data, &registry) {
                     // unbounded channel: try_send never blocks, only fails if closed
                     if let Err(e) = user_input.try_send(evt) {
@@ -130,11 +135,12 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
     // receive snapshots from bevy ecs; send to all clients (as fast as you recieved them).
     // the are sent at 1x per game frame on the client side.
     {
-        let socket = Arc::clone(&socket);
+        let socket = socket.try_clone().unwrap();
         let registry = registry.clone();
 
         IoTaskPool::get().spawn(async move {
             println!("[UDP send] Broadcast task started");
+            // this loop only runs when it has snapshots to process.
             while let Ok(msg) = snapshot_receiver.recv().await {
                 let addrs: Vec<_> = {
                     let guard = registry.clients.read().unwrap();
@@ -142,7 +148,7 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
                 };
 
                 for addr in addrs {
-                    if let Err(e) = socket.send_to(&msg.data, addr).await {
+                    if let Err(e) = socket.send_to(&msg.data, addr) {
                         eprintln!("[UDP send] failed to {}: {}", addr, e);
                     }
                 }
@@ -167,6 +173,7 @@ pub fn process_remote_inputs_system(
     let mut n = 0;
     while let Ok(remote) = channels.user_input_receiver.try_recv() {
         n += 1;
+
         writer.write(PlayerInputEvent {
             entity: remote.player,
             left: remote.left,
@@ -216,8 +223,8 @@ pub fn send_snapshots_system(
 }
 
 // send ACK to client when they send an handshake packet (MAIN OR PLAY).
-async fn handle_handshake(
-    socket: &Arc<UdpSocket>,
+fn handle_handshake(
+    socket: &UdpSocket,
     registry: &ClientRegistry,
     addr: SocketAddr,
     msg: &[u8],
@@ -236,7 +243,7 @@ async fn handle_handshake(
         });
     }
 
-    if let Err(e) = socket.send_to(b"ACK", addr).await {
+    if let Err(e) = socket.send_to(b"ACK", addr) {
         eprintln!("[Server] Failed to send ACK: {}", e);
     }
 }
