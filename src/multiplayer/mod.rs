@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 pub mod server;
 pub mod client;
+mod handshake_data;
 
 
 use client::*;

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::tasks::IoTaskPool;
+use super::handshake_data::*;
 use std::net::UdpSocket;
 use std::time::Duration;
 use async_channel::{Sender, Receiver};
@@ -106,19 +107,60 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
     let (net_snapshots_in, snapshot_receiver) = async_channel::unbounded::<SnapshotUpdate>();
 
     println!("[Client] Sending HELLO to {}", server_addr);
+    let mut buf = [0u8; 1024];
 
-    // temporary hack
+    // let responses: Vec<_> = 
+    // tick + player selection + characterSelection + player name.
+    let mut packet_number = 0;
+    while packet_number < 15  {
+
+        let handshake_message = HandshakeData::new(packet_number,0, 0, "blue_fish", "Sean").encode();
+        socket
+            .send_to(handshake_message.as_slice(), server_addr)
+            .expect("Failed to send handshake message");
+
+
+        // out of order packets 
+        // number each packet
+        // resolve on the server-side;
+        match socket.recv_from(&mut buf) {
+            // recieve messages inlcuding. time sent from server.
+            Ok((len, addr)) => {
+                // calculate ping.
+                // the client sends the time that it sent Handshake message
+                // the server diff-message.send-now from when it was received.
+                // send back ACK+PlayerNumber from server.
+                //
+                // client computes RTT
+                // make an array of size 15 match the server responses
+                // 15 handshake messages -> 15 acks (or less)
+                // then process the data. and begin returning a rolling average of rtt.
+                // client sends packet numbers 
+                // server sends instant with response
+                let msg = &buf[..len];
+                if let Some(resp) = HandshakeResponse::decode(msg){
+                    println!("{:#?}", resp);
+                }
+                // parse handshake response
+                // server ACK + PlayerNumber + PacketNumber + Server
+            }
+            Err(e) => {
+                eprintln!("[Client] Handshake packet failed.: {}", e);
+            }
+        }
+        packet_number += 1;
+    }
     let msg = if is_main_player.as_ref().0 {
         b"MAIN"
     } else {
         b"PLAY"
     };
 
-    socket
-        .send_to(msg, server_addr)
-        .expect("Failed to send handshake message");
 
-    let mut buf = [0u8; 1024];
+    // Expect new data's -> {instant, tick, playerNumber (for assigning controls),
+    // characterSelection for assigning sprite,} | also playerName | later on for
+    // leaderboard stretch goal.
+
 
     // expect the next message you receive from the server to be "ACK" in response to main or hello
     // it could be lost with udp
@@ -128,62 +170,61 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
     // handshake and they can't play (but there are a lot of reason's this could happen, and there
     // could be a tcp fallback maybe)
     // server should send ack to the correct client. or send a unique response to each client.
+    // structure is bad, lets pull out handshake logic.
     match socket.recv_from(&mut buf) {
         Ok((len, addr)) => {
             let msg = &buf[..len];
-            if msg == b"ACK" {
-                println!("[Client] Handshake successful with server {}", addr);
+            println!("[Client] Handshake successful with server {}", addr);
 
-                // clone socket so it can live in both sending and receiving tasks
-                // shouldn't cause race conditions because I am sending inputs and recieving
-                // positions
-                // this data should have a tick number attached so we can check if it stale or not.
-                // send ack to every single one
-                let socket_clone = socket.try_clone().expect("Failed to clone client socket");
+            // clone socket so it can live in both sending and receiving tasks
+            // shouldn't cause race conditions because I am sending inputs and recieving
+            // positions
+            // this data should have a tick number attached so we can check if it stale or not.
+            // send ack to every single one
+            let socket_clone = socket.try_clone().expect("Failed to clone client socket");
 
-                let task_pool = IoTaskPool::get();
-                // send keys. 
-                // potentially spawn this thread in a different system.
-                task_pool.spawn(async move {
-                    let mut buf = [0u8; 1500];
-                    loop {
-                        match socket_clone.recv_from(&mut buf) {
-                            Ok((len, from)) => {
-                                let snapshot = &buf[..len];
+            let task_pool = IoTaskPool::get();
+            // send keys. 
+            // potentially spawn this thread in a different system.
+            task_pool.spawn(async move {
+                let mut buf = [0u8; 1500];
+                loop {
+                    match socket_clone.recv_from(&mut buf) {
+                        Ok((len, from)) => {
+                            let snapshot = &buf[..len];
 
-                                // parse the state out of the snapshot packet recieved from the server
-                                if snapshot.len() < 6 {
-                                    println!("[Client] Invalid snapshot length {}", snapshot.len());
-                                    continue;
-                                }
-
-                                let (tick, positions) = parse_snapshot(snapshot);
-
-                                if let Err(e) = net_snapshots_in.try_send(SnapshotUpdate { tick, positions }) {
-                                    eprintln!("[Client] Failed to enqueue snapshot: {}", e);
-                                }
-                            }
-                            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                                std::thread::yield_now();
+                            // parse the state out of the snapshot packet recieved from the server
+                            if snapshot.len() < 6 {
+                                println!("[Client] Invalid snapshot length {}", snapshot.len());
                                 continue;
                             }
-                            Err(e) => {
-                                eprintln!("[Client] Snapshot recv error: {}", e);
-                                break;
+
+                            let (tick, positions) = parse_snapshot(snapshot);
+
+                            if let Err(e) = net_snapshots_in.try_send(SnapshotUpdate { tick, positions }) {
+                                eprintln!("[Client] Failed to enqueue snapshot: {}", e);
                             }
                         }
+                        Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                            std::thread::yield_now();
+                            continue;
+                        }
+                        Err(e) => {
+                            eprintln!("[Client] Snapshot recv error: {}", e);
+                            break;
+                        }
                     }
-                }).detach();
+                }
+            }).detach();
 
-                // insert client socket for later use; (sending inputs to the socket)
-                commands.insert_resource(UdpClientSocket {
-                    socket,
-                    server_addr,
-                });
-                // channel for receiving snapshots from the server into the main thread and
-                // processing with apply_snapshot_system
-                commands.insert_resource(ClientNetChannels { rx_snapshots: snapshot_receiver });
-            }
+            // insert client socket for later use; (sending inputs to the socket)
+            commands.insert_resource(UdpClientSocket {
+                socket,
+                server_addr,
+            });
+            // channel for receiving snapshots from the server into the main thread and
+            // processing with apply_snapshot_system
+            commands.insert_resource(ClientNetChannels { rx_snapshots: snapshot_receiver });
         }
         Err(e) => {
             eprintln!("[Client] Handshake failed: {}", e);

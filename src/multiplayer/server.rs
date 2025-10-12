@@ -2,6 +2,7 @@ use crate::{
     app::MainPlayer,
     player::{Player, player_control::PlayerInputEvent},
 };
+use super::handshake_data::*;
 use async_channel::{Receiver, Sender};
 use bevy::prelude::*;
 use bevy::tasks::{IoTaskPool, TaskPool, TaskPoolBuilder};
@@ -120,8 +121,6 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
     {
         let registry = registry.clone();
         let user_input = user_input_sender.clone();
-        let main_entity  = main_entity;   // capture real entities
-        let other_entity = other_entity;
         let socket = socket.try_clone().unwrap();
 
         IoTaskPool::get().spawn(async move {
@@ -138,7 +137,6 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
                 };
 
                 let data = &buf[..len];
-                let session_players = [main_entity, other_entity];
 
                 // the init packets should contain the player initialization data, the socket
                 // mapping should contain jitter and ping (RTT) we should test for it and make a
@@ -152,26 +150,33 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
                 // lets assume two players.
                 // this is a mutable resouce that can be accessed by bevy.
 
-                if data == b"MAIN" || data == b"PLAY" {
+                if let Some(handshake_msg) = HandshakeData::decode(data)  {
                     // copy the ipaddress and make a mapping for the ecs world.
 
-                    let player_number = if data == b"MAIN" { 0 } else { 1 };
+                    println!("{:#?}", handshake_msg);
+                    let player_number = handshake_msg.player_number;
+                    let packet_number = handshake_msg.packet_number;
 
                     println!("[Server] Handshake from {} -> {:?}", addr, if data == b"MAIN" { "MAIN" } else { "PLAY" });
                     {
                         let mut map = registry.clients.write().unwrap();
                         // lets keep this read only stuff (in terms of driving the simulation) 
-                        map.insert(addr, ClientSession {
-                            last_seen: Instant::now(),
-                            player_number,
-                        });
-                        // TODO send a better message. 
-                        // after sending set player number in the ecs_players
-                        ecs_players[player_number as usize].1 = 0;
-                        num_players += 1;
+                        if !map.contains_key(&addr) {
+                            map.insert(addr, ClientSession {
+                                last_seen: Instant::now(),
+                                player_number,
+                            });
+                            // TODO send a better message. 
+                            // after sending set player number in the ecs_players
+                            ecs_players[player_number as usize].1 = 0;
+                            num_players += 1;
+                        }
+
+                        // if num_player == 2 send start message.
                     }
 
-                    if let Err(e) = socket.send_to(b"ACK", addr) {
+                    // send new packet.
+                    if let Err(e) = socket.send_to(HandshakeResponse::new(player_number, packet_number).encode().as_slice(), addr) {
                         eprintln!("[Server] Failed to send ACK: {}", e);
                     }
                 } 
