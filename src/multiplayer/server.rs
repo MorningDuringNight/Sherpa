@@ -157,7 +157,7 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
                     let player_number = handshake_msg.player_number;
                     let packet_number = handshake_msg.packet_number;
 
-                    println!("[Server] Handshake from {} -> {:?}", addr, if data == b"MAIN" { "MAIN" } else { "PLAY" });
+                    println!("[Server] Handshake from {} -> {:?}", addr, if player_number == 0 { "MAIN" } else { "PLAY" });
                     {
                         let mut map = registry.clients.write().unwrap();
                         // lets keep this read only stuff (in terms of driving the simulation) 
@@ -180,7 +180,7 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
                         eprintln!("[Server] Failed to send ACK: {}", e);
                     }
                 } 
-                else if num_players == 2 {
+                else {
                     // map address to player in ecs_players.
                     // 
                     let mut map = match registry.clients.write() {
@@ -212,7 +212,7 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
     }
 
     // receive snapshots from bevy ecs; send to all clients (as fast as you recieved them).
-    // the are sent at 1x per game frame on the client side.
+    // the are sent at 1x per game frame on the client side. 
     {
         let socket = socket.try_clone().unwrap();
         let registry = registry.clone();
@@ -221,14 +221,10 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
             println!("[UDP send] Broadcast task started");
             // this loop only runs when it has snapshots to process.
             while let Ok(msg) = snapshot_receiver.recv().await {
-                let addrs: Vec<_> = {
+                let (addrs, num_clients) = {
                     let guard = registry.clients.read().unwrap();
-                    guard.keys().cloned().collect()
+                    (guard.keys().cloned().collect::<Vec<_>>(), guard.len())
                 };
-                if addrs.len() < 2 {
-                    continue;
-                }
-
                 for addr in addrs {
                     println!("Sent Snapshot");
                     if let Err(e) = socket.send_to(&msg.data, addr) {

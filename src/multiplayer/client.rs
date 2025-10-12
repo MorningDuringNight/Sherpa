@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::tasks::IoTaskPool;
 use super::handshake_data::*;
-use std::net::UdpSocket;
+use std::{net::UdpSocket, time::Instant};
 use std::time::Duration;
 use async_channel::{Sender, Receiver};
 
@@ -110,14 +110,17 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
     let mut buf = [0u8; 1024];
 
     // let responses: Vec<_> = 
+    let mut send_instants: Vec<Option<Instant>> = vec![None; 15];
     // tick + player selection + characterSelection + player name.
     let mut packet_number = 0;
     while packet_number < 15  {
 
-        let handshake_message = HandshakeData::new(packet_number,0, 0, "blue_fish", "Sean").encode();
+        let player_number = if is_main_player.as_ref().0 { 0 } else { 1 };
+        let handshake_message = HandshakeData::new(packet_number, 0, player_number, "blue_fish", "Sean").encode();
         socket
             .send_to(handshake_message.as_slice(), server_addr)
             .expect("Failed to send handshake message");
+        send_instants[packet_number as usize] = Some(Instant::now());
 
 
         // out of order packets 
@@ -139,13 +142,18 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
                 // server sends instant with response
                 let msg = &buf[..len];
                 if let Some(resp) = HandshakeResponse::decode(msg){
-                    println!("{:#?}", resp);
+                    if let Some(sent) = send_instants[resp.packet_number as usize] {
+                        let rtt = sent.elapsed().as_millis();
+                        println!("[Handshake] RTT for packet {} = {} ms", resp.packet_number, rtt);
+                    } else {
+                        println!("[Handshake] instant not captured for packet {}", resp.packet_number);
+                    }
                 }
                 // parse handshake response
                 // server ACK + PlayerNumber + PacketNumber + Server
             }
             Err(e) => {
-                eprintln!("[Client] Handshake packet failed.: {}", e);
+                println!("[Client] Handshake packet failed.: {}", e);
             }
         }
         packet_number += 1;
