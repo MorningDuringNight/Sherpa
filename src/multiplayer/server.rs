@@ -42,12 +42,21 @@ pub struct SnapshotMsg {
 #[derive(Debug)]
 pub struct ClientSession {
     pub last_seen: Instant,
-    pub player: Entity,
-    pub prev_mask: u8,
+    pub player_number: u8,
+    // modifying this when applying inputs is not good.
 }
+
+// registry is for mapping socketAddress -> ClientSession
+// we need to know the ClientSession when receiving keyboard-inputs over the net to know which
+// player to apply them to 
+// Maybe make another mapping of player name -> entity and other attributes.
+// You should create this mapping on handshake.
+// Handshake should be synchronous
 
 // we might not need a lock here, we build the client registry relatively Synchronously
 // we do mutate the client session though. and possibly indirectly read from in from multiple threads.
+//
+// the handshake task needs to write another entry but if the other task is reading a specific entry they shouldnt be locked out of that read
 #[derive(Resource, Default, Clone)]
 pub struct ClientRegistry {
     pub clients: Arc<std::sync::RwLock<HashMap<SocketAddr, ClientSession>>>,
@@ -78,6 +87,8 @@ pub struct NetChannels {
 
 // make registry
 // init async_channels
+// query for all players
+// set whichever one you asked for.
 pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainPlayer>>, other_q: Query<Entity, (With<Player>, Without<MainPlayer>)>,
     ) {
 
@@ -86,13 +97,20 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
     let (ecs_snapshot_sender, snapshot_receiver) = async_channel::unbounded::<SnapshotMsg>();
     let (user_input_sender, user_input_receiver) = async_channel::unbounded::<RemoteInputEvent>();
 
+    let mut num_players = 0;
     let main_entity = main_q.single().expect("MainPlayer entity not found");
     let other_entity = other_q.single().expect("Secondary Player entity not found");
 
     let registry = ClientRegistry::default();
 
 
-    println!("[SETUP UDP] Listening on 0.0.0.0:5000");
+    let mut ecs_players: Vec<(Entity, u8)> = vec![(main_entity, 0), (other_entity, 0)];
+    println!("[SETUP UDP] waiting for handshake on 0.0.0.0:5000");
+
+    // while the size of the client registry doesn't have two players.
+    // listen on 
+
+
 
     // Synchronously listen for handshake, only start sending once both players connect
     // 
@@ -109,23 +127,79 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
         IoTaskPool::get().spawn(async move {
             let mut buf = [0u8; 1024];
             loop {
+                // get data from net incoming
                 let (len, addr) = match socket.recv_from(&mut buf) {
                     Ok(v) => v,
                     Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
                         std::thread::yield_now();
                         continue;
                     }
-                    Err(e) => { eprintln!("[UDP recv] error: {}", e); continue; }
+                    Err(e) => { eprintln!("[UDP recv] error: {}", e); break; }
                 };
 
                 let data = &buf[..len];
+                let session_players = [main_entity, other_entity];
+
+                // the init packets should contain the player initialization data, the socket
+                // mapping should contain jitter and ping (RTT) we should test for it and make a
+                // new player at the same time.
+                //
+                // Expect new data's -> {instant, tick, playerNumber (for assigning controls),
+                // characterSelection for assigning sprite,} | also playerName | later on for
+                // leaderboard stretch goal.
+                //
+                //
+                // lets assume two players.
+                // this is a mutable resouce that can be accessed by bevy.
 
                 if data == b"MAIN" || data == b"PLAY" {
-                    handle_handshake(&socket, &registry, addr, data, main_entity, other_entity);
-                } else if let Some(evt) = parse_input_packet(addr, data, &registry) {
-                    // unbounded channel: try_send never blocks, only fails if closed
-                    if let Err(e) = user_input.try_send(evt) {
-                        eprintln!("[UDP recv] Failed to send input to ECS: {}", e);
+                    // copy the ipaddress and make a mapping for the ecs world.
+
+                    let player_number = if data == b"MAIN" { 0 } else { 1 };
+
+                    println!("[Server] Handshake from {} -> {:?}", addr, if data == b"MAIN" { "MAIN" } else { "PLAY" });
+                    {
+                        let mut map = registry.clients.write().unwrap();
+                        // lets keep this read only stuff (in terms of driving the simulation) 
+                        map.insert(addr, ClientSession {
+                            last_seen: Instant::now(),
+                            player_number,
+                        });
+                        // TODO send a better message. 
+                        // after sending set player number in the ecs_players
+                        ecs_players[player_number as usize].1 = 0;
+                        num_players += 1;
+                    }
+
+                    if let Err(e) = socket.send_to(b"ACK", addr) {
+                        eprintln!("[Server] Failed to send ACK: {}", e);
+                    }
+                } 
+                else if num_players == 2 {
+                    // map address to player in ecs_players.
+                    // 
+                    let mut map = match registry.clients.write() {
+                        Ok(m) => m,
+                        Err(e) => {
+                            eprintln!("[UDP parse] failed to lock client registry: {}", e);
+                            continue;
+                        }
+                    };
+
+                    let client_session = map.get_mut(&addr).unwrap();
+
+                    let (curr_player, prev_mask) = &mut ecs_players[client_session.player_number as usize];
+
+                    if let Some(evt) = parse_input_packet(addr, data, *prev_mask, *curr_player) {
+                        *prev_mask = data[4];
+                        client_session.last_seen = Instant::now();
+
+                        if let Err(e) = user_input.try_send(evt) {
+                            eprintln!("[UDP recv] Failed to send input to ECS: {}", e);
+                        }
+                    } else {
+                        // optionally: ignore or log
+                        // eprintln!("[UDP recv] No valid input parsed from {}", addr);
                     }
                 }
             }
@@ -146,8 +220,12 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
                     let guard = registry.clients.read().unwrap();
                     guard.keys().cloned().collect()
                 };
+                if addrs.len() < 2 {
+                    continue;
+                }
 
                 for addr in addrs {
+                    println!("Sent Snapshot");
                     if let Err(e) = socket.send_to(&msg.data, addr) {
                         eprintln!("[UDP send] failed to {}: {}", addr, e);
                     }
@@ -222,37 +300,12 @@ pub fn send_snapshots_system(
     }
 }
 
-// send ACK to client when they send an handshake packet (MAIN OR PLAY).
-fn handle_handshake(
-    socket: &UdpSocket,
-    registry: &ClientRegistry,
-    addr: SocketAddr,
-    msg: &[u8],
-    main_entity: Entity,
-    other_entity: Entity,
-) {
-    let assigned = if msg == b"MAIN" { main_entity } else { other_entity };
-    println!("[Server] Handshake from {} -> {:?}", addr, if msg == b"MAIN" { "MAIN" } else { "PLAY" });
-
-    {
-        let mut map = registry.clients.write().unwrap();
-        map.insert(addr, ClientSession {
-            last_seen: Instant::now(),
-            prev_mask: 0,
-            player: assigned,
-        });
-    }
-
-    if let Err(e) = socket.send_to(b"ACK", addr) {
-        eprintln!("[Server] Failed to send ACK: {}", e);
-    }
-}
-
 // validates input packets from players returns player input state struct to send to the bevy ecs thread for simulation
 fn parse_input_packet(
     addr: SocketAddr,
     data: &[u8],
-    clients: &ClientRegistry,
+    prev_mask: u8,
+    player: Entity,
 ) -> Option<RemoteInputEvent> {
 
 
@@ -265,34 +318,10 @@ fn parse_input_packet(
         return None;
     }
 
-    // Attempt to lock registry and find client
-    let mut map = match clients.clients.write() {
-        Ok(m) => m,
-        Err(e) => {
-            // eprintln!("[UDP parse] failed to lock client registry: {}", e);
-            return None;
-        }
-    };
-
-    if !map.contains_key(&addr) {
-        println!(
-            "[UDP parse] ignoring input from unknown client {} (registry has {} clients)",
-            addr,
-            map.len()
-        );
-        for key in map.keys() {
-            println!("    - known client: {}", key);
-        }
-        return None;
-    }
-
-    let client = map.get_mut(&addr)?;
-    let prev_mask = client.prev_mask;
 
     // decode sequence + mask
     let seq_bytes = &data[0..4];
     let mask = data[4];
-    let seq = u32::from_be_bytes(seq_bytes.try_into().unwrap());
 
     // decode button states
     let jump_pressed = mask & (1 << 0) != 0;
@@ -309,14 +338,9 @@ fn parse_input_packet(
     let jump_just_pressed = jump_pressed && !jump_prev_pressed;
     let jump_just_released = !jump_pressed && jump_prev_pressed;
 
-    // update client session
-
-    client.prev_mask = mask;
-    client.last_seen = Instant::now();
-
     // event will be sent over the channel from the receiving task to the bevy thread.
     let evt = RemoteInputEvent {
-        player: client.player,
+        player,
         left,
         right,
         jump_pressed,
