@@ -112,8 +112,9 @@ pub fn run(is_main_player: bool) {
 
     #[cfg(feature = "client")]
         app.add_plugins(UdpClientPlugin {
-            server_addr: "127.0.0.1:5000".to_string(), // localhost
+            // server_addr: "127.0.0.1:5000".to_string(), // localhost
             // server_addr: "3.22.185.76:5000".to_string(), // ec2 relay server.
+            server_addr: "100.110.71.63:5000".to_string(), // ec2 relay server.
             // server_addr: "192.168.1.101:5000".to_string(), // homeserver local ip
         });
     #[cfg(feature = "server")]

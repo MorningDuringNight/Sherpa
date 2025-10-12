@@ -5,6 +5,7 @@
 
 use bevy::prelude::*;
 
+use crate::app::IsMainPlayer;
 use crate::config::PLAYER_SPAWN_MASS;
 use crate::config::PlayerSpawnPoint;
 use crate::config::PlayerSpawnVelocity;
@@ -20,20 +21,30 @@ pub fn spawn_players(
     mut commands: Commands, 
     #[cfg(feature = "client")] asset_server: Res<AssetServer>,
     spawn_point: Res<PlayerSpawnPoint>,
+    is_main_player: Res<IsMainPlayer>,
     spawn_velocity: Res<PlayerSpawnVelocity>,
 ) {
-    let p1_main_controls = PlayerControls {
+
+    let wasd_controls = PlayerControls {
         up: KeyCode::KeyW,
         down: KeyCode::KeyS,
         left: KeyCode::KeyA,
         right: KeyCode::KeyD,
     };
-    let p2_main_controls = PlayerControls {
+
+    let arrow_controls = PlayerControls {
         up: KeyCode::ArrowUp,
         down: KeyCode::ArrowDown,
         left: KeyCode::ArrowLeft,
         right: KeyCode::ArrowRight,
     };
+    // assign based on is_main_player
+    let (p1_main_controls, p2_main_controls) = if is_main_player.as_ref().0 {
+        (arrow_controls, wasd_controls)
+    } else {
+        (wasd_controls, arrow_controls)
+    };
+
     // --- Spawn first player ---
     let p1 = spawn_single_player(
         &mut commands,
