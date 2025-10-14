@@ -175,6 +175,8 @@ pub fn setup_udp_server(mut commands: Commands, main_q: Query<Entity, With<MainP
                         // if num_player == 2 send start message.
                     }
 
+                    // simulate lag
+                    // std::thread::sleep(std::time::Duration::from_millis(10));
                     // send new packet.
                     if let Err(e) = socket.send_to(HandshakeResponse::new(player_number, packet_number).encode().as_slice(), addr) {
                         eprintln!("[Server] Failed to send ACK: {}", e);

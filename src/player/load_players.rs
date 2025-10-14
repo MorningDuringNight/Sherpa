@@ -14,17 +14,15 @@ use crate::player::bundle::{PlayerBundle, PlayerControls};
 use crate::components::motion::{GroundState, JumpController, Mass, Velocity};
 use crate::components::rope::{Rope, RopeConstraint};
 
-use crate::app::{MainPlayer};
-
+use crate::app::MainPlayer;
 
 pub fn spawn_players(
-    mut commands: Commands, 
+    mut commands: Commands,
     #[cfg(feature = "client")] asset_server: Res<AssetServer>,
     spawn_point: Res<PlayerSpawnPoint>,
     is_main_player: Res<IsMainPlayer>,
     spawn_velocity: Res<PlayerSpawnVelocity>,
 ) {
-
     let wasd_controls = PlayerControls {
         up: KeyCode::KeyW,
         down: KeyCode::KeyS,
@@ -85,8 +83,7 @@ fn spawn_single_player(
     #[cfg(feature = "client")] asset_server: &AssetServer,
     transform: Transform,
     velocity: Vec2,
-    #[cfg(feature = "client")]
-    controls: PlayerControls,
+    #[cfg(feature = "client")] controls: PlayerControls,
     #[cfg(feature = "client")] texture_path: &str,
     is_main: bool,
 ) -> Entity {
@@ -108,6 +105,7 @@ fn spawn_single_player(
     if is_main {
         entity_commands.insert(MainPlayer);
     }
+    entity_commands.insert(crate::multiplayer::client::SmoothTarget::default());
 
     #[cfg(feature = "client")]
     entity_commands.insert(controls);

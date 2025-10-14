@@ -245,45 +245,28 @@ pub fn client_handshake(
     }
 }
 
-fn smooth_towards(
-    transform: &mut Transform,
-    new_target: Vec2,
-    dt: f32,
-    lerp_speed: f32,
-) {
-    let current = transform.translation.truncate();
-    let new = current.lerp(new_target, lerp_speed * dt);
-    transform.translation.x = new.x;
-    transform.translation.y = new.y;
-}
-
 // player one sets their position and sets player 2 SmoothTarget
 // player 2 does the reverse
 pub fn apply_snapshot_system(
-    time: Res<Time>,
     channels: Res<ClientNetChannels>,
     is_main_player: Res<IsMainPlayer>,
     mut main_query: Query<(&mut Transform, &mut SmoothTarget), (With<Player>, With<MainPlayer>)>,
     mut other_query: Query<(&mut Transform, &mut SmoothTarget), (With<Player>, Without<MainPlayer>)>,
 ) {
-    let dt = time.delta_secs();
-    let lerp_speed = 10.0;
-
     while let Ok(snapshot) = channels.rx_snapshots.try_recv() {
         if snapshot.positions.is_empty() {
             continue;
         }
 
 
-
         if let (Ok((mut main_transform, mut smooth_main)), Ok((mut other_transform, mut smooth_p2))) = (main_query.single_mut(), other_query.single_mut()) {
+
             if let Some((x, y)) = snapshot.positions.get(0) {
                 if is_main_player.as_ref().0 {
                     main_transform.translation.x = *x;
                     main_transform.translation.y = *y;
                 } else {
-                    smooth_main.target = Vec2::new(*x, *y);
-                    smooth_towards(&mut main_transform, smooth_main.target, dt, lerp_speed);
+                    // smooth_main.target = Vec2::new(*x, *y);
                 }
             }
 
@@ -292,8 +275,7 @@ pub fn apply_snapshot_system(
                     other_transform.translation.x = *x;
                     other_transform.translation.y = *y;
                 } else {
-                    smooth_p2.target = Vec2::new(*x, *y);
-                    smooth_towards(&mut other_transform, smooth_p2.target, dt, lerp_speed);
+                    // smooth_p2.target = Vec2::new(*x, *y);
                 }
             }
 

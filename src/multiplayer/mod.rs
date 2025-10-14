@@ -73,7 +73,8 @@ pub struct UdpClientPlugin {
 
 impl Plugin for UdpClientPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ServerAddress(self.server_addr.clone()))
+        app
+            .insert_resource(ServerAddress(self.server_addr.clone()))
             .add_systems(Startup, client_handshake)
             .add_systems(
                 FixedUpdate,
@@ -83,7 +84,7 @@ impl Plugin for UdpClientPlugin {
             )
             .add_systems(
                 FixedUpdate,
-                apply_snapshot_system.run_if(resource_exists::<ClientNetChannels>),
+                (apply_snapshot_system.run_if(resource_exists::<ClientNetChannels>)).chain(),
             );
     }
 }
