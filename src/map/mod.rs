@@ -3,6 +3,8 @@ mod game_object_builder;
 mod loader;
 mod mapdata;
 mod util;
+use crate::config::MyAppState;
+
 
 pub use game_object_builder::Collider;
 pub use loader::Coin;
@@ -28,7 +30,11 @@ impl Plugin for MapPlugin {
             )
             .chain(),
         );
-        #[cfg(feature = "server")]
-        app.add_systems(Startup, (load_map_data, load_game_objects).chain());
+        app.add_systems(
+            OnEnter(MyAppState::InGame),
+            (load_map_data, load_game_objects).chain(),
+        );
+        // .add_systems(PostUpdate, camera_follow
+        //     .run_if(in_state(MyAppState::InGame)));
     }
 }

@@ -5,6 +5,9 @@
 
 pub mod player;
 pub mod physics;
+pub mod states;
 
 pub use player::*;
 pub use physics::*;
+
+pub use states::*;
