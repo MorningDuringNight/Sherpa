@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Bevy (program + cwd)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/bevy-katsuo",
+            "args": [],
+            "cwd": "${workspaceFolder}", // now respected
+            "stopOnEntry": false,
+            "terminal": "integrated",
+            "sourceLanguages": [
+                "rust"
+            ],
+        }
+    ]
+}

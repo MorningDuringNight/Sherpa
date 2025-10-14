@@ -1,5 +1,5 @@
-use super::mapdata::Boundary;
 use super::Collider;
+use super::mapdata::Boundary;
 
 use super::MapFile;
 use super::game_object_builder::GameObject;
@@ -59,23 +59,25 @@ pub fn background_layer(
 }
 
 pub fn ground() -> GameObject {
+    #[cfg(feature = "client")]
     let sprite = Sprite {
-        color: Color::srgb(0.3, 0.8, 0.3), // ✅ Optional debug color
+        color: Color::srgb(0.3, 0.8, 0.3), // Optional debug color
         custom_size: Some(Vec2::new(1280.0, 5.0)),
         ..Default::default()
     };
 
     let transform = Transform::from_xyz(1280.0 / 2.0, -1.0, 0.0);
+
+    #[cfg(feature = "client")]
     let visibility = Visibility::default();
 
-    let collider = super::Collider {
+    let collider = Collider {
         aabb: Aabb2d::new(Vec2::new(0.0, 0.0), Vec2::new(1280.0, 5.0) * 0.5),
     };
 
-    // 👇 Builder replaces the bundle struct
-    GameObject::new("Ground", sprite, transform, visibility).with_collider(collider)
+    // 👇 Uses macro to pick correct constructor depending on feature flag
+    crate::new_game_object!("Ground", sprite, transform, visibility).with_collider(collider)
 }
-
 // game objects -> slice of the entity layer image
 // create the AtlasLayoutResource that we defined
 pub fn atlas_layout(

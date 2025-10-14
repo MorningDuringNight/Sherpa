@@ -6,12 +6,10 @@ use bevy::prelude::*;
 
 pub mod motion;
 pub mod rope;
-pub mod collision;
 
 pub mod prelude {
     pub use super::motion::Velocity;
     pub use super::motion::NetForce;
     pub use super::motion::ControlForce;
     pub use super::rope::Rope;
-    pub use super::collision::Aabb;
 }

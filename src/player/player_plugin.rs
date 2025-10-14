@@ -5,22 +5,19 @@
 
 use bevy::math::VectorSpace;
 use bevy::prelude::*;
-
+use rand::Rng;
 use crate::player::bundle::{PlayerBundle, PlayerControls};
 use crate::config::PlayerSpawnPoint;
 use crate::config::PlayerSpawnVelocity;
 use crate::config::PLAYER_SPAWN_MASS;
 
-use crate::components::motion::{GroundState, JumpController, Mass, Velocity, Position};
+use crate::components::motion::{GroundState, JumpController, Mass, Velocity};
 use crate::components::rope::{Rope, RopeConstraint};
 
 use crate::map::Collider;
-<<<<<<< Updated upstream
-use crate::app::FollowedPlayer;
-=======
 use crate::app::{FollowedPlayer, MainPlayer};
 use crate::config::MyAppState;
->>>>>>> Stashed changes
+use crate::stateMachine::*;
 
 pub struct PlayerPlugin;
 
@@ -44,8 +41,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, spawn_po
     let ground_state = GroundState::default();
     let mass = Mass(PLAYER_SPAWN_MASS); // make the first player heavier (deleted for now but multiply mass)
     let velocity = Velocity(spawn_velocity.velocity);
-    let position= Position(spawn_point.position.truncate());
-    let p1 = commands.spawn(PlayerBundle::new(controls, texture, transform, velocity, mass, jump_controller, ground_state, position)).insert(FollowedPlayer).id();
+    let p1 = commands.spawn(PlayerBundle::new(controls, texture, transform, velocity, mass, jump_controller, ground_state, position)).insert(FollowedPlayer).insert(StateMachine::new(BotState::idel)).id(); // insert component
     // Spawn a second player for testing
     // This is temporary and will be removed later
     // Ideally we would have a better way
@@ -62,7 +58,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, spawn_po
     let ground_state = GroundState::default();
     let mass = Mass(PLAYER_SPAWN_MASS);
     let position= Position((spawn_point.position + Vec3::new(300.0, 0.0, 0.0)).truncate());
-    let p2 = commands.spawn(PlayerBundle::new(controls, texture, transform, velocity, mass, jump_controller, ground_state, position)).id();
+    let p2 = commands.spawn(PlayerBundle::new(controls, texture, transform, velocity, mass, jump_controller, ground_state, position)).insert(Bot::new()).id();
 
     // Add p1 and p2 a rope component
     commands.spawn(Rope {

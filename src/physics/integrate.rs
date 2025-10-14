@@ -3,7 +3,7 @@
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Systems for physics integration>
 use bevy::prelude::*;
-use crate::components::motion::{Velocity, NetForce, Momentum, Mass, Position};
+use crate::components::motion::{Velocity, NetForce, Momentum, Mass };
 use crate::player::Player;
 
 pub fn clean_force_system(
@@ -40,17 +40,6 @@ pub fn integrate_velocity_system(
     for (mut transform, velocity) in query.iter_mut() {
         transform.translation.x += velocity.0.x * delta_seconds;
         transform.translation.y += velocity.0.y * delta_seconds;
-    }
-}
-
-pub fn update_position(
-    time: Res<Time<Fixed>>,
-    mut query: Query<(&mut Position, &Velocity), With<Player>>,
-){
-    let delta_seconds = time.delta_secs();
-    for (mut position, velocity) in query.iter_mut() {
-        position.0.x += velocity.0.x * delta_seconds;
-        position.0.y += velocity.0.y * delta_seconds;
     }
 }
 

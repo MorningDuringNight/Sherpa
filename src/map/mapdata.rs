@@ -69,7 +69,7 @@ pub enum MoveType {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")] // 👈 important
+#[serde(rename_all = "camelCase")]
 pub struct Moving {
     pub start_x: i32,
     pub start_y: i32,
