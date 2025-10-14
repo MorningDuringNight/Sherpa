@@ -245,18 +245,6 @@ pub fn client_handshake(
     }
 }
 
-fn smooth_towards(
-    transform: &mut Transform,
-    new_target: Vec2,
-    dt: f32,
-    lerp_speed: f32,
-) {
-    let current = transform.translation.truncate();
-    let new = current.lerp(new_target, lerp_speed * dt);
-    transform.translation.x = new.x;
-    transform.translation.y = new.y;
-}
-
 // player one sets their position and sets player 2 SmoothTarget
 // player 2 does the reverse
 pub fn apply_snapshot_system(
@@ -267,6 +255,7 @@ pub fn apply_snapshot_system(
     mut other_query: Query<(&mut Transform, &mut SmoothTarget), (With<Player>, Without<MainPlayer>)>,
 ) {
     let dt = time.delta_secs();
+    let now = time.elapsed_secs();
     let lerp_speed = 10.0;
 
     while let Ok(snapshot) = channels.rx_snapshots.try_recv() {
@@ -282,8 +271,9 @@ pub fn apply_snapshot_system(
                     main_transform.translation.x = *x;
                     main_transform.translation.y = *y;
                 } else {
-                    smooth_main.target = Vec2::new(*x, *y);
-                    smooth_towards(&mut main_transform, smooth_main.target, dt, lerp_speed);
+                    let pos = Vec2::new(*x, *y);
+                    smooth_main.last = smooth_main.next.take();
+                    smooth_main.next = Some((now, pos));
                 }
             }
 
@@ -292,8 +282,9 @@ pub fn apply_snapshot_system(
                     other_transform.translation.x = *x;
                     other_transform.translation.y = *y;
                 } else {
-                    smooth_p2.target = Vec2::new(*x, *y);
-                    smooth_towards(&mut other_transform, smooth_p2.target, dt, lerp_speed);
+                    let pos = Vec2::new(*x, *y);
+                    smooth_p2.last = smooth_p2.next.take();
+                    smooth_p2.next = Some((now, pos));
                 }
             }
 
@@ -305,7 +296,8 @@ pub fn apply_snapshot_system(
 
 #[derive(Component, Default)]
 pub struct SmoothTarget {
-    pub target: Vec2,
+    pub last: Option<(f32, Vec2)>, // (timestamp, position)
+    pub next: Option<(f32, Vec2)>,
 }
 
 pub fn smooth_interpolation_system(
@@ -314,23 +306,26 @@ pub fn smooth_interpolation_system(
     mut main_query: Query<(&mut Transform, &SmoothTarget), (With<Player>, With<MainPlayer>)>,
     mut other_query: Query<(&mut Transform, &SmoothTarget), (With<Player>, Without<MainPlayer>)>,
 ) {
-    let lerp_speed = 10.0;
+    let now = time.elapsed_secs();
+    let interp_delay = 0.05; // 50 ms delay for safety (1 tick)
+    let render_time = now - interp_delay;
+
+    let lerp_snapshots = |transform: &mut Transform, buf: &SmoothTarget| {
+        if let (Some((t0, p0)), Some((t1, p1))) = (buf.last, buf.next) {
+            if t1 > t0 {
+                let alpha = ((render_time - t0) / (t1 - t0)).clamp(0.0, 1.0);
+                let pos = p0.lerp(p1, alpha);
+                transform.translation.x = pos.x;
+                transform.translation.y = pos.y;
+            }
+        }
+    };
 
     if is_main_player.0 {
-        // we are the main player -> interpolate the *other* player
-        if let Ok((mut transform, target)) = other_query.single_mut() {
-            let current = transform.translation.truncate();
-            let new = current.lerp(target.target, lerp_speed * time.delta_secs());
-            transform.translation.x = new.x;
-            transform.translation.y = new.y;
+        if let Ok((mut transform, buf)) = other_query.single_mut() {
+            lerp_snapshots(&mut transform, &buf);
         }
-    } else {
-        // we are NOT the main player -> interpolate the *main* player
-        if let Ok((mut transform, target)) = main_query.single_mut() {
-            let current = transform.translation.truncate();
-            let new = current.lerp(target.target, lerp_speed * time.delta_secs());
-            transform.translation.x = new.x;
-            transform.translation.y = new.y;
-        }
+    } else if let Ok((mut transform, buf)) = main_query.single_mut() {
+        lerp_snapshots(&mut transform, &buf);
     }
 }

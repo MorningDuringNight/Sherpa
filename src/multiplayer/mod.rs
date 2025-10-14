@@ -85,6 +85,10 @@ impl Plugin for UdpClientPlugin {
             .add_systems(
                 FixedUpdate,
                 (apply_snapshot_system.run_if(resource_exists::<ClientNetChannels>)).chain(),
+            )
+            .add_systems(
+                Update,
+                smooth_interpolation_system,
             );
     }
 }
