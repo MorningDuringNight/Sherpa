@@ -3,6 +3,10 @@ mod game_object_builder;
 mod loader;
 mod mapdata;
 mod util;
+pub mod scroller;
+use scroller::camera_follow;
+use crate::config::MyAppState;
+
 
 pub use game_object_builder::Collider;
 pub use loader::Coin;
@@ -28,7 +32,10 @@ impl Plugin for MapPlugin {
             )
             .chain(),
         );
-        #[cfg(feature = "server")]
-        app.add_systems(Startup, (load_map_data, load_game_objects).chain());
+            OnEnter(MyAppState::InGame),
+            (load_map_resouces, load_background_layers, load_map,).chain(),
+        )
+        .add_systems(PostUpdate, camera_follow
+            .run_if(in_state(MyAppState::InGame)));
     }
 }
