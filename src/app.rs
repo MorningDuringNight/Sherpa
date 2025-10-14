@@ -141,9 +141,9 @@ pub fn run(is_main_player: bool) {
         .insert_resource(PlayerSpawnPoint { position: PLAYER_INITIAL_POSITION })
         .insert_resource(PlayerSpawnVelocity { velocity: PLAYER_INITIAL_VELOCITY })
         .insert_resource(BotActive(false))
-        .insert_resource(RopeGeometry::default())
-    #[cfg(debug_assertions)] // not added in release mode.
-    app.add_plugins(DevModePlugin);
+        .insert_resource(RopeGeometry::default());
+    // #[cfg(debug_assertions)] // not added in release mode.
+    // app.add_plugins(DevModePlugin);
 
    
     
@@ -165,13 +165,14 @@ pub fn run(is_main_player: bool) {
         .insert_resource(RopeGeometry::default())
 
         // .add_systems(Startup, init_ropes)
-        .add_systems(OnEnter(MyAppState::InGame), init_ropes.after(spawn_player))
+        .add_systems(OnEnter(MyAppState::InGame), init_ropes.after(spawn_players))
         .add_systems(Update, rope_tension_system
             .run_if(in_state(MyAppState::InGame)))
         .add_systems(Update, rope_force_to_system
             .run_if(in_state(MyAppState::InGame)))
         .add_systems(Update, compute_rope_geometry
             .run_if(in_state(MyAppState::InGame)))
+        .add_event::<ToggleBotEvent>()
         .add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input)
             .run_if(in_state(MyAppState::InGame)))
         .add_systems(Update, apply_rope_geometry
@@ -180,5 +181,3 @@ pub fn run(is_main_player: bool) {
         .run();
 }
 
-    app.run();
-}

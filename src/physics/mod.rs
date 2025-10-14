@@ -52,8 +52,6 @@ impl Plugin for PhysicsPlugin {
                     boundary,
                 ).chain()
                 .run_if(in_state(MyAppState::InGame))
-            )
-            .add_systems(Update, update_position
-                .run_if(in_state(MyAppState::InGame)));
+            );
     }
 }
