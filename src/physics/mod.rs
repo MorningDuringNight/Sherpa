@@ -3,6 +3,7 @@
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Physics system module and plugin>
 use bevy::prelude::*;
+use crate::config::MyAppState;
 
 pub mod integrate;
 pub mod control;
@@ -51,7 +52,9 @@ impl Plugin for PhysicsPlugin {
                     on_collision,
                     boundary,
                 ).chain()
+                .run_if(in_state(MyAppState::InGame))
             )
-            .add_systems(Update, update_position);
+            .add_systems(Update, update_position
+                .run_if(in_state(MyAppState::InGame)));
     }
 }

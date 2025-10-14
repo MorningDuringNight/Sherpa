@@ -15,13 +15,19 @@ use crate::components::motion::{GroundState, JumpController, Mass, Velocity, Pos
 use crate::components::rope::{Rope, RopeConstraint};
 
 use crate::map::Collider;
+<<<<<<< Updated upstream
 use crate::app::FollowedPlayer;
+=======
+use crate::app::{FollowedPlayer, MainPlayer};
+use crate::config::MyAppState;
+>>>>>>> Stashed changes
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_player);
+        app.add_systems(OnEnter(MyAppState::InGame), spawn_player);
+            
     }
 }
 
