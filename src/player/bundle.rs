@@ -33,7 +33,6 @@ pub struct PlayerBundle {
     pub size: PlayerCollider,
     pub jump_controller: JumpController,
     pub ground_state: GroundState,
-    pub follow: FollowedPlayer,
 }
 
 impl PlayerBundle {
@@ -58,7 +57,6 @@ impl PlayerBundle {
             },
             jump_controller,
             ground_state,
-            follow: FollowedPlayer{},
         }
 
     }

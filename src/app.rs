@@ -62,26 +62,17 @@ pub struct FollowedPlayer;
 
 const CAMERA_DECAY_RATE: f32 = 3.;
 
-// System for the camera movement
 pub fn update_camera(
-    gamemode: Res<GameMode>,
     mut camera_q: Query<&mut Transform, With<MainCamera>>,
-    players: Query<(&Transform, &Player), Without<MainCamera>>,
+    followed_q: Query<&Transform, (With<FollowedPlayer>, Without<MainCamera>)>,
     time: Res<Time>,
 ) {
-    let target_id = match *gamemode {
-        GameMode::LocalCoop | GameMode::AiWithAi | GameMode::Simulated => 0,
-        GameMode::LocalWithNpc(id) | GameMode::NetCoop(id) => id,
-    };
+    let Ok(mut cam) = camera_q.single_mut() else { return };
+    let Ok(player_tf) = followed_q.single() else { return };
 
-    if let (Ok(mut cam), Some((p_tf, _))) = (
-        camera_q.single_mut(),
-        players.iter().find(|(_, p)| matches!(p, Player::Local(id) | Player::Net(id) if *id == target_id)),
-    ) {
-        let y = p_tf.translation.y.max(SCREEN.1 / 2.0);
-        let target = Vec3::new(cam.translation.x, y, cam.translation.z);
-        cam.translation.smooth_nudge(&target, CAMERA_DECAY_RATE, time.delta_secs());
-    }
+    let y = player_tf.translation.y.max(SCREEN.1 / 2.0);
+    let target = Vec3::new(cam.translation.x, y, cam.translation.z);
+    cam.translation.smooth_nudge(&target, CAMERA_DECAY_RATE, time.delta_secs());
 }
 
 pub fn run(player_number: Option<usize>) {

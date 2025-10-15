@@ -82,7 +82,7 @@ pub fn spawn_players(
     });
 
     // player 1 is always the player that the camera is tied to.
-    commands.entity(*player_list[0]).insert(FollowedPlayer);
+    let mut camera_follow_player = 0;
     match *gamemode {
         GameMode::LocalCoop => {
             // add FollowCamera to one of these.
@@ -90,6 +90,7 @@ pub fn spawn_players(
             commands.entity(p2).insert((arrow_controls.unwrap(), Player::Local(1)));
         }
         GameMode::LocalWithNpc(local_player_number) => {
+            camera_follow_player = local_player_number;
             // insert NPC for player that isnt player_number
             commands.entity(*player_list[local_player_number]).insert((wasd_controls.unwrap(), Player::Local(local_player_number)));
 
@@ -106,6 +107,7 @@ pub fn spawn_players(
             );
         }
         GameMode::NetCoop(local_player_number) => {
+            camera_follow_player = local_player_number;
             // insert net player marker for all players that arent LocalPlayer
             // insert localPlayer marker component for this player
             commands.entity(*player_list[local_player_number]).insert((wasd_controls.unwrap(), Player::Local(local_player_number)));
@@ -121,6 +123,7 @@ pub fn spawn_players(
             });
         }
     }
+    commands.entity(*player_list[camera_follow_player]).insert(FollowedPlayer);
 
     commands.spawn(Rope {
         constraint: RopeConstraint::default(),
