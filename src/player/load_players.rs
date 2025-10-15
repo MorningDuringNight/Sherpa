@@ -119,7 +119,7 @@ pub fn spawn_players(
         }
         GameMode::Simulated => {
             player_list.iter().enumerate().for_each(|(i, entity)| {
-                    commands.entity(**entity).insert(Player::Local(i));
+                commands.entity(**entity).insert(Player::Local(i));
             });
         }
     }

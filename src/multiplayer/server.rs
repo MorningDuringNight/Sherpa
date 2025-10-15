@@ -78,7 +78,7 @@ fn custom_network_pool() -> TaskPool {
 // init async_channels
 pub fn setup_udp_server(
     mut commands: Commands,
-    players: Query<Entity, With<Player>>,
+    players: Query<(Entity, &Player)>,
 ) {
     let socket = UdpSocket::bind("0.0.0.0:5000").expect("Failed to bind UDP socket");
     socket.set_nonblocking(false).unwrap();
@@ -96,10 +96,14 @@ pub fn setup_udp_server(
     // this could cause race conditions I need to think a bit more about it.
     let tx_inputs = tx_inputs.clone();
 
-    let mut locals = players.iter().collect::<Vec<_>>();
-    locals.sort_by_key(|e| e.index());
-    let (p1, p2) = (locals[0], locals[1]);
+    let mut locals: Vec<(Entity, usize)> = players
+        .iter()
+        .filter_map(|(e, p)| match p { Player::Local(id) => Some((e, *id)), _ => None })
+        .collect();
 
+    locals.sort_by_key(|&(_, id)| id);
+
+    let (p1, p2) = (locals[0].0, locals[1].0);
     // Recieve from client
     // send inputs from clients to main ecs thread.
     {
@@ -246,26 +250,39 @@ pub fn has_clients(registry: Option<Res<ClientRegistry>>) -> bool {
 }
 
 pub fn send_snapshots_system(
-    players: Query<&Transform, With<Player>>,
+    players: Query<(&Transform, &Player)>,
     channels: Res<NetChannels>,
     mut tick: Local<u32>,
 ) {
     *tick += 1;
 
-    let decimals = 1; // truncate to 1 decimal place
-    let player_count = players.iter().len() as u16;
+    let decimals = 1;
+    let mut locals: [Option<&Transform>; 2] = [None, None];
+
+    // Collect references to Player::Local(0) and Player::Local(1)
+    for (transform, player) in &players {
+        if let Player::Local(id) = player {
+            locals[*id] = Some(transform);
+        }
+    }
+
+    // Fallback: only count players we actually found
+    let player_count = locals.iter().flatten().count() as u16;
 
     // tick (4 bytes) + player_count (2 bytes) + N*(x:4, y:4)
     let mut buf = Vec::with_capacity(4 + 2 + player_count as usize * 8);
     buf.extend_from_slice(&tick.to_be_bytes());
     buf.extend_from_slice(&player_count.to_be_bytes());
 
-    for transform in players.iter() {
-        let x = truncate_f32(transform.translation.x, decimals);
-        let y = truncate_f32(transform.translation.y, decimals);
+    // Write Player::Local(0) first, then Player::Local(1)
+    for id in 0..2 {
+        if let Some(transform) = locals[id] {
+            let x = truncate_f32(transform.translation.x, decimals);
+            let y = truncate_f32(transform.translation.y, decimals);
 
-        buf.extend_from_slice(&x.to_be_bytes());
-        buf.extend_from_slice(&y.to_be_bytes());
+            buf.extend_from_slice(&x.to_be_bytes());
+            buf.extend_from_slice(&y.to_be_bytes());
+        }
     }
 
     if let Err(e) = channels.tx_snapshots.try_send(SnapshotMsg { data: buf }) {
@@ -278,15 +295,15 @@ fn handle_handshake(
     registry: &ClientRegistry,
     addr: SocketAddr,
     msg: &[u8],
-    main_entity: Entity,
-    other_entity: Entity,
+    p1: Entity,
+    p2: Entity,
 ) {
     let player_entity = if msg == b"MAIN" {
-        println!("[Server] {} identified as MAIN player", addr);
-        main_entity
+        println!("[Server] {} identified as P1 player", addr);
+        p1
     } else {
-        println!("[Server] {} identified as regular PLAYER", addr);
-        other_entity
+        println!("[Server] {} identified as P2 player", addr);
+        p2
     };
 
     let mut map = registry.clients.write().unwrap();
