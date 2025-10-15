@@ -11,7 +11,7 @@
 | 09/24 – 09/30    |Jagger Hershey|
 | 10/01 – 10/07    |Alli Batell|
 | 10/08 – 10/14    |Zhuoyan Cen | 
-| 10/15 – 10/21    | |
+| 10/15 – 10/21    |Tingxu Chen |
 | 10/22 – 11/04    | |
 | 11/05 – 11/18    |Xiaoting Wang |
 | 11/19 – 12/02    |Sean Shmulevich|

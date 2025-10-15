@@ -23,6 +23,7 @@ use self::rope_force::rope_force_to_system;
 use self::collision::platform_collider_system;
 use self::collision::player_collider_system;
 use self::collision::update_coyote_timer_system;
+use self::collision::update_wall_jump_timer_system;
 use self::collision::on_collision;
 use self::collision::PlayerCollisionEvent;
 
@@ -45,6 +46,7 @@ impl Plugin for PhysicsPlugin {
                     player_collider_system,
                     platform_collider_system,
                     update_coyote_timer_system,
+                    update_wall_jump_timer_system,
                     on_collision,
                     boundary,
                 ).chain()

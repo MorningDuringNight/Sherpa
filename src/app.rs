@@ -7,9 +7,7 @@ use crate::config::*;
 use crate::physics::PhysicsPlugin;
 use crate::player::{Player, PlayerPlugin};
 use bevy::asset::AssetPlugin;
-use bevy::prelude::*;
 use bevy::sprite::SpritePlugin;
-use bevy::time::Fixed;
 use std::env;
 
 use crate::map::{MapPlugin, SCREEN};
@@ -74,6 +72,46 @@ pub fn update_camera(
     let target = Vec3::new(cam.translation.x, y, cam.translation.z);
     cam.translation.smooth_nudge(&target, CAMERA_DECAY_RATE, time.delta_secs());
 }
+// going to implement the replacement for the controls
+#[derive(Event)]
+struct ToggleBotEvent;
+
+#[derive(Resource)]
+struct BotActive(bool);
+
+fn bot_update_toggle(
+    mut bot_active: ResMut<BotActive>,
+    keyboard: Res<ButtonInput<KeyCode>>,
+){
+    //toggle logic
+    if keyboard.just_pressed(KeyCode::Space) {
+        bot_active.0 = !bot_active.0;
+    }
+}
+
+fn bot_update(
+    mut players: Query<(Entity, &Transform,&mut Bot), With<Bot>>,
+    botActive: Res<BotActive>,
+    mut keys: ResMut<ButtonInput<KeyCode>>,
+){
+    if botActive.0 == false{
+        return;
+    }
+    else{
+        for (entity, transform, mut Bot) in players.iter_mut(){
+            let (newState, _) = Bot.change(&mut keys);
+        }
+        
+    }
+}
+fn trigger_bot_input(
+    mut toggle_events: EventWriter<ToggleBotEvent>,
+    keyboard: Res<ButtonInput<KeyCode>>,
+) {
+    if keyboard.just_pressed(KeyCode::KeyB) {
+        toggle_events.write(ToggleBotEvent);
+    }
+}
 
 pub fn run(player_number: Option<usize>) {
     let mut app = App::new();
@@ -106,25 +144,30 @@ pub fn run(player_number: Option<usize>) {
         app.add_plugins(UdpServerPlugin);
     }
 
-    app.insert_resource(Time::<Fixed>::from_hz(60.0))
-        .insert_resource(PlayerSpawnPoint {
-            position: PLAYER_INITIAL_POSITION,
-        })
-        .insert_resource(PlayerSpawnVelocity {
-            velocity: PLAYER_INITIAL_VELOCITY,
-        })
-        .add_systems(Startup, init_player_camera)
-        .add_systems(FixedUpdate, update_camera)
+    #[cfg(feature = "client")]
+    app.add_plugins(UdpClientPlugin {
+        server_addr: "3.21.92.34:5000".to_string(),
+    });
+    #[cfg(feature = "server")]
+    app.add_plugins(UdpServerPlugin);
+
+    app.insert_resource(IsMainPlayer(is_main_player))
+        .insert_resource(Time::<Fixed>::from_hz(60.0))
+        .insert_resource(PlayerSpawnPoint { position: PLAYER_INITIAL_POSITION })
+        .insert_resource(PlayerSpawnVelocity { velocity: PLAYER_INITIAL_VELOCITY })
+        .insert_resource(BotActive(false))
+        .insert_resource(RopeGeometry::default())
         .add_plugins(MapPlugin)
         .add_plugins(PlayerPlugin)
         .add_plugins(PhysicsPlugin)
         .add_plugins(UIPlugin)
-        .insert_resource(RopeGeometry::default())
-        // .add_systems(Startup, init_ropes)
+        .add_event::<ToggleBotEvent>()
+        .add_systems(Startup, init_player_camera)
+        .add_systems(Update, update_camera)
+        .add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input))
         .add_systems(Startup, init_ropes.after(spawn_players))
         .add_systems(Update, rope_tension_system)
         .add_systems(Update, rope_force_to_system)
-        .add_systems(Update, compute_rope_geometry)
         .add_systems(Update, apply_rope_geometry);
 
     app.run();
