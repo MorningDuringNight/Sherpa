@@ -5,7 +5,7 @@
 
 use crate::config::*;
 use crate::physics::PhysicsPlugin;
-use crate::player::PlayerPlugin;
+use crate::player::{Player, PlayerPlugin};
 use bevy::asset::AssetPlugin;
 use bevy::prelude::*;
 use bevy::sprite::SpritePlugin;
@@ -25,6 +25,15 @@ use crate::physics::rope_force::{
 };
 use crate::player::load_players::spawn_players;
 
+// change usize to all: single player, single machine config data. 
+#[derive(Resource)]
+pub enum GameMode {
+    LocalCoop, // on one computer
+    LocalWithNpc(usize), // main player p1 with ai player 2.
+    AiWithAi, // main player p1 with ai player 2.
+    NetCoop(usize),
+    Simulated,
+}
 // <- compute_rope_geometry 删除了
 
 // move a half screen right and a half screen up.
@@ -51,43 +60,60 @@ pub struct MainCamera;
 #[derive(Component)]
 pub struct FollowedPlayer;
 
-#[derive(Component)]
-pub struct MainPlayer;
-
 const CAMERA_DECAY_RATE: f32 = 3.;
 
 // System for the camera movement
-fn update_camera(
-    mut camera: Single<&mut Transform, (With<MainCamera>, Without<MainPlayer>)>,
-    player: Single<&Transform, (With<MainPlayer>, Without<Camera2d>)>,
+pub fn update_camera(
+    gamemode: Res<GameMode>,
+    mut camera_q: Query<&mut Transform, With<MainCamera>>,
+    players: Query<(&Transform, &Player), Without<MainCamera>>,
     time: Res<Time>,
 ) {
-    let Vec3 { y, .. } = player.translation;
+    let target_id = match *gamemode {
+        GameMode::LocalCoop | GameMode::AiWithAi | GameMode::Simulated => 0,
+        GameMode::LocalWithNpc(id) | GameMode::NetCoop(id) => id,
+    };
 
-    let min_y = SCREEN.1 / 2.0;
-    let clamped_y = y.max(min_y);
-    let target = Vec3::new(camera.translation.x, clamped_y, camera.translation.z);
-
-    camera
-        .translation
-        .smooth_nudge(&target, CAMERA_DECAY_RATE, time.delta_secs());
+    if let (Ok(mut cam), Some((p_tf, _))) = (
+        camera_q.single_mut(),
+        players.iter().find(|(_, p)| matches!(p, Player::Local(id) | Player::Net(id) if *id == target_id)),
+    ) {
+        let y = p_tf.translation.y.max(SCREEN.1 / 2.0);
+        let target = Vec3::new(cam.translation.x, y, cam.translation.z);
+        cam.translation.smooth_nudge(&target, CAMERA_DECAY_RATE, time.delta_secs());
+    }
 }
 
-#[derive(Resource)]
-pub struct IsMainPlayer(pub bool);
-
-pub fn run(is_main_player: bool) {
+pub fn run(player_number: Option<usize>) {
     let mut app = App::new();
+
     #[cfg(all(feature = "client", debug_assertions))]
     app.add_plugins(DevModePlugin);
 
-
     #[cfg(feature = "client")]
-    app.add_plugins(DefaultPlugins);
-    app.insert_resource(IsMainPlayer(is_main_player));
+    {
+        app.add_plugins(DefaultPlugins);
+        if let Some(player_number) = player_number {
+            app.insert_resource(GameMode::NetCoop(player_number));
+        }
+        else {
+            app.insert_resource(GameMode::LocalCoop);
+        }
+
+        app.add_plugins(UdpClientPlugin {
+            server_addr: "127.0.0.1:5000".to_string(), // localhost
+            // server_addr: "home.tailaaef65.ts.net:5000".to_string(), // hostname magic dns.
+            // server_addr: "100.110.71.63:5000".to_string(), // tailscaled.
+            // server_addr: "3.22.185.76:5000".to_string(),
+        });
+    }
 
     #[cfg(feature = "server")]
-    app.add_plugins(MinimalPlugins);
+    {
+        app.add_plugins(MinimalPlugins);
+        app.insert_resource(GameMode::Simulated);
+        app.add_plugins(UdpServerPlugin);
+    }
 
     app.insert_resource(Time::<Fixed>::from_hz(60.0))
         .insert_resource(PlayerSpawnPoint {
@@ -110,14 +136,5 @@ pub fn run(is_main_player: bool) {
         .add_systems(Update, compute_rope_geometry)
         .add_systems(Update, apply_rope_geometry);
 
-    #[cfg(feature = "client")]
-        app.add_plugins(UdpClientPlugin {
-            // server_addr: "127.0.0.1:5000".to_string(), // localhost
-            // server_addr: "home.tailaaef65.ts.net:5000".to_string(), // hostname magic dns.
-            // server_addr: "100.110.71.63:5000".to_string(), // tailscaled.
-            server_addr: "3.21.92.34:5000".to_string(),
-        });
-    #[cfg(feature = "server")]
-        app.add_plugins(UdpServerPlugin);
     app.run();
 }

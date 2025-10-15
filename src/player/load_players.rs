@@ -5,6 +5,8 @@
 
 use bevy::prelude::*;
 
+use crate::app::FollowedPlayer;
+use crate::config::PLAYER_SIZE;
 use crate::config::PLAYER_SPAWN_MASS;
 use crate::config::PlayerSpawnPoint;
 use crate::config::PlayerSpawnVelocity;
@@ -13,71 +15,127 @@ use crate::player::bundle::{PlayerBundle, PlayerControls};
 use crate::components::motion::{GroundState, JumpController, Mass, Velocity};
 use crate::components::rope::{Rope, RopeConstraint};
 
-use crate::app::{MainPlayer};
+use crate::app::{GameMode};
 
+
+
+
+#[derive(Component)]
+// Player with playerNumber
+pub enum Player {
+    Local(usize), 
+    Net(usize),
+    Npc(usize),
+}
 
 pub fn spawn_players(
     mut commands: Commands, 
     #[cfg(feature = "client")] asset_server: Res<AssetServer>,
     spawn_point: Res<PlayerSpawnPoint>,
     spawn_velocity: Res<PlayerSpawnVelocity>,
+
+    gamemode: Res<GameMode>,
 ) {
-    let p1_main_controls = PlayerControls {
+
+    #[cfg(feature = "server")]
+    let (p1_img, p2_img) = (None, None);
+
+    #[cfg(feature = "client")]
+    let (p1_img, p2_img) = (
+        Some(asset_server.load("spriteguy.png")),
+        Some(asset_server.load("portrait_rainey.png")),
+    );
+
+    let p1 = single_player(
+        &mut commands,
+        p1_img,
+        Transform::from_translation(spawn_point.position),
+        spawn_velocity.velocity,
+    );
+
+    let p2 = single_player(
+        &mut commands,
+        p2_img,
+        Transform::from_translation(spawn_point.position + Vec3::new(300.0, 0.0, 0.0)),
+        spawn_velocity.velocity,
+    );
+
+    let player_list = [&p1, &p2];
+
+    #[cfg(feature = "server")]
+    let (wasd_controls, arrow_controls) = (None::<PlayerControls>, None::<PlayerControls>);
+    
+    #[cfg(feature = "client")]
+    let wasd_controls = Some(PlayerControls {
         up: KeyCode::KeyW,
         down: KeyCode::KeyS,
         left: KeyCode::KeyA,
         right: KeyCode::KeyD,
-    };
-    let p2_main_controls = PlayerControls {
+    });
+
+    #[cfg(feature = "client")]
+    let arrow_controls = Some(PlayerControls {
         up: KeyCode::ArrowUp,
         down: KeyCode::ArrowDown,
         left: KeyCode::ArrowLeft,
-        right: KeyCode::ArrowRight,
-    };
-    // --- Spawn first player ---
-    let p1 = spawn_single_player(
-        &mut commands,
-        #[cfg(feature = "client")]
-        &asset_server,
-        Transform::from_translation(spawn_point.position),
-        spawn_velocity.velocity,
-        #[cfg(feature = "client")]
-        p1_main_controls,
-        #[cfg(feature = "client")]
-        "spriteguy.png",
-        true,
-    );
+        right: KeyCode::ArrowRight
+    });
 
-    // --- Spawn second player (test) ---
-    let p2 = spawn_single_player(
-        &mut commands,
-        #[cfg(feature = "client")]
-        &asset_server,
-        Transform::from_translation(spawn_point.position + Vec3::new(300.0, 0.0, 0.0)),
-        spawn_velocity.velocity,
-        #[cfg(feature = "client")]
-        p2_main_controls,
-        #[cfg(feature = "client")]
-        "portrait_rainey.png",
-        false, // not main_player
-    );
+    // player 1 is always the player that the camera is tied to.
+    commands.entity(*player_list[0]).insert(FollowedPlayer);
+    match *gamemode {
+        GameMode::LocalCoop => {
+            // add FollowCamera to one of these.
+            commands.entity(p1).insert((wasd_controls.unwrap(), Player::Local(0)));
+            commands.entity(p2).insert((arrow_controls.unwrap(), Player::Local(1)));
+        }
+        GameMode::LocalWithNpc(local_player_number) => {
+            // insert NPC for player that isnt player_number
+            commands.entity(*player_list[local_player_number]).insert((wasd_controls.unwrap(), Player::Local(local_player_number)));
+
+            player_list.iter().enumerate().filter(|(i, _)| *i != local_player_number)
+                .for_each(|(i, entity)| {
+                    commands.entity(**entity).insert(Player::Npc(i));
+                }
+            );
+        }
+        GameMode::AiWithAi => {
+            player_list.iter().enumerate().for_each(|(i, entity)| {
+                    commands.entity(**entity).insert(Player::Npc(i));
+                }
+            );
+        }
+        GameMode::NetCoop(local_player_number) => {
+            // insert net player marker for all players that arent LocalPlayer
+            // insert localPlayer marker component for this player
+            commands.entity(*player_list[local_player_number]).insert((wasd_controls.unwrap(), Player::Local(local_player_number)));
+            player_list.iter().enumerate().filter(|(i, _)| *i != local_player_number)
+                .for_each(|(i, entity)| {
+                    commands.entity(**entity).insert(Player::Net(i));
+                }
+            );
+        }
+        GameMode::Simulated => {
+            player_list.iter().enumerate().for_each(|(i, entity)| {
+                    commands.entity(**entity).insert(Player::Local(i));
+            });
+        }
+    }
 
     commands.spawn(Rope {
         constraint: RopeConstraint::default(),
-        attached_entity_head: p1,
-        attached_entity_tail: p2,
+        attached_entity_head: *player_list[0],
+        attached_entity_tail: *player_list[1],
     });
 }
 
-fn spawn_single_player(
+// make player base w or w/o sprite.
+// add controls and sprite depending on gamemode.
+fn single_player(
     commands: &mut Commands,
-    #[cfg(feature = "client")] asset_server: &AssetServer,
+    texture: Option<Handle<Image>>,
     transform: Transform,
     velocity: Vec2,
-    #[cfg(feature = "client")]
-    controls: PlayerControls,
-    #[cfg(feature = "client")] texture_path: &str,
-    is_main: bool,
 ) -> Entity {
     let jump_controller = JumpController::default();
     let ground_state = GroundState::default();
@@ -85,8 +143,6 @@ fn spawn_single_player(
     let velocity = Velocity(velocity);
 
     let mut entity_commands = commands.spawn(PlayerBundle::new(
-        #[cfg(feature = "client")]
-        asset_server.load(texture_path),
         transform,
         velocity,
         mass,
@@ -94,12 +150,14 @@ fn spawn_single_player(
         ground_state,
     ));
 
-    if is_main {
-        entity_commands.insert(MainPlayer);
-    }
-
-    #[cfg(feature = "client")]
-    entity_commands.insert(controls);
+    if let Some(texture) = texture {
+        let sprite = Sprite {
+            image: texture,
+            custom_size: Some(PLAYER_SIZE),
+            ..Default::default()
+        };
+        entity_commands.insert(sprite);
+    };
 
     entity_commands.id()
 }

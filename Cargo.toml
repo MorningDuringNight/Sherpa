@@ -4,11 +4,6 @@ name = "bevy-katsuo"
 version = "0.1.0"
 edition = "2024"
 
-[package.metadata.commands]
-mp = "./scripts/mp.sh"
-mp-stop = "tmux kill-session -t bevy-mp"
-mp-win = "pwsh ./scripts/mp-win.ps1"
-
 [dependencies]
 async-channel = "2.5.0"
 bevy.workspace = true

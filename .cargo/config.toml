@@ -2,6 +2,5 @@
 vroom = "run --features bevy/dynamic_linking"
 xtask = "run --package xtask --"
 server = "run --no-default-features --features server"
-mp-stop = "cmd mp-stop"
-mp-win = "cmd mp-win"
-mp = "cmd mp"
+p1 = "run -- --p1"
+p2 = "run -- --p2"

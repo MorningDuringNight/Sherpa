@@ -9,7 +9,7 @@ use crate::config::physics::{
     PLAYER_JUMP_FORCE,
     PLAYER_CONTROL_SPEED_LIMIT,
 };
-use crate::player::bundle::Player;
+use crate::player::Player;
 use crate::components::motion::{
     ControlForce,
     GroundState,

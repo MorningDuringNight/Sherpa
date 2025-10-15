@@ -1,5 +1,4 @@
 use crate::{
-    app::MainPlayer,
     player::{Player, player_control::PlayerInputEvent},
 };
 use async_channel::{Receiver, Sender};
@@ -79,8 +78,7 @@ fn custom_network_pool() -> TaskPool {
 // init async_channels
 pub fn setup_udp_server(
     mut commands: Commands,
-    main_player_q: Query<Entity, With<MainPlayer>>,
-    other_player_q: Query<Entity, (With<Player>, Without<MainPlayer>)>,
+    players: Query<Entity, With<Player>>,
 ) {
     let socket = UdpSocket::bind("0.0.0.0:5000").expect("Failed to bind UDP socket");
     socket.set_nonblocking(false).unwrap();
@@ -98,12 +96,10 @@ pub fn setup_udp_server(
     // this could cause race conditions I need to think a bit more about it.
     let tx_inputs = tx_inputs.clone();
 
-    let main_player_entity = main_player_q
-        .single()
-        .expect("Expected a MainPlayer entity");
-    let other_player_entity = other_player_q
-        .single()
-        .expect("Expected a secondary Player entity");
+    let mut locals = players.iter().collect::<Vec<_>>();
+    locals.sort_by_key(|e| e.index());
+    let (p1, p2) = (locals[0], locals[1]);
+
     // Recieve from client
     // send inputs from clients to main ecs thread.
     {
@@ -125,8 +121,8 @@ pub fn setup_udp_server(
                                 &recv_clients,
                                 addr,
                                 data,
-                                main_player_entity,
-                                other_player_entity,
+                                p1,
+                                p2,
                             );
                         } else {
                             // we received some packet which was not a hankshake acknowledgement
