@@ -44,6 +44,8 @@ pub struct JumpController {
     pub jump_time_elapsed: f32,
     pub max_jump_duration: f32,
     pub jump_multiplier: f32,
+    pub can_wall_jump: bool,
+    pub wall_jump_timer: Timer,
 }
 
 impl Default for JumpController {
@@ -53,6 +55,8 @@ impl Default for JumpController {
             jump_time_elapsed: 0.0,
             max_jump_duration: 0.25,
             jump_multiplier: 0.35,
+            can_wall_jump: true,
+            wall_jump_timer: Timer::from_seconds(0.2, TimerMode::Once),
         }
     }
 }

@@ -19,6 +19,7 @@ opt-level = 1
 default = ["client"]
 client = []
 server = []
+obs = []
 
 # Apply all optimiations to dependencies in dev builds
 [profile.dev.package."*"]

@@ -20,6 +20,23 @@ pub struct PlayerCollider {
     pub aabb: Aabb2d,
 }
 
+#[derive(Component)]
+pub struct Mode {
+    pub mode: InputType,
+}
+
+#[derive(Clone, PartialEq)]
+pub enum InputType {
+    Player,   
+    AI,
+}
+
+impl Default for Mode {
+    fn default() -> Self {
+        Self { mode: InputType::Player }
+    }
+}
+
 #[derive(Bundle)]
 pub struct PlayerBundle {
     pub gravity: Gravity,

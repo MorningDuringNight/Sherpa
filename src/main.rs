@@ -7,6 +7,7 @@ mod multiplayer;
 mod physics;
 mod player;
 mod util;
+mod stateMachine;
 
 use std::env;
 fn main() {
