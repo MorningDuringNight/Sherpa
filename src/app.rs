@@ -3,9 +3,11 @@
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Create App and setup camera>
 
+use bevy::prelude::*;
 use crate::config::*;
 use crate::physics::PhysicsPlugin;
 use crate::player::{Player, PlayerPlugin};
+use crate::stateMachine::Bot;
 use bevy::asset::AssetPlugin;
 use bevy::sprite::SpritePlugin;
 use std::env;
@@ -90,7 +92,7 @@ fn bot_update_toggle(
 }
 
 fn bot_update(
-    mut players: Query<(Entity, &Transform,&mut Bot), With<Bot>>,
+    mut players: Query<(Entity, &Transform, &mut Bot), With<Bot>>,
     botActive: Res<BotActive>,
     mut keys: ResMut<ButtonInput<KeyCode>>,
 ){
@@ -104,6 +106,7 @@ fn bot_update(
         
     }
 }
+
 fn trigger_bot_input(
     mut toggle_events: EventWriter<ToggleBotEvent>,
     keyboard: Res<ButtonInput<KeyCode>>,
@@ -144,19 +147,11 @@ pub fn run(player_number: Option<usize>) {
         app.add_plugins(UdpServerPlugin);
     }
 
-    #[cfg(feature = "client")]
-    app.add_plugins(UdpClientPlugin {
-        server_addr: "3.21.92.34:5000".to_string(),
-    });
-    #[cfg(feature = "server")]
-    app.add_plugins(UdpServerPlugin);
-
-    app.insert_resource(IsMainPlayer(is_main_player))
+    app
         .insert_resource(Time::<Fixed>::from_hz(60.0))
         .insert_resource(PlayerSpawnPoint { position: PLAYER_INITIAL_POSITION })
         .insert_resource(PlayerSpawnVelocity { velocity: PLAYER_INITIAL_VELOCITY })
         .insert_resource(BotActive(false))
-        .insert_resource(RopeGeometry::default())
         .add_plugins(MapPlugin)
         .add_plugins(PlayerPlugin)
         .add_plugins(PhysicsPlugin)
@@ -165,9 +160,11 @@ pub fn run(player_number: Option<usize>) {
         .add_systems(Startup, init_player_camera)
         .add_systems(Update, update_camera)
         .add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input))
+        .insert_resource(RopeGeometry::default())
         .add_systems(Startup, init_ropes.after(spawn_players))
         .add_systems(Update, rope_tension_system)
         .add_systems(Update, rope_force_to_system)
+        .add_systems(Update, compute_rope_geometry)
         .add_systems(Update, apply_rope_geometry);
 
     app.run();

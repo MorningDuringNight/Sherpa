@@ -16,6 +16,9 @@ use crate::components::motion::{GroundState, JumpController, Mass, Velocity};
 use crate::components::rope::{Rope, RopeConstraint};
 
 use crate::app::{GameMode};
+use crate::stateMachine::Bot;
+use crate::stateMachine::BotState;
+use crate::stateMachine::StateMachine;
 
 
 
@@ -85,9 +88,13 @@ pub fn spawn_players(
     let mut camera_follow_player = 0;
     match *gamemode {
         GameMode::LocalCoop => {
+            let bot = Bot::new();
+            let state_machine = StateMachine::new(BotState::idel);
             // add FollowCamera to one of these.
-            commands.entity(p1).insert((wasd_controls.unwrap(), Player::Local(0)));
-            commands.entity(p2).insert((arrow_controls.unwrap(), Player::Local(1)));
+            commands.entity(p1).insert((wasd_controls.unwrap(), Player::Local(0), state_machine));
+            commands.entity(p2).insert((arrow_controls.unwrap(), Player::Local(1), bot));
+
+            
         }
         GameMode::LocalWithNpc(local_player_number) => {
             camera_follow_player = local_player_number;

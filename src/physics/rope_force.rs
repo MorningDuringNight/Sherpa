@@ -85,8 +85,8 @@ pub fn init_ropes(
         return;
     }
 
-let p1 = player_entities[0];
-let p2 = player_entities[1];
+    let p1 = player_entities[0];
+    let p2 = player_entities[1];
 
     // 生成 rope 实体
     let rope_entity = commands
