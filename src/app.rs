@@ -53,7 +53,7 @@ fn init_player_camera(mut commands: Commands) {
     ));
 }
 
-// Camera Components
+// camera components
 #[derive(Component)]
 pub struct MainCamera;
 
@@ -125,6 +125,8 @@ pub fn run(player_number: Option<usize>) {
     #[cfg(feature = "client")]
     {
         app.add_plugins(DefaultPlugins);
+        app.add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input));
+
         if let Some(player_number) = player_number {
             app.insert_resource(GameMode::NetCoop(player_number));
         }
@@ -159,7 +161,6 @@ pub fn run(player_number: Option<usize>) {
         .add_event::<ToggleBotEvent>()
         .add_systems(Startup, init_player_camera)
         .add_systems(Update, update_camera)
-        .add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input))
         .insert_resource(RopeGeometry::default())
         .add_systems(Startup, init_ropes.after(spawn_players))
         .add_systems(Update, rope_tension_system)
