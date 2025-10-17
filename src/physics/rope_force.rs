@@ -91,11 +91,12 @@ let p2 = player_entities[1];
     // 生成 rope 实体
     let rope_entity = commands
         .spawn(Rope {
-            constraint: RopeConstraint {
-                rest_length: 200.0,
-                spring_constant: 50.0,
-                max_extension: 300.0,
-            },
+            // constraint: RopeConstraint {
+            //     rest_length: 200.0,
+            //     spring_constant: 50.0,
+            //     max_extension: 300.0,
+            // },
+            constraint: RopeConstraint::default(),
             attached_entity_head: p1,
             attached_entity_tail: p2,
         })

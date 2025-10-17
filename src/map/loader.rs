@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use std::path::Path;
 
 use super::game_object_builder::GameObject;
-use super::mapdata::{EntityKind};
+use super::mapdata::{EntityKind, SpikeTip};
 use super::util::*;
 use super::{MAP_NAME, MapFile};
 
@@ -25,6 +25,12 @@ pub struct Platform;
 #[derive(Component, Default)]
 pub struct Coin;
 
+#[derive(Component, Default)]
+pub struct Spike;
+
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct SpikeDir(pub SpikeTip);
+
 // entrypoint for spawning different types of objects.
 // this should probably be its own file or folder even but we can keep it for now.
 fn game_objects(
@@ -37,6 +43,7 @@ fn game_objects(
 
     for (id, entity) in &map_data.entities {
         // match for entity.kind, Platform or Coin enum
+        println!("id: {}", id);
         let index = atlas.indices[id];
 
         let sprite = Sprite {
@@ -48,7 +55,7 @@ fn game_objects(
             ..Default::default()
         };
         let transform = Transform::from_xyz(entity.boundary.start_x, entity.boundary.start_y, 0.0);
-        let bundle = match entity.kind {
+        let mut bundle = match entity.kind {
             EntityKind::Platform => {
                 let collider = collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
                 GameObject::new(id, sprite, transform, Visibility::default())
@@ -62,6 +69,15 @@ fn game_objects(
                     .with_marker::<Coin>()
             }
         };
+
+        // 若 attributes.special == "spike"，则附加 Spike 标记及方向
+        if let Some(special) = &entity.attributes.special {
+            if special == "spike" {
+                bundle = bundle.with_marker::<Spike>();
+                let dir = entity.attributes.tip.unwrap_or(SpikeTip::Down);
+                bundle = bundle.with_component(SpikeDir(dir));
+            }
+        }
 
         bundles.push(bundle);
     }

@@ -8,8 +8,8 @@ use scroller::camera_follow;
 
 
 pub use game_object_builder::Collider;
-pub use loader::{Coin, Platform};
-pub use mapdata::MapFile;
+pub use loader::{Coin, Platform, Spike, SpikeDir};
+pub use mapdata::{MapFile, SpikeTip};
 
 use loader::{load_background_layers, load_map, load_map_resouces};
 

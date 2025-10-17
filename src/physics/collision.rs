@@ -1,13 +1,11 @@
-use crate::config::physics::{PLAYER_MOVE_FORCE, PLAYER_JUMP_FORCE, PLAYER_CONTROL_SPEED_LIMIT};
+use crate::config::physics::*;
 use crate::player::PlayerCollider;
-use bevy::math::bounding::{Aabb2d, AabbCast2d, BoundingVolume, RayCast2d};
-use bevy::math::{Dir2, Ray2d};
+use bevy::math::bounding::{Aabb2d, BoundingVolume};
 
 use bevy::math::bounding::IntersectsVolume;
 use crate::player::bundle::Player;
-use bevy::{prelude::*, transform};
+use bevy::prelude::*;
 use crate::config::physics::GRAVITY;
-use crate::components::collision::Aabb;
 use crate::game_ui::ui::TotalCoin;
 
 #[derive(Event, Debug)]
@@ -20,14 +18,14 @@ pub fn on_collision(
     mut commands: Commands,
     mut events: EventReader<PlayerCollisionEvent>,
     coins: Query<(), With<crate::map::Coin>>,
-    mut coinCount: ResMut<TotalCoin>,
+    mut coin_count: ResMut<TotalCoin>,
 ) {
     for ev in events.read() {
         if coins.get(ev.game_object).is_ok() {
             println!("🤑🤑🤑");
             commands.entity(ev.game_object).despawn();
             //let mut coinCount = coinCount.unwrap();
-            coinCount.amount += 1;
+            coin_count.amount += 1;
         }
     }
 }
@@ -107,6 +105,8 @@ pub fn platform_collider_system(
         &mut GroundState,
     ), With<Player>>,
     colliders: Query<(Entity, &Transform, &Collider), Without<Player>>,
+    spikes: Query<(&crate::map::SpikeDir,), With<crate::map::Spike>>,
+    mut game_over: Option<ResMut<crate::game_ui::ui::GameOver>>,
 ) {
     let dt = time.delta_secs();
 
@@ -123,6 +123,19 @@ pub fn platform_collider_system(
                 let player_center = player_aabb.center();
                 let closest = collider_aabb.closest_point(player_center);
                 let offset = player_center - closest;
+
+                // 若为钉子且从下方接触（offset.y <= 0.0 视为玩家在钉子下侧/被钉子刺中）→ 触发游戏结束
+                if let Ok((dir,)) = spikes.get(game_object) {
+                    // 只判上下方向
+                    let deadly = match dir.0 {
+                        crate::map::SpikeTip::Down => offset.y <= 0.0,
+                        crate::map::SpikeTip::Up => offset.y > 0.0 && velocity.0.y <= 0.0,
+                        _ => false,
+                    };
+                    if deadly {
+                        if let Some(mut go) = game_over.as_deref_mut() { go.active = true; }
+                    }
+                }
 
                 resolve_collision(
                     &mut player_pos,
@@ -168,8 +181,8 @@ pub fn player_collider_system(
 
         if let Some(obj1) = one.last_mut() {
             for obj2 in two.iter_mut() {
-                let &mut (id1, ref mut vel1, ref mut trans1, ref mut mom1, collider1) = obj1;
-                let &mut (id2, ref mut vel2, ref mut trans2, ref mut mom2, collider2) = obj2;
+                let &mut (_id1, ref mut vel1, ref mut trans1, ref mut mom1, collider1) = obj1;
+                let &mut (_id2, ref mut vel2, ref mut trans2, ref mut mom2, collider2) = obj2;
 
                 // Predict future positions
                 let future_pos1 = trans1.translation.truncate() + vel1.0 * dt;

@@ -8,32 +8,41 @@
     }
   ],
   "entities": {
+    "spike": {
+      "attributes": {
+        "oneWay": false,
+        "special": "spike",
+        "tip": "down"
+      },
+      "boundary": {
+        "height":200,
+        "startX": 130,
+        "startY": 130,
+        "width": 150
+      },
+      "collision": {
+        "height": 27,
+        "startX": 130,
+        "startY": 1897,
+        "width": 50
+      },
+      "type": "platform"
+    },
     "3GYQNX": {
       "attributes": {
-        "moving": {
-          "endX": 228,
-          "endY": 1897,
-          "moveType": "linear",
-          "speed": 1,
-          "startX": 128,
-          "startY": 1897,
-          "trigger": {
-            "triggerType": "loop"
-          }
-        },
         "oneWay": false
       },
       "boundary": {
         "height": 27,
         "startX": 288,
         "startY": 138,
-        "width": 320
+        "width": 280
       },
       "collision": {
         "height": 27,
-        "startX": 128,
+        "startX": 328,
         "startY": 1897,
-        "width": 320
+        "width": 280
       },
       "type": "platform"
     },
