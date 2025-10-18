@@ -26,8 +26,6 @@ use crate::physics::rope_force::{
 };
 use crate::player::load_players::spawn_players;
 
-#[derive(Resource, Deref, DerefMut)]
-struct botTimer {time:Timer}
 // change usize to all: single player, single machine config data. 
 #[derive(Resource)]
 pub enum GameMode {
@@ -144,7 +142,7 @@ pub fn run(player_number: Option<usize>) {
     #[cfg(feature = "client")]
     {
         app.add_plugins(DefaultPlugins);
-        app.add_systems(Update, (bot_update, bot_update_toggle,trigger_bot_input));
+        app.add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input));
 
         if let Some(player_number) = player_number {
             app.insert_resource(GameMode::NetCoop(player_number));
