@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use super::move_State::*;
 //collect data from every frame booleans
+
+#[derive(Component, Clone,)]
 pub enum BotState{
     idel,
     right,
@@ -14,10 +16,11 @@ impl BotState {
     pub fn new() -> Self{
         BotState:: idel
     }
+    
 }
 
 
-#[derive(Component)]
+#[derive(Component, Clone )]
 pub struct StateMachine {
     pub current: BotState,
     //pub prev: BotState,

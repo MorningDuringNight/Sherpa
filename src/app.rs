@@ -3,6 +3,7 @@
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Create App and setup camera>
 
+use std::time::Duration;
 use bevy::prelude::*;
 use crate::config::*;
 use crate::physics::PhysicsPlugin;
@@ -25,6 +26,8 @@ use crate::physics::rope_force::{
 };
 use crate::player::load_players::spawn_players;
 
+#[derive(Resource, Deref, DerefMut)]
+struct botTimer {time:Timer}
 // change usize to all: single player, single machine config data. 
 #[derive(Resource)]
 pub enum GameMode {
@@ -95,13 +98,29 @@ fn bot_update(
     mut players: Query<(Entity, &Transform, &mut Bot), With<Bot>>,
     botActive: Res<BotActive>,
     mut keys: ResMut<ButtonInput<KeyCode>>,
-){
+    mut botTimer: ResMut<botTimer>,
+    time: Res<Time>,
+
+){  
     if botActive.0 == false{
         return;
     }
     else{
-        for (entity, transform, mut Bot) in players.iter_mut(){
-            let (newState, _) = Bot.change(&mut keys);
+        for (entity, transform, mut Bot,) in players.iter_mut(){
+            //put repeating timer
+            //if timer has not started: start timer and run function
+            //if not start return
+            //if started just finished then runfunction
+            //
+            botTimer.as_deref_mut().tick(time.delta());
+            if botTimer.time.finished(){
+                Bot.change(&mut keys);
+            }
+            else {
+                return;
+            }
+
+            //players.current_state = newState;
         }
         
     }
@@ -125,7 +144,7 @@ pub fn run(player_number: Option<usize>) {
     #[cfg(feature = "client")]
     {
         app.add_plugins(DefaultPlugins);
-        app.add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input));
+        app.add_systems(Update, (bot_update, bot_update_toggle,trigger_bot_input));
 
         if let Some(player_number) = player_number {
             app.insert_resource(GameMode::NetCoop(player_number));
@@ -153,6 +172,7 @@ pub fn run(player_number: Option<usize>) {
         .insert_resource(Time::<Fixed>::from_hz(60.0))
         .insert_resource(PlayerSpawnPoint { position: PLAYER_INITIAL_POSITION })
         .insert_resource(PlayerSpawnVelocity { velocity: PLAYER_INITIAL_VELOCITY })
+        .insert_resource(botTimer{time:Timer::new(Duration::from_secs(1),TimerMode::Repeating)})
         .insert_resource(BotActive(false))
         .add_plugins(MapPlugin)
         .add_plugins(PlayerPlugin)

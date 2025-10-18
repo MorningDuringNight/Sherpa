@@ -89,9 +89,11 @@ pub fn spawn_players(
     match *gamemode {
         GameMode::LocalCoop => {
             let bot = Bot::new();
-            let state_machine = StateMachine::new(BotState::idel);
+            let bot2 = Bot::new();
+            //let state_machine = StateMachine::new(BotState::idel);
+            //println!("we hit here");
             // add FollowCamera to one of these.
-            commands.entity(p1).insert((wasd_controls.unwrap(), Player::Local(0), state_machine));
+            commands.entity(p1).insert((wasd_controls.unwrap(), Player::Local(0), bot2));
             commands.entity(p2).insert((arrow_controls.unwrap(), Player::Local(1), bot));
 
             
