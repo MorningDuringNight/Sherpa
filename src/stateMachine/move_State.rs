@@ -49,7 +49,7 @@ impl Bot{
         let next = match self.state_machine.current{ // bevy timer repeating
             //idel change to 
             BotState::idel =>{
-                input = rand::rng().random_range(0..=3);
+                input = rand::rng().random_range(0..=4);
                 println!("print idel {}", input);
                 if input == 0{
                     keys.press(KeyCode::ArrowRight);
@@ -70,6 +70,10 @@ impl Bot{
                     keys.press(KeyCode::ArrowDown);
                     BotState::idel
                 }
+                else if input == 4{
+                    keys.press(KeyCode::ArrowLeft);
+                    BotState::left
+                }
                 else{
                     //println!("print Hurt you");
                     BotState::idel
@@ -87,11 +91,7 @@ impl Bot{
                     keys.press(KeyCode::ArrowLeft);
                     BotState::left
                 }
-                else if input == 2{
-                     keys.press(KeyCode::ArrowUp);
-                     keys.press(KeyCode::ArrowRight);
-                    BotState::jump_r
-                }
+
                 else if input == 3{
                     keys.press(KeyCode::ArrowDown);
                     BotState::idel
@@ -114,11 +114,6 @@ impl Bot{
                     BotState::left
                 }
                 else if input == 100{
-                    keys.press(KeyCode::ArrowUp);
-                    keys.press(KeyCode::ArrowLeft);
-                    BotState::jump_l
-                }
-                else if input == 100{
                     keys.press(KeyCode::ArrowDown);
                     BotState::idel
                 }
@@ -130,17 +125,7 @@ impl Bot{
              BotState::jump =>{
                 println!("print jump");
                 input = rand::rng().random_range(0..=2);
-                if input == 0{
-                    //keys.press(KeyCode::ArrowUp);
-                    keys.press(KeyCode::ArrowRight);
-                    BotState::jump_r
-                }
-                else if input == 1{
-                    keys.press(KeyCode::ArrowUp);
-                    keys.press(KeyCode::ArrowLeft);
-                    BotState::jump_l
-                }
-                else if input == 2{
+                if input == 2{
                     keys.press(KeyCode::ArrowDown);
                     BotState::idel
                 }
@@ -149,46 +134,8 @@ impl Bot{
                     BotState::idel
                 }
             }
-            BotState::jump_r =>{
-                println!("print jump_r");
-                input = rand::rng().random_range(0..=2);
-                if input == 0{
-                    keys.press(KeyCode::ArrowRight);
-                    BotState::right
-                }
-                else if input == 1{
-                    keys.press(KeyCode::ArrowLeft);
-                    BotState::left
-                }
-                else if input == 2{
-                    keys.press(KeyCode::ArrowDown);
-                    BotState::idel
-                }
-                else{
-                    keys.press(KeyCode::ArrowDown);
-                    BotState::idel
-                }
-            }
-            BotState::jump_l =>{
-                println!("print jump_l");
-                input = rand::rng().random_range(0..=2);
-                if input == 0{
-                    keys.press(KeyCode::ArrowRight);
-                    BotState::right
-                }
-                else if input == 1{
-                    keys.press(KeyCode::ArrowLeft);
-                    BotState::left
-                }
-                else if input == 2{
-                    keys.press(KeyCode::ArrowDown);
-                    BotState::idel
-                }
-                else{
-                    keys.press(KeyCode::ArrowDown);
-                    BotState::idel
-                }
-            }
+            
+            
             };
             //return next;
             self.state_machine.current = next.clone();
