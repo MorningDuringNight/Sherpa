@@ -8,8 +8,10 @@ use scroller::camera_follow;
 
 
 pub use game_object_builder::Collider;
-pub use loader::{Coin, Platform};
+pub use loader::{Coin, Platform, Spike, TrampolineBounce, MapTextureHandles, MapDimensions, game_objects};
+pub use util::AtlasLayoutResource;
 pub use mapdata::MapFile;
+pub use util::ground;
 
 use loader::{load_background_layers, load_map, load_map_resouces};
 

@@ -1,13 +1,12 @@
-use crate::config::physics::{PLAYER_MOVE_FORCE, PLAYER_JUMP_FORCE, PLAYER_CONTROL_SPEED_LIMIT};
+use crate::config::physics::*;
 use crate::player::PlayerCollider;
-use bevy::math::bounding::{Aabb2d, AabbCast2d, BoundingVolume, RayCast2d};
-use bevy::math::{Dir2, Ray2d};
+use bevy::math::bounding::{Aabb2d, BoundingVolume};
 
 use bevy::math::bounding::IntersectsVolume;
 use crate::player::bundle::Player;
-use bevy::{prelude::*, transform};
+use bevy::prelude::*;
 use crate::config::physics::GRAVITY;
-use crate::components::collision::Aabb;
+use crate::components::motion::Mass;
 use crate::game_ui::ui::TotalCoin;
 
 #[derive(Event, Debug)]
@@ -20,14 +19,14 @@ pub fn on_collision(
     mut commands: Commands,
     mut events: EventReader<PlayerCollisionEvent>,
     coins: Query<(), With<crate::map::Coin>>,
-    mut coinCount: ResMut<TotalCoin>,
+    mut coin_count: ResMut<TotalCoin>,
 ) {
     for ev in events.read() {
         if coins.get(ev.game_object).is_ok() {
             println!("🤑🤑🤑");
             commands.entity(ev.game_object).despawn();
             //let mut coinCount = coinCount.unwrap();
-            coinCount.amount += 1;
+            coin_count.amount += 1;
         }
     }
 }
@@ -105,12 +104,16 @@ pub fn platform_collider_system(
         &mut Momentum,
         &PlayerCollider,
         &mut GroundState,
+        &Mass,
     ), With<Player>>,
     colliders: Query<(Entity, &Transform, &Collider), Without<Player>>,
+    spikes: Query<(), With<crate::map::Spike>>,
+    trampolines: Query<(&crate::map::TrampolineBounce,), With<crate::map::TrampolineBounce>>,
+    mut game_over: Option<ResMut<crate::game_ui::ui::GameOver>>,
 ) {
     let dt = time.delta_secs();
 
-    for (player, mut transform, mut velocity, mut momentum, player_collider, mut ground) in players.iter_mut() {
+    for (player, mut transform, mut velocity, mut momentum, player_collider, mut ground, mass) in players.iter_mut() {
         let mut player_aabb = predicted_aabb(&transform, &velocity, player_collider, dt);
         ground.is_grounded = false;
 
@@ -124,6 +127,16 @@ pub fn platform_collider_system(
                 let closest = collider_aabb.closest_point(player_center);
                 let offset = player_center - closest;
 
+                // 钉子：任何竖直方向碰撞都会游戏结束
+                if spikes.get(game_object).is_ok() {
+                    // println!("Player collided with spike! offset.y: {}, velocity.y: {}", offset.y, velocity.0.y);
+                    // println!("Spike deadly conditions met! Game over triggered.");
+                    if let Some(mut go) = game_over.as_deref_mut() { go.active = true; }
+                }
+
+                // 保存碰撞前的速度，用于蹦床弹力计算
+                let velocity_before_collision = velocity.0;
+
                 resolve_collision(
                     &mut player_pos,
                     &mut velocity.0,
@@ -131,6 +144,19 @@ pub fn platform_collider_system(
                     &mut ground,
                     offset,
                 );
+
+                // 蹦床：玩家从上方落下时给予向上弹力（在碰撞解决后应用）
+                if let Ok((bounce_strength,)) = trampolines.get(game_object) {
+                    // println!("Player collided with trampoline! offset.y: {}, velocity_before: {}, bounce_strength: {}", offset.y, velocity_before_collision.y, bounce_strength.0);
+                    if offset.y > 0.0 && velocity_before_collision.y <= 0.0 {
+                        // println!("Trampoline conditions met! Applying bounce with strength {}.", bounce_strength.0);
+                        velocity.0.y = -velocity_before_collision.y + bounce_strength.0; // 使用碰撞前的速度
+                        momentum.0.y = velocity.0.y * mass.0; // 使用玩家的实际质量重新计算动量
+                        // println!("Applied bounce: velocity.y = {}, momentum.y = {}, mass = {}", velocity.0.y, momentum.0.y, mass.0);
+                    } else {
+                        // println!("Trampoline conditions NOT met.");
+                    }
+                }
 
                 events.write(PlayerCollisionEvent {
                     player,
@@ -168,8 +194,8 @@ pub fn player_collider_system(
 
         if let Some(obj1) = one.last_mut() {
             for obj2 in two.iter_mut() {
-                let &mut (id1, ref mut vel1, ref mut trans1, ref mut mom1, collider1) = obj1;
-                let &mut (id2, ref mut vel2, ref mut trans2, ref mut mom2, collider2) = obj2;
+                let &mut (_id1, ref mut vel1, ref mut trans1, ref mut mom1, collider1) = obj1;
+                let &mut (_id2, ref mut vel2, ref mut trans2, ref mut mom2, collider2) = obj2;
 
                 // Predict future positions
                 let future_pos1 = trans1.translation.truncate() + vel1.0 * dt;

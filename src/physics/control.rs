@@ -5,14 +5,23 @@
 use bevy::prelude::*;
 use crate::config::physics::{PLAYER_MOVE_FORCE, PLAYER_JUMP_FORCE, PLAYER_CONTROL_SPEED_LIMIT};
 use crate::player::bundle::Player;
-use crate::components::motion::{ControlForce, GroundState, JumpController, NetForce, Velocity};
+use crate::components::motion::{ControlForce, GroundState, JumpController, NetForce, Velocity, Momentum};
 
 pub fn player_movement_input_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
-    mut query: Query<(&mut Velocity, &mut ControlForce, &mut NetForce, &Player, &mut JumpController, &mut GroundState), With<Player>>,
+    mut query: Query<(&mut Velocity, &mut ControlForce, &mut NetForce, &mut Momentum, &Player, &mut JumpController, &mut GroundState), With<Player>>,
+    game_over: Option<Res<crate::game_ui::ui::GameOver>>,
 ) {
-    for (mut velocity, mut control_force, mut net_force, player, mut jump_controller, mut ground_state) in &mut query {
+    let is_game_over = game_over.as_ref().map_or(false, |g| g.active);
+    for (mut velocity, mut control_force, mut net_force, mut momentum, player, mut jump_controller, mut ground_state) in &mut query {
+        if is_game_over {
+            control_force.0 = Vec2::ZERO;
+            net_force.0 = Vec2::ZERO;
+            velocity.0 = Vec2::ZERO;
+            momentum.0 = Vec2::ZERO;
+            continue;
+        }
         // Calculate the resistance parameter
         // f = c*v => c = f/v
         let resistance = PLAYER_MOVE_FORCE / PLAYER_CONTROL_SPEED_LIMIT; 
