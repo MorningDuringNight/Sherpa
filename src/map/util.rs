@@ -1,11 +1,16 @@
 use super::Collider;
 use super::mapdata::Boundary;
 
+
 use super::MapFile;
 use super::game_object_builder::GameObject;
 use bevy::math::bounding::Aabb2d;
 use bevy::prelude::*;
 use std::collections::HashMap;
+
+use crate::map::game_object_builder::EasedPlatform;
+use crate::map::game_object_builder::CubicEasing;
+use super::mapdata::Moving;
 
 #[derive(Resource)]
 pub struct AtlasLayoutResource {
@@ -39,6 +44,24 @@ pub fn collider_from_boundary(
         .unwrap_or(Collider {
             aabb: Aabb2d::new(Vec2::ZERO, Vec2::ZERO),
         })
+}
+
+pub fn create_eased(
+    moving: &Moving,
+) -> EasedPlatform{
+    EasedPlatform{
+        start: Vec2::new(moving.start_x as f32, moving.start_y as f32),
+        end: Vec2::new(moving.end_x as f32, moving.end_y as f32),
+        t: 0.0,
+        speed: moving.speed as f32,
+        forward: true,
+        easing: CubicEasing{
+            x1: 0.42,
+            y1: 0.0,
+            x2: 0.58,
+            y2: 1.0,
+        }
+    }    
 }
 
 pub fn background_layer(

@@ -97,7 +97,7 @@
           "endX": 613,
           "endY": 400,
           "moveType": "linear",
-          "speed": 0.5,
+          "speed": 3,
           "startX": 513,
           "startY": 1521,
           "trigger": {
