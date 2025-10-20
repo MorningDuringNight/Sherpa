@@ -4,7 +4,7 @@ use bevy::math::bounding::{Aabb2d, AabbCast2d, BoundingVolume, RayCast2d};
 use bevy::math::{Dir2, Ray2d};
 
 use bevy::math::bounding::IntersectsVolume;
-use crate::player::bundle::Player;
+use crate::player::Player;
 use bevy::{prelude::*, transform};
 use crate::config::physics::GRAVITY;
 use crate::game_ui::ui::TotalCoin;

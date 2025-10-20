@@ -3,10 +3,11 @@ pub mod bundle;
 pub mod load_players;
 pub mod player_control;
 
+
 use self::player_control::{player_movement_input_system, player_input_collection_system, PlayerInputEvent};
 
-pub use self::load_players::spawn_players;
-pub use bundle::{Player, PlayerCollider};
+pub use self::load_players::{spawn_players, Player};
+pub use bundle::{PlayerCollider};
 
 pub struct PlayerPlugin;
 

@@ -69,7 +69,7 @@ fn game_objects(
         };
         let transform = Transform::from_xyz(entity.boundary.start_x, entity.boundary.start_y, 0.0);
         let bundle = match entity.kind {
-            EntityKind::Platform => {
+            EntityKind::Platform | EntityKind::Spikes | EntityKind::Trampoline => {
                 let collider = collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
                 if entity.attributes.moving.is_some(){
                     let eased_platform = create_eased(entity.attributes.moving.as_ref().unwrap());

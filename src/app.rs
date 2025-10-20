@@ -3,13 +3,12 @@
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Create App and setup camera>
 
+use std::time::Duration;
 use bevy::prelude::*;
-use bevy::time::Fixed;
-use bevy::transform;
-use crate::player::PlayerPlugin;
-use crate::physics::PhysicsPlugin;
 use crate::config::*;
-use crate::stateMachine::*;
+use crate::physics::PhysicsPlugin;
+use crate::player::{Player, PlayerPlugin};
+use crate::stateMachine::Bot;
 use bevy::asset::AssetPlugin;
 use bevy::sprite::SpritePlugin;
 use std::env;
@@ -27,6 +26,17 @@ use crate::physics::rope_force::{
 };
 use crate::player::load_players::spawn_players;
 
+// change usize to all: single player, single machine config data. 
+#[derive(Resource)]
+pub enum GameMode {
+    LocalCoop, // on one computer
+    LocalWithNpc(usize), // main player p1 with ai player 2.
+    AiWithAi, // main player p1 with ai player 2.
+    NetCoop(usize),
+    Simulated,
+}
+#[derive(Resource, Deref, DerefMut)]
+struct botTimer {time:Timer}
 // <- compute_rope_geometry 删除了
 
 // move a half screen right and a half screen up.
@@ -46,33 +56,26 @@ fn init_player_camera(mut commands: Commands) {
     ));
 }
 
-// Camera Components
+// camera components
 #[derive(Component)]
 pub struct MainCamera;
 
 #[derive(Component)]
 pub struct FollowedPlayer;
 
-#[derive(Component)]
-pub struct MainPlayer;
-
 const CAMERA_DECAY_RATE: f32 = 3.;
 
-// System for the camera movement
-fn update_camera(
-    mut camera: Single<&mut Transform, (With<MainCamera>, Without<MainPlayer>)>,
-    player: Single<&Transform, (With<MainPlayer>, Without<Camera2d>)>,
+pub fn update_camera(
+    mut camera_q: Query<&mut Transform, With<MainCamera>>,
+    followed_q: Query<&Transform, (With<FollowedPlayer>, Without<MainCamera>)>,
     time: Res<Time>,
 ) {
-    let Vec3 { y, .. } = player.translation;
+    let Ok(mut cam) = camera_q.single_mut() else { return };
+    let Ok(player_tf) = followed_q.single() else { return };
 
-    let min_y = SCREEN.1 / 2.0;
-    let clamped_y = y.max(min_y);
-    let target = Vec3::new(camera.translation.x, clamped_y, camera.translation.z);
-
-    camera
-        .translation
-        .smooth_nudge(&target, CAMERA_DECAY_RATE, time.delta_secs());
+    let y = player_tf.translation.y.max(SCREEN.1 / 2.0);
+    let target = Vec3::new(cam.translation.x, y, cam.translation.z);
+    cam.translation.smooth_nudge(&target, CAMERA_DECAY_RATE, time.delta_secs());
 }
 // going to implement the replacement for the controls
 #[derive(Event)]
@@ -92,20 +95,37 @@ fn bot_update_toggle(
 }
 
 fn bot_update(
-    mut players: Query<(Entity, &Transform,&mut Bot), With<Bot>>,
+    mut players: Query<(Entity, &Transform, &mut Bot), With<Bot>>,
     botActive: Res<BotActive>,
     mut keys: ResMut<ButtonInput<KeyCode>>,
-){
+    mut botTimer: ResMut<botTimer>,
+    time: Res<Time>,
+
+){  
     if botActive.0 == false{
         return;
     }
     else{
-        for (entity, transform, mut Bot) in players.iter_mut(){
-            let (newState, _) = Bot.change(&mut keys);
+        for (entity, transform, mut Bot,) in players.iter_mut(){
+            //put repeating timer
+            //if timer has not started: start timer and run function
+            //if not start return
+            //if started just finished then runfunction
+            //
+            botTimer.as_deref_mut().tick(time.delta());
+            if botTimer.time.finished(){
+                Bot.change(&mut keys);
+            }
+            else {
+                return;
+            }
+
+            //players.current_state = newState;
         }
         
     }
 }
+
 fn trigger_bot_input(
     mut toggle_events: EventWriter<ToggleBotEvent>,
     keyboard: Res<ButtonInput<KeyCode>>,
@@ -115,33 +135,45 @@ fn trigger_bot_input(
     }
 }
 
-#[derive(Resource)]
-pub struct IsMainPlayer(pub bool);
-
-pub fn run(is_main_player: bool) {
+pub fn run(player_number: Option<usize>) {
     let mut app = App::new();
 
     #[cfg(all(feature = "client", debug_assertions))]
     app.add_plugins(DevModePlugin);
 
     #[cfg(feature = "client")]
-    app.add_plugins(DefaultPlugins);
-    #[cfg(feature = "server")]
-    app.add_plugins(MinimalPlugins);
+    {
+        app.add_plugins(DefaultPlugins);
+        app.add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input));
 
-    #[cfg(feature = "client")]
-    app.add_plugins(UdpClientPlugin {
-        server_addr: "3.21.92.34:5000".to_string(),
-    });
-    #[cfg(feature = "server")]
-    app.add_plugins(UdpServerPlugin);
+        if let Some(player_number) = player_number {
+            app.insert_resource(GameMode::NetCoop(player_number));
+        }
+        else {
+            app.insert_resource(GameMode::LocalCoop);
+        }
 
-    app.insert_resource(IsMainPlayer(is_main_player))
+        app.add_plugins(UdpClientPlugin {
+            server_addr: "127.0.0.1:5000".to_string(), // localhost
+            // server_addr: "home.tailaaef65.ts.net:5000".to_string(), // hostname magic dns.
+            // server_addr: "100.110.71.63:5000".to_string(), // tailscaled.
+            // server_addr: "3.22.185.76:5000".to_string(),
+        });
+    }
+
+    #[cfg(feature = "server")]
+    {
+        app.add_plugins(MinimalPlugins);
+        app.insert_resource(GameMode::Simulated);
+        app.add_plugins(UdpServerPlugin);
+    }
+
+    app
         .insert_resource(Time::<Fixed>::from_hz(60.0))
         .insert_resource(PlayerSpawnPoint { position: PLAYER_INITIAL_POSITION })
         .insert_resource(PlayerSpawnVelocity { velocity: PLAYER_INITIAL_VELOCITY })
+        .insert_resource(botTimer{time:Timer::new(Duration::from_secs(1),TimerMode::Repeating)})
         .insert_resource(BotActive(false))
-        .insert_resource(RopeGeometry::default())
         .add_plugins(MapPlugin)
         .add_plugins(PlayerPlugin)
         .add_plugins(PhysicsPlugin)
@@ -149,10 +181,11 @@ pub fn run(is_main_player: bool) {
         .add_event::<ToggleBotEvent>()
         .add_systems(Startup, init_player_camera)
         .add_systems(Update, update_camera)
-        .add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input))
+        .insert_resource(RopeGeometry::default())
         .add_systems(Startup, init_ropes.after(spawn_players))
         .add_systems(Update, rope_tension_system)
         .add_systems(Update, rope_force_to_system)
+        .add_systems(Update, compute_rope_geometry)
         .add_systems(Update, apply_rope_geometry);
 
     app.run();

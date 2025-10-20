@@ -2,9 +2,10 @@ use bevy::prelude::*;
 use rand::prelude::*;
 use super::state::*;
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct Bot {
     pub state_machine: StateMachine,
+
 }
 
 #[derive(Event)]
@@ -27,23 +28,34 @@ impl Bot{
         player_events: EventReader<PlayerEvent>,
         mut state_query: Query<&mut StateMachine>,
     ){
-
+        // timer mode 
+        // different timer resource
+        // run in a fixed update schedual
+        // first statement of state transition if timer not trigger return nothing
+        // other state transition
+        
     }
+
 
     pub fn change(
         &mut self, /*input: &Input*/
         mut keys: &mut ButtonInput<KeyCode>,
-    ) -> (BotState, i32){
+        // timer: Res<Time>,
+    ) -> BotState{
         //temporary random movement to change state
         let rng = rand::rng();
         let mut input;
         //remove when done please
-        let next = match self.state_machine.current{
+        let next = match self.state_machine.current{ // bevy timer repeating
             //idel change to 
             BotState::idel =>{
-                input = rand::rng().random_range(0..3);
+                input = rand::rng().random_range(0..=4);
+                println!("print idel {}", input);
                 if input == 0{
                     keys.press(KeyCode::ArrowRight);
+                    // timer.0.reset(); // Reset the timer when the key is pressed
+                    // timer.0.set_duration(Duration::from_secs(2)); // Set the desired duration
+                    // timer.0.set_mode(TimerMode::Once); // Set to once
                     BotState::right
                 }
                 else if input == 1{
@@ -58,13 +70,19 @@ impl Bot{
                     keys.press(KeyCode::ArrowDown);
                     BotState::idel
                 }
+                else if input == 4{
+                    keys.press(KeyCode::ArrowLeft);
+                    BotState::left
+                }
                 else{
+                    //println!("print Hurt you");
                     BotState::idel
                 }
             }
 
             BotState::right =>{
-                input = rand::rng().random_range(0..3);
+                println!("print righj");
+                input = rand::rng().random_range(0..=3);
                 if input == 0{
                     keys.press(KeyCode::ArrowRight);
                     BotState::right
@@ -73,11 +91,7 @@ impl Bot{
                     keys.press(KeyCode::ArrowLeft);
                     BotState::left
                 }
-                else if input == 2{
-                     keys.press(KeyCode::ArrowUp);
-                     keys.press(KeyCode::ArrowRight);
-                    BotState::jump_r
-                }
+
                 else if input == 3{
                     keys.press(KeyCode::ArrowDown);
                     BotState::idel
@@ -89,8 +103,9 @@ impl Bot{
             }
 
              BotState::left =>{
-                input = rand::rng().random_range(0..3);
-                if input == 0{
+                println!("print lkeft");
+                input = rand::rng().random_range(0..=3);
+                if input == 10{
                     keys.press(KeyCode::ArrowRight);
                     BotState::right
                 }
@@ -98,12 +113,7 @@ impl Bot{
                     keys.press(KeyCode::ArrowLeft);
                     BotState::left
                 }
-                else if input == 2{
-                    keys.press(KeyCode::ArrowUp);
-                    keys.press(KeyCode::ArrowLeft);
-                    BotState::jump_l
-                }
-                else if input == 3{
+                else if input == 100{
                     keys.press(KeyCode::ArrowDown);
                     BotState::idel
                 }
@@ -113,18 +123,9 @@ impl Bot{
                 }
             }
              BotState::jump =>{
-                input = rand::rng().random_range(0..2);
-                if input == 0{
-                    keys.press(KeyCode::ArrowUp);
-                    keys.press(KeyCode::ArrowRight);
-                    BotState::jump_r
-                }
-                else if input == 1{
-                    keys.press(KeyCode::ArrowUp);
-                    keys.press(KeyCode::ArrowLeft);
-                    BotState::jump_l
-                }
-                else if input == 2{
+                println!("print jump");
+                input = rand::rng().random_range(0..=2);
+                if input == 2{
                     keys.press(KeyCode::ArrowDown);
                     BotState::idel
                 }
@@ -133,46 +134,11 @@ impl Bot{
                     BotState::idel
                 }
             }
-            BotState::jump_r =>{
-                input = rand::rng().random_range(0..2);
-                if input == 0{
-                    keys.press(KeyCode::ArrowRight);
-                    BotState::right
-                }
-                else if input == 1{
-                    keys.press(KeyCode::ArrowLeft);
-                    BotState::left
-                }
-                else if input == 2{
-                    keys.press(KeyCode::ArrowDown);
-                    BotState::idel
-                }
-                else{
-                    keys.press(KeyCode::ArrowDown);
-                    BotState::idel
-                }
-            }
-            BotState::jump_l =>{
-                input = rand::rng().random_range(0..2);
-                if input == 0{
-                    keys.press(KeyCode::ArrowRight);
-                    BotState::right
-                }
-                else if input == 1{
-                    keys.press(KeyCode::ArrowLeft);
-                    BotState::left
-                }
-                else if input == 2{
-                    keys.press(KeyCode::ArrowDown);
-                    BotState::idel
-                }
-                else{
-                    keys.press(KeyCode::ArrowDown);
-                    BotState::idel
-                }
-            }
-            };
-            return (next,input);
             
+            
+            };
+            //return next;
+            self.state_machine.current = next.clone();
+            next
         }
     }

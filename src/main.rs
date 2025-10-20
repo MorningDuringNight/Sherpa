@@ -11,20 +11,20 @@ mod stateMachine;
 
 use std::env;
 fn main() {
-    let mut is_main_player = false;
+    let mut player_number = None;
 
     for arg in env::args().skip(1) { // skip binary name
         match arg.as_str() {
-            "--main" => {
-                is_main_player = true;
+            "--p1" => {
+                player_number = Some(0);
             }
-            "--player" => {
-                is_main_player = false;
+            "--p2" => {
+                player_number = Some(1);
             }
             _ => {
                 eprintln!("Unknown argument: {arg}");
             }
         }
     }
-    app::run(is_main_player);
+    app::run(player_number);
 }
