@@ -95,7 +95,7 @@ fn bot_update_toggle(
 }
 
 fn bot_update(
-    mut players: Query<(Entity, &Transform, &mut Bot), With<Bot>>,
+    mut players: Query<(Entity, &GlobalTransform, &mut Bot), With<Bot>>,
     botActive: Res<BotActive>,
     mut keys: ResMut<ButtonInput<KeyCode>>,
     mut botTimer: ResMut<botTimer>,
@@ -114,7 +114,11 @@ fn bot_update(
             //
             botTimer.as_deref_mut().tick(time.delta());
             if botTimer.time.finished(){
-                Bot.change(&mut keys);
+                Bot.change(
+                    &time,
+                    transform,
+                    &mut keys,
+                );
             }
             else {
                 return;
