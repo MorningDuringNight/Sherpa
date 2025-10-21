@@ -185,9 +185,9 @@
           "endX": 163,
           "endY": 1000,
           "moveType": "linear",
-          "speed": 1,
-          "startX": 63,
-          "startY": 1255,
+          "speed": 3,
+          "startX": 513,
+          "startY": 1521,
           "trigger": {
             "triggerType": "loop"
           }

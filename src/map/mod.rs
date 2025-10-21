@@ -3,11 +3,13 @@ mod game_object_builder;
 mod loader;
 mod mapdata;
 mod util;
+mod platformfunction;
 
 pub use game_object_builder::Collider;
 pub use loader::Coin;
 pub use mapdata::MapFile;
 
+use platformfunction::linear_move_with_easing;
 use loader::{load_background_layers, load_game_objects, load_map_data, load_render_resources};
 
 const MAP_NAME: &str = "level1";
@@ -30,5 +32,6 @@ impl Plugin for MapPlugin {
         );
         #[cfg(feature = "server")]
         app.add_systems(Startup, (load_map_data, load_game_objects).chain());
+        app.add_systems(Update, linear_move_with_easing);
     }
 }
