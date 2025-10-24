@@ -1,41 +1,42 @@
 use bevy::prelude::*;
+use super::move_State::*;
+//collect data from every frame booleans
 
-#[derive((Debug, Clone, Copy, PartialEq, Eq, Hash, States, Default))]
-enum BotState{
-    #[default]
+#[derive(Component, Clone,)]
+pub enum BotState{
     idel,
     right,
     left,
     jump,
-    jump_r,
-    jump_l,
+    // jump_r,
+    // jump_l,
 }
 
-#[derive(Component)]
-struct StateMachine {
-    current: BotState,
-    previous: BotState,
+impl BotState {
+    pub fn new() -> Self{
+        BotState:: idel
+    }
+    
+}
+
+
+#[derive(Component, Clone )]
+pub struct StateMachine {
+    pub current: BotState,
+    //pub prev: BotState,
+    //action: 
 }
 
 impl StateMachine {
-    fn new(Init: BotState) -> Self {
+    pub fn new(Init: BotState) -> Self {
         //this as the constructor for tree
         Self {
-            current: init,
-            previous: init,
+            current: Init,
         }
     }
 
-    fn transition(&mut self, new_state: BotState){
-        self.previous = self.current;
+    pub fn transition(&mut self, new_state: BotState){
         self.current = new_state;
     }
-
-    fn current(&self) -> BotState {
-        self.current
-    }
-
-    fn previous(&self) -> BotState {
-        self.previous
-    }
+    
 }

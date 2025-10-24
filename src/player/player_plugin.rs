@@ -5,17 +5,18 @@
 
 use bevy::math::VectorSpace;
 use bevy::prelude::*;
-
+use rand::Rng;
 use crate::player::bundle::{PlayerBundle, PlayerControls};
 use crate::config::PlayerSpawnPoint;
 use crate::config::PlayerSpawnVelocity;
 use crate::config::PLAYER_SPAWN_MASS;
 
-use crate::components::motion::{GroundState, JumpController, Mass, Velocity, Position};
+use crate::components::motion::{GroundState, JumpController, Mass, Velocity};
 use crate::components::rope::{Rope, RopeConstraint};
 
 use crate::map::Collider;
-use crate::app::{FollowedPlayer, MainPlayer};
+use crate::app::FollowedPlayer;
+use crate::stateMachine::*;
 
 pub struct PlayerPlugin;
 
@@ -25,7 +26,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, spawn_point: Res<PlayerSpawnPoint>, spawn_velocity: Res<PlayerSpawnVelocity>) {
+fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, spawn_point: Res<PlayerSpawnPoint>, spawn_velocity: Res<PlayerSpawnVelocity>) {
     let transform = Transform::from_translation(spawn_point.position);
     let texture = asset_server.load("spriteguy.png");
     let controls = PlayerControls {
@@ -38,10 +39,7 @@ pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, spaw
     let ground_state = GroundState::default();
     let mass = Mass(PLAYER_SPAWN_MASS); // make the first player heavier (deleted for now but multiply mass)
     let velocity = Velocity(spawn_velocity.velocity);
-
-    let position= Position(spawn_point.position.truncate());
-    let p1 = commands.spawn(PlayerBundle::new(controls, texture, transform, velocity, mass, jump_controller, ground_state, position)).insert(FollowedPlayer).insert(MainPlayer).id();
-
+    let p1 = commands.spawn(PlayerBundle::new(controls, texture, transform, velocity, mass, jump_controller, ground_state, position)).insert(FollowedPlayer).insert(StateMachine::new(BotState::idel)).id(); // insert component
     // Spawn a second player for testing
     // This is temporary and will be removed later
     // Ideally we would have a better way
@@ -57,16 +55,15 @@ pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, spaw
     let jump_controller = JumpController::default();
     let ground_state = GroundState::default();
     let mass = Mass(PLAYER_SPAWN_MASS);
-
     let position= Position((spawn_point.position + Vec3::new(300.0, 0.0, 0.0)).truncate());
-    let p2 = commands.spawn(PlayerBundle::new(controls, texture, transform, velocity, mass, jump_controller, ground_state, position)).insert(FollowedPlayer).id();
+    let p2 = commands.spawn(PlayerBundle::new(controls, texture, transform, velocity, mass, jump_controller, ground_state, position)).insert(Bot::new()).id();
 
-//     // Add p1 and p2 a rope component
-//     commands.spawn(Rope {
-//         constraint: RopeConstraint::default(),
-//         attached_entity_head: p1,
-// attached_entity_tail: p2,
-// });
-
-// Ground platform setup
+    // Add p1 and p2 a rope component
+    commands.spawn(Rope {
+        constraint: RopeConstraint::default(),
+        attached_entity_head: p1,
+        attached_entity_tail: p2,
+    });
+    
+    // Ground platform setup
 }

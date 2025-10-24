@@ -17,7 +17,7 @@ pub fn toggle_debug(
     }
 }
 
-fn debug_on(debug: Res<Debug>) -> bool {
+pub fn debug_on(debug: Res<Debug>) -> bool {
     debug.0
 }
 
@@ -88,19 +88,3 @@ pub fn draw_colliders(
     }
 }
 
-pub struct DevModePlugin;
-
-impl Plugin for DevModePlugin {
-    fn build(&self, app: &mut App) {
-        app
-            .insert_resource(Debug(false))
-            .add_systems(Update, toggle_debug)
-            .add_systems(
-                Update,
-                (
-                    move_camera_with_arrows,
-                    draw_colliders,
-                ).run_if(debug_on)
-            );
-    }
-}

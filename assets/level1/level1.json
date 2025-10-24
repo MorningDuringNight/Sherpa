@@ -51,7 +51,7 @@
         "startY": 2020,
         "width": 165
       },
-      "type": "spike"
+      "type": "spikes"
     },
     "6Uc8L2": {
       "attributes": {
@@ -91,7 +91,7 @@
     },
     "An3NTn": {
       "attributes": {
-        "bounceStrength": 30
+        "bounceStrength": 10
       },
       "boundary": {
         "height": 39,
@@ -154,10 +154,10 @@
         "width": 384
       },
       "collision": {
-        "height": 63,
-        "startX": 320,
-        "startY": 1792,
-        "width": 384
+        "height": 41,
+        "startX": 331,
+        "startY": 1801,
+        "width": 289
       },
       "type": "platform"
     },
@@ -240,7 +240,7 @@
         "startY": 1765,
         "width": 174
       },
-      "type": "spike"
+      "type": "spikes"
     },
     "OM4jBl": {
       "attributes": {
@@ -388,7 +388,7 @@
     },
     "dGWGqQ": {
       "attributes": {
-        "bounceStrength": 30
+        "bounceStrength": 10
       },
       "boundary": {
         "height": 39,
@@ -550,7 +550,7 @@
     },
     "x6nWrY": {
       "attributes": {
-        "bounceStrength": 30
+        "bounceStrength": 10
       },
       "boundary": {
         "height": 39,

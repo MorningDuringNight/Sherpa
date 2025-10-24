@@ -3,8 +3,8 @@ use crate::player::PlayerCollider;
 use bevy::math::bounding::{Aabb2d, BoundingVolume};
 
 use bevy::math::bounding::IntersectsVolume;
-use crate::player::bundle::Player;
-use bevy::prelude::*;
+use crate::player::Player;
+use bevy::{prelude::*, transform};
 use crate::config::physics::GRAVITY;
 use crate::components::motion::Mass;
 use crate::game_ui::ui::TotalCoin;
@@ -31,7 +31,7 @@ pub fn on_collision(
     }
 }
 
-use crate::components::motion::{GroundState, Momentum, Velocity};
+use crate::components::motion::{GroundState, JumpController, Momentum, Velocity};
 use crate::map::Collider;
 
 const PLATFORM_FRICTION: f32 = 0.88;
@@ -55,6 +55,7 @@ fn resolve_collision(
     velocity: &mut Vec2,
     momentum: &mut Vec2,
     ground: &mut GroundState,
+    jump_controller: &mut JumpController,
     offset: Vec2,
 ) {
     if offset.x.abs() > offset.y.abs() {
@@ -67,6 +68,11 @@ fn resolve_collision(
         } else {
             // Collided from the right side of a wall → push player to the right
             player_pos.x -= 32.0;
+        }
+
+        // Refresh wall jump timer to use wall jump
+        if !ground.is_grounded && jump_controller.can_wall_jump {
+            jump_controller.wall_jump_timer.reset();
         }
 
         velocity.x = 0.0;
@@ -83,6 +89,9 @@ fn resolve_collision(
             ground.is_grounded = true;
             // velocity.x *= PLATFORM_FRICTION;
             momentum.x *= PLATFORM_FRICTION;
+
+            // Restore wall jump when landed
+            jump_controller.can_wall_jump = true;
         }
         // colliding with bottom
         else {
@@ -105,6 +114,7 @@ pub fn platform_collider_system(
         &PlayerCollider,
         &mut GroundState,
         &Mass,
+        &mut JumpController,
     ), With<Player>>,
     colliders: Query<(Entity, &Transform, &Collider), Without<Player>>,
     spikes: Query<(), With<crate::map::Spike>>,
@@ -113,7 +123,7 @@ pub fn platform_collider_system(
 ) {
     let dt = time.delta_secs();
 
-    for (player, mut transform, mut velocity, mut momentum, player_collider, mut ground, mass) in players.iter_mut() {
+    for (player, mut transform, mut velocity, mut momentum, player_collider, mut ground, mass, mut jump_controller) in players.iter_mut() {
         let mut player_aabb = predicted_aabb(&transform, &velocity, player_collider, dt);
         ground.is_grounded = false;
 
@@ -142,6 +152,7 @@ pub fn platform_collider_system(
                     &mut velocity.0,
                     &mut momentum.0,
                     &mut ground,
+                    &mut jump_controller,
                     offset,
                 );
 
@@ -180,6 +191,8 @@ pub fn player_collider_system(
         &mut Transform,
         &mut Momentum,
         &PlayerCollider,
+        &mut JumpController,
+        &mut GroundState,
     )>,
 ) {
     let dt = time.delta_secs();
@@ -194,8 +207,8 @@ pub fn player_collider_system(
 
         if let Some(obj1) = one.last_mut() {
             for obj2 in two.iter_mut() {
-                let &mut (_id1, ref mut vel1, ref mut trans1, ref mut mom1, collider1) = obj1;
-                let &mut (_id2, ref mut vel2, ref mut trans2, ref mut mom2, collider2) = obj2;
+                let &mut (_id1, ref mut vel1, ref mut trans1, ref mut mom1, collider1, ref mut jump_controller1, ref mut ground_state1) = obj1;
+                let &mut (_id2, ref mut vel2, ref mut trans2, ref mut mom2, collider2, ref mut jump_controller2, ref mut ground_state2) = obj2;
 
                 // Predict future positions
                 let future_pos1 = trans1.translation.truncate() + vel1.0 * dt;
@@ -227,6 +240,44 @@ pub fn player_collider_system(
                         vel1.0.x = 0.0;
                         vel2.0.x = 0.0;
                     } 
+                    else {
+                        // Resolve vertically 
+                        if aabb1.center().y < aabb2.center().y {
+                            // Push obj1 down, obj2 up
+                            trans1.translation.y -= overlap_y / 2.0;
+                            trans2.translation.y += overlap_y / 2.0;
+
+                            // obj2 landed on obj1, reset jumps
+                            jump_controller2.can_wall_jump = true;
+                            jump_controller2.is_jumping = false;
+                            ground_state2.is_grounded = true;
+                            ground_state2.coyote_timer.reset();
+                            
+                            // Apply friction to top of player
+                            mom2.0.x *= PLATFORM_FRICTION;
+                        }
+                        else {
+                            // Push obj1 up, obj2 down
+                            trans1.translation.y += overlap_y / 2.0;
+                            trans2.translation.y -= overlap_y / 2.0;
+
+                            // obj1 landed on obj2, reset jumps
+                            jump_controller1.can_wall_jump = true;
+                            jump_controller1.is_jumping = false;
+                            ground_state1.is_grounded = true;
+                            ground_state1.coyote_timer.reset();
+                            
+                            // Apply friction to top of player
+                            mom1.0.x *= PLATFORM_FRICTION;
+                        }
+
+                        // Basic vertical momentum resolution
+                        let total_momentum = mom1.0.y + mom2.0.y;
+                        mom1.0.y = total_momentum * 0.5;
+                        mom2.0.y = total_momentum * 0.5;
+                        vel1.0.y = 0.0;
+                        vel2.0.y = 0.0;
+                    }
                 }
             }
         }
@@ -257,5 +308,14 @@ pub fn update_coyote_timer_system(
         else {
             ground_state.coyote_timer.reset();
         }
+    }
+}
+
+pub fn update_wall_jump_timer_system(
+    time: Res<Time>,
+    mut query: Query<&mut JumpController, With<Player>>
+) {
+    for mut jump_controller in &mut query {
+        jump_controller.wall_jump_timer.tick(time.delta());
     }
 }

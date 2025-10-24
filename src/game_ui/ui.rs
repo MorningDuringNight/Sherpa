@@ -4,7 +4,6 @@ use crate::player::Player;
 use crate::components::motion::Position;
 use crate::map::{Collider, MapFile, MapTextureHandles, MapDimensions, AtlasLayoutResource, game_objects, ground};
 
-pub struct UIPlugin;
 
 #[derive(Component)]
 pub struct UICamera;
@@ -50,11 +49,11 @@ impl Plugin for UIPlugin{
 
 pub fn updateHeight(
     mut maxheight: ResMut<MaxHeight>,
-    players: Query<&Position, With<Player>>
+    players: Query<&Transform, With<Player>>
 ){
     for player in players.iter(){
-        if player.0.y as u32 > maxheight.amount{
-            maxheight.amount = player.0.y as u32;
+        if player.translation.y as u32 > maxheight.amount{
+            maxheight.amount = player.translation.y as u32;
         }
     }
 }
