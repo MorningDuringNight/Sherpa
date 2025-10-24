@@ -6,8 +6,10 @@ mod util;
 mod platformfunction;
 
 pub use game_object_builder::Collider;
-pub use loader::Coin;
+pub use loader::{Coin, Platform, Spike, TrampolineBounce, MapTextureHandles, MapDimensions, game_objects};
+pub use util::AtlasLayoutResource;
 pub use mapdata::MapFile;
+pub use util::ground;
 
 use platformfunction::linear_move_with_easing;
 use loader::{load_background_layers, load_game_objects, load_map_data, load_render_resources};

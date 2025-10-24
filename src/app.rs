@@ -167,7 +167,7 @@ pub fn run(player_number: Option<usize>) {
 
     #[cfg(feature = "server")]
     {
-        app.add_plugins(MinimalPlugins);
+        app.add_plugins(DefaultPlugins);
         app.insert_resource(GameMode::Simulated);
         app.add_plugins(UdpServerPlugin);
     }

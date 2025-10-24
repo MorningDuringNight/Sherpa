@@ -24,7 +24,7 @@ where
 pub enum EntityKind {
     Platform,
     Coin,
-    Spikes,
+    Spike,
     Trampoline,
 }
 
@@ -60,6 +60,9 @@ pub struct EntityData {
 pub struct EntityAttrs {
     one_way: Option<bool>,
     pub moving: Option<Moving>,
+    pub special: Option<String>,
+    #[serde(rename = "bounceStrength")]
+    pub bounce_strength: Option<f32>,
 }
 
 #[derive(Debug, Deserialize, Clone)]

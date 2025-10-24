@@ -29,6 +29,12 @@ pub struct MovingPlatform;
 #[derive(Component, Default)]
 pub struct Coin;
 
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct TrampolineBounce(pub f32);
+
+#[derive(Component, Default)]
+pub struct Spike;
+
 #[macro_export]
 macro_rules! new_game_object {
     ($id:expr, $sprite:expr, $transform:expr, $vis:expr) => {{
@@ -68,8 +74,8 @@ fn game_objects(
             ..Default::default()
         };
         let transform = Transform::from_xyz(entity.boundary.start_x, entity.boundary.start_y, 0.0);
-        let bundle = match entity.kind {
-            EntityKind::Platform | EntityKind::Spikes | EntityKind::Trampoline => {
+        let mut bundle = match entity.kind {
+            EntityKind::Platform => {
                 let collider = collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
                 if entity.attributes.moving.is_some(){
                     let eased_platform = create_eased(entity.attributes.moving.as_ref().unwrap());
@@ -89,6 +95,21 @@ fn game_objects(
                 new_game_object!(id, sprite, transform, Visibility::default())
                     .with_collider(collider)
                     .with_marker::<Coin>()
+            }
+            EntityKind::Spike => {
+                let collider = collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
+                GameObject::new(id, sprite, transform, Visibility::default())
+                    .with_collider(collider)
+                    .with_marker::<Spike>()
+            }
+            EntityKind::Trampoline => {
+                let collider = collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
+                let mut bundle = GameObject::new(id, sprite, transform, Visibility::default())
+                    .with_collider(collider);
+                // 添加弹力强度组件
+                let bounce_strength = entity.attributes.bounce_strength.unwrap_or(1.0);
+                bundle = bundle.with_component(TrampolineBounce(bounce_strength));
+                bundle
             }
         };
 
