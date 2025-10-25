@@ -20,19 +20,28 @@ pub struct SnapshotUpdate {
     pub positions: Vec<(f32, f32)>,
 }
 
+// Make a new type for sending inputs
+#[derive(Debug)]
+pub struct InputCommand {
+    pub seq: u32,
+    pub mask: u8
+}
+
 #[derive(Resource)]
 pub struct ClientNetChannels {
     pub rx_snapshots: Receiver<SnapshotUpdate>,
+    pub tx_inputs: Sender<InputCommand>,
 }
 
 // send input to the socket in the main bevy ecs thread. Synchronously.
 pub fn send_input_state_system(
     mut seq: Local<u32>,
     keyboard: Res<ButtonInput<KeyCode>>,
-    client: Option<Res<UdpClientSocket>>,
+    // Take the "send" side of a new channel instad of udp client socket
+    channels: Option<Res<ClientNetChannels>>,
 ) {
-    if client.is_none() { return; }
-    let client = client.unwrap();
+    if channels.is_none() { return; }
+    let channels = channels.unwrap();
 
     let mut mask = 0u8;
     if keyboard.pressed(KeyCode::KeyW) { mask |= 1 << 0; }
@@ -44,9 +53,9 @@ pub fn send_input_state_system(
     let mut buf = Vec::with_capacity(5);
     buf.extend_from_slice(&seq.to_be_bytes());
     buf.push(mask);
-
-    if let Err(e) = client.socket.send_to(&buf, client.server_addr) {
-        eprintln!("[Client] Failed to send input state: {}", e);
+    // Instead of sending to socket send to channel
+    if let Err(e) = channels.tx_inputs.try_send(InputCommand{ seq: *seq, mask}) {
+        eprintln!("[Client] Failed to enque input: {}", e);
     }
 }
 
@@ -76,7 +85,10 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
         .set_read_timeout(Some(Duration::from_secs(2)))
         .expect("Failed to set read timeout");
 
+    // Make a new channel, this is the receiving end (rx), tx is what the client uses to send so must be a resource
     let (tx_snapshots, rx_snapshots) = async_channel::unbounded::<SnapshotUpdate>();
+    let (tx_inputs, rx_inputs) = async_channel::unbounded::<InputCommand>();
+    
     let tx_snapshots_clone = tx_snapshots.clone();
 
     println!("[Client] Sending HELLO to {}", server_addr);
@@ -157,7 +169,24 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
                         }
                     }
                 }).detach();
+                // Create clone of clients udp socket to send packets to server
+                let socket_for_sending = socket.try_clone().expect("Failed to clone socket for sending");
+                let server_addr_clone = server_addr.clone();
 
+                // Receive keys from ecs, send through the channel  
+                task_pool.spawn(async move {
+                    // Receive inputs from ecs and read from the channel rx_inputs
+                    while let Ok(input) = rx_inputs.recv().await {
+                        // Serialize input to bytes
+                        let mut buf = Vec::with_capacity(5);
+                        buf.extend_from_slice(&input.seq.to_be_bytes());
+                        buf.push(input.mask);
+                        // Send to server via udp
+                        if let Err(e) = socket_for_sending.send_to(&buf, server_addr_clone) {
+                            eprintln!("[Client] Failed to send input state: {}", e);
+                    }
+                    }
+                }).detach();
                 // insert client socket for later use; (sending inputs to the socket)
                 commands.insert_resource(UdpClientSocket {
                     socket,
@@ -165,7 +194,7 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
                 });
                 // channel for receiving snapshots from the server into the main thread and
                 // processing with apply_snapshot_system
-                commands.insert_resource(ClientNetChannels { rx_snapshots });
+                commands.insert_resource(ClientNetChannels { rx_snapshots, tx_inputs, });
             }
         }
         Err(e) => {
