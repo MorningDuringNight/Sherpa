@@ -27,6 +27,12 @@ impl BotState {
     
 }
 
+#[derive(Event)]
+pub struct BotInputEvent {
+    pub key_code: KeyCode,
+    pub pressed: bool, 
+}
+
 
 #[derive(Component, Clone )]
 pub struct StateMachine {
