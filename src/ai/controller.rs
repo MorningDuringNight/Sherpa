@@ -144,6 +144,7 @@ pub fn decide_next_patrol(
     tf: &GlobalTransform,
     keys: &mut ButtonInput<KeyCode>,
     mem: &mut PatrolMemory,
+    mut pevent: EventWriter<BotInputEvent>,
 ) -> BotState {
     // 打印mem指针
     // info!("PatrolMemory ptr: {:p}", mem);
