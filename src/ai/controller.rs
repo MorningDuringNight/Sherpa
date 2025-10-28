@@ -176,12 +176,30 @@ pub fn decide_next_patrol(
     }
 
     
-    keys.release(KeyCode::ArrowLeft);
-    keys.release(KeyCode::ArrowRight);
-    keys.release(KeyCode::ArrowUp);
-    keys.release(KeyCode::ArrowDown);
+    // keys.release(KeyCode::ArrowLeft);
+    // keys.release(KeyCode::ArrowRight);
+    // keys.release(KeyCode::ArrowUp);
+    // keys.release(KeyCode::ArrowDown);
 
+    pevent.send(BotInputEvent{
+        key_code: KeyCode::ArrowLeft,
+        pressed: false,
+    });
 
+    pevent.send(BotInputEvent{
+        key_code: KeyCode::ArrowRight,
+        pressed: false,
+    });
+
+    pevent.send(BotInputEvent{
+        key_code: KeyCode::ArrowUp,
+        pressed: false,
+    });
+
+    pevent.send(BotInputEvent{
+        key_code: KeyCode::ArrowDown,
+        pressed: false,
+    });
     let mut rng = rand::thread_rng();
 
     // 1. 被困状态：优先解救
@@ -191,22 +209,38 @@ pub fn decide_next_patrol(
         match r {
             0 => {
                 if mem.dir == -1 {
-                    keys.press(KeyCode::ArrowLeft);
+                    pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowLeft,
+                    pressed: true,
+                });
+
                     // info!("  Bot is jumping left to escape");
                 } else {
-                    keys.press(KeyCode::ArrowRight);
+                    pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowRight,
+                    pressed: true,
+                });
                     // info!("  Bot is jumping right to escape");
                 }
-                keys.press(KeyCode::ArrowUp);
+                pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowUp,
+                    pressed: true,
+                });
                 return BotState::jump;
             }
             _ => {
                 if mem.dir == -1 {
-                    keys.press(KeyCode::ArrowLeft);
+                    pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowLeft,
+                    pressed: true,
+                });
                     // info!("  Bot is moving left to escape");
                     return BotState::left;
                 } else {
-                    keys.press(KeyCode::ArrowRight);
+                   pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowRight,
+                    pressed: true,
+                });
                     // info!("  Bot is moving right to escape");
                     return BotState::right;
                 }
@@ -225,9 +259,15 @@ pub fn decide_next_patrol(
             if mem.dir != -1 {
                 mem.dir = -1;
             }
-            keys.press(KeyCode::ArrowLeft);
+            pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowLeft,
+                    pressed: true,
+                });
             if player_jump {
-                keys.press(KeyCode::ArrowUp);
+                pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowUp,
+                    pressed: true,
+                });
                 // info!("  Bot is moving left and jumping");
                 return BotState::jump;
             } else {
@@ -238,9 +278,15 @@ pub fn decide_next_patrol(
             if mem.dir != 1 {
                 mem.dir = 1;
             }
-            keys.press(KeyCode::ArrowRight);
+            pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowRight,
+                    pressed: true,
+                });
             if player_jump {
-                keys.press(KeyCode::ArrowUp);
+                pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowUp,
+                    pressed: true,
+                });
                 // info!("  Bot is moving right and jumping");
                 return BotState::jump;
             } else {
@@ -248,7 +294,10 @@ pub fn decide_next_patrol(
                 return BotState::right;
             }
         } else if player_jump {
-            keys.press(KeyCode::ArrowUp);
+            pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowUp,
+                    pressed: true,
+                });
             // info!("  Bot is jumping");
             return BotState::jump;
         } else {
@@ -261,33 +310,54 @@ pub fn decide_next_patrol(
     // info!("[3] Bot is patrolling, random choice: {}", r);
     match r {
         0 => {
-            keys.press(KeyCode::ArrowLeft);
+            pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowLeft,
+                    pressed: true,
+                });
             mem.dir = -1;
             // info!("  Bot is moving left");
             BotState::left
         }
         1 => {
-            keys.press(KeyCode::ArrowRight);
+            pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowRight,
+                    pressed: true,
+                });
             mem.dir = 1;
             // info!("  Bot is moving right");
             BotState::right
         }
         2 => {
-            keys.press(KeyCode::ArrowLeft);
-            keys.press(KeyCode::ArrowUp);
+            pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowLeft,
+                    pressed: true,
+                });
+            pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowUp,
+                    pressed: true,
+                });
             mem.dir = -1;
             // info!("  Bot is jumping left");
             BotState::jump
         }
         3 => {
-            keys.press(KeyCode::ArrowRight);
-            keys.press(KeyCode::ArrowUp);
+            pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowRight,
+                    pressed: true,
+                });
+            pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowUp,
+                    pressed: true,
+                });
             mem.dir = 1;
             // info!("  Bot is jumping right");
             BotState::jump
         }
         _ => {
-            keys.press(KeyCode::ArrowDown);
+            pevent.send(BotInputEvent{
+                    key_code: KeyCode::ArrowDown,
+                    pressed: true,
+                });
             // info!("  Bot is idling");
             BotState::idel
         }
