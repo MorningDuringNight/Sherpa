@@ -1,21 +1,27 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) 2025 Tingxu Chen
-// Author: Tingxu Chen <tic128@pitt.edu>
-// Description: <Player mod>
 use bevy::prelude::*;
+pub mod bundle;
+pub mod load_players;
+pub mod player_control;
 
-mod spawn;
 
-mod bundle;
-mod config;
-pub mod component;
+use self::player_control::{player_movement_input_system, player_input_collection_system, PlayerInputEvent};
 
-use self::spawn::spawn_player;
+pub use self::load_players::{spawn_players, Player};
+pub use bundle::{PlayerCollider};
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, spawn_player);
+        app.add_event::<PlayerInputEvent>();
+        app.add_systems(Startup, spawn_players);
+        app.add_systems(FixedUpdate, (player_movement_input_system).chain());
+
+        #[cfg(feature = "client")]
+        // doesn't do much at all when running with client+server
+        // kind sorta client side prediction already.
+        app.add_systems(Update, player_input_collection_system);
     }
+
+
 }

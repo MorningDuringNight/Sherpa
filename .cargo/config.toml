@@ -1,0 +1,6 @@
+[alias]
+vroom = "run --features bevy/dynamic_linking"
+xtask = "run --package xtask --"
+server = "run --no-default-features --features server"
+p1 = "run -- --p1"
+p2 = "run -- --p2"

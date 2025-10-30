@@ -3,39 +3,57 @@
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Physics system module and plugin>
 use bevy::prelude::*;
-use bevy::time::Fixed;
 
-mod physics_core;
-mod player;
-mod control;
+pub mod integrate;
+pub mod gravity;
+pub mod rope_force;
+pub mod collision;
 
-mod config;
-mod schedule;
 
-use self::physics_core::PhysicsCorePlugin;
-use self::player::player_insert_physics;
-use self::control::player_intent_to_force;
-use self::schedule::PhysicsSet;
+use self::integrate::clean_force_system;
+use self::integrate::integrate_force_system;
+use self::integrate::integrate_momentum_system;
+use self::integrate::integrate_velocity_system;
+use self::integrate::boundary;
+use self::gravity::gravity_system;
+use self::rope_force::clean_rope_force_system;
+use self::rope_force::rope_tension_system;
+use self::rope_force::rope_force_to_system;
+// use self::rope_force::debug_print_rope_mesh2d;
+// use self::rope_force::debug_print_player_world_pos;
+
+use self::collision::platform_collider_system;
+use self::collision::player_collider_system;
+use self::collision::update_coyote_timer_system;
+use self::collision::update_wall_jump_timer_system;
+use self::collision::on_collision;
+use self::collision::PlayerCollisionEvent;
 
 pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Time::<Fixed>::from_hz(60.0))
-           .configure_sets(
-                FixedUpdate,
+        app
+            .add_event::<PlayerCollisionEvent>()
+            .add_systems(
+                FixedUpdate, 
                 (
-                    PhysicsSet::Clear,
-                    PhysicsSet::Emit,
-                    PhysicsSet::Integrate,
-                ).chain(),
-            )
-           .add_plugins(PhysicsCorePlugin)
-           .add_systems(
-                FixedUpdate,
-                (
-                    player_insert_physics,
-                    player_intent_to_force,
-                ).in_set(PhysicsSet::Emit).chain()
+                    clean_force_system,
+                    gravity_system,
+                    clean_rope_force_system,
+                    rope_tension_system,
+                    rope_force_to_system,
+                    integrate_force_system,
+                    integrate_momentum_system,
+                    integrate_velocity_system,
+                    player_collider_system,
+                    platform_collider_system,
+                    update_coyote_timer_system,
+                    update_wall_jump_timer_system,
+                    on_collision,
+                    boundary,
+                    // debug_print_rope_mesh2d,
+                    // debug_print_player_world_pos,
+                ).chain()
             );
     }
 }

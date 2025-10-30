@@ -1,0 +1,13 @@
+[package]
+name = "prototype"
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+
+[dependencies]
+bevy.workspace = true
+rand.workspace = true
+bevy_sprite = "0.16.1"
+
+[package.metadata.commands]
+pullmap = "bash ../.cargo/pullMap.sh"

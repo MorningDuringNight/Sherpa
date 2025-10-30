@@ -1,0 +1,3 @@
+- `cargo xtask {task_name} {sub_command_args}`
+    - `cargo xtask pullmap` **-> default, download map named *'level1'***
+    - `cargo xtask pullmap -n|--name {map_name_on_server}`
