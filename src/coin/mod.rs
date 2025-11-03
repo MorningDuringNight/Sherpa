@@ -8,7 +8,8 @@ pub struct CoinPlugin;
 
 impl Plugin for CoinPlugin {
     fn build(&self, app: &mut App) {
-        // app.add_systems(Update, spawn_coin)
-        //    .add_systems(Update, coin_detect);
+        app.insert_resource( TotalCoin {amount:0,});
+        app.add_systems(Update, spawn_coin)
+           .add_systems(Update, coin_detect);
     }
 }
