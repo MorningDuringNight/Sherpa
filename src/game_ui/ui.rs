@@ -7,19 +7,12 @@ use crate::player::Player;
 pub struct UICamera;
 
 #[derive(Resource, Debug, Default, Clone, PartialEq, Eq)]
-pub struct TotalCoin{
-    pub amount: u32,
-}
-
-
-#[derive(Resource, Debug, Default, Clone, PartialEq, Eq)]
 pub struct MaxHeight{
     pub amount: u32,
 }
 
 #[derive(Component)]
 pub struct CoinDisplay;
-
 
 #[derive(Component)]
 pub struct ScoreDisplay;
