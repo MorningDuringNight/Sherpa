@@ -1,0 +1,13 @@
+[package]
+name = "slideshow"
+
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+
+[dependencies]
+bevy.workspace = true
+rand.workspace = true
+
+[package.metadata.commands]
+pullmap = "bash ../.cargo/pullMap.sh"

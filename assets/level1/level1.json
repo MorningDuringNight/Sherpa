@@ -1,0 +1,651 @@
+{
+  "collisionAreas": [],
+  "entities": {
+    "1Bjsto": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 49,
+        "startX": 802,
+        "startY": 1433,
+        "width": 61
+      },
+      "collision": {
+        "height": 49,
+        "startX": 771,
+        "startY": 591,
+        "width": 61
+      },
+      "type": "platform"
+    },
+    "57uUIz": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 65,
+        "startX": 481,
+        "startY": 1441,
+        "width": 191
+      },
+      "collision": {
+        "height": 65,
+        "startX": 385,
+        "startY": 574,
+        "width": 191
+      },
+      "type": "platform"
+    },
+    "5t0nMl": {
+      "attributes": {},
+      "boundary": {
+        "height": 28,
+        "startX": 742,
+        "startY": 14,
+        "width": 165
+      },
+      "collision": {
+        "height": 28,
+        "startX": 659,
+        "startY": 2020,
+        "width": 165
+      },
+      "type": "spikes"
+    },
+    "6Uc8L2": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 61,
+        "startX": 1024,
+        "startY": 419,
+        "width": 384
+      },
+      "collision": {
+        "height": 61,
+        "startX": 832,
+        "startY": 1599,
+        "width": 384
+      },
+      "type": "platform"
+    },
+    "8e5DcN": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 64,
+        "startX": 37,
+        "startY": 672,
+        "width": 54
+      },
+      "collision": {
+        "height": 64,
+        "startX": 10,
+        "startY": 1343,
+        "width": 54
+      },
+      "type": "coin"
+    },
+    "An3NTn": {
+      "attributes": {
+        "bounceStrength": 10
+      },
+      "boundary": {
+        "height": 39,
+        "startX": 1057,
+        "startY": 20,
+        "width": 63
+      },
+      "collision": {
+        "height": 39,
+        "startX": 1025,
+        "startY": 2009,
+        "width": 63
+      },
+      "type": "trampoline"
+    },
+    "FzrI7J": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 24,
+        "startX": 896,
+        "startY": 140,
+        "width": 128
+      },
+      "collision": {
+        "height": 24,
+        "startX": 832,
+        "startY": 1895,
+        "width": 128
+      },
+      "type": "platform"
+    },
+    "GgfOh1": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 69,
+        "startX": 672,
+        "startY": 1121,
+        "width": 197
+      },
+      "collision": {
+        "height": 69,
+        "startX": 573,
+        "startY": 893,
+        "width": 197
+      },
+      "type": "platform"
+    },
+    "GllhG3": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 63,
+        "startX": 512,
+        "startY": 224,
+        "width": 384
+      },
+      "collision": {
+        "height": 41,
+        "startX": 331,
+        "startY": 1801,
+        "width": 289
+      },
+      "type": "platform"
+    },
+    "H6hElL": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 63,
+        "startX": 992,
+        "startY": 1762,
+        "width": 193
+      },
+      "collision": {
+        "height": 63,
+        "startX": 895,
+        "startY": 255,
+        "width": 193
+      },
+      "type": "platform"
+    },
+    "JhII3R": {
+      "attributes": {
+        "moving": {
+          "endX": 163,
+          "endY": 1000,
+          "moveType": "linear",
+          "speed": 3,
+          "startX": 513,
+          "startY": 1521,
+          "trigger": {
+            "triggerType": "loop"
+          }
+        },
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 24,
+        "startX": 192,
+        "startY": 780,
+        "width": 257
+      },
+      "collision": {
+        "height": 24,
+        "startX": 63,
+        "startY": 1255,
+        "width": 257
+      },
+      "type": "platform"
+    },
+    "M9lJzf": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 64,
+        "startX": 128,
+        "startY": 96,
+        "width": 257
+      },
+      "collision": {
+        "height": 64,
+        "startX": -1,
+        "startY": 1919,
+        "width": 257
+      },
+      "type": "platform"
+    },
+    "NoXfwt": {
+      "attributes": {},
+      "boundary": {
+        "height": 27,
+        "startX": 617,
+        "startY": 270,
+        "width": 174
+      },
+      "collision": {
+        "height": 27,
+        "startX": 530,
+        "startY": 1765,
+        "width": 174
+      },
+      "type": "spikes"
+    },
+    "OM4jBl": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 32,
+        "startX": 679,
+        "startY": 812,
+        "width": 51
+      },
+      "collision": {
+        "height": 32,
+        "startX": 653,
+        "startY": 1220,
+        "width": 51
+      },
+      "type": "platform"
+    },
+    "P7VpTf": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 67,
+        "startX": 224,
+        "startY": 674,
+        "width": 49
+      },
+      "collision": {
+        "height": 67,
+        "startX": 199,
+        "startY": 1341,
+        "width": 49
+      },
+      "type": "coin"
+    },
+    "SSyaD5": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 64,
+        "startX": 1120,
+        "startY": 672,
+        "width": 193
+      },
+      "collision": {
+        "height": 64,
+        "startX": 1023,
+        "startY": 1343,
+        "width": 193
+      },
+      "type": "platform"
+    },
+    "XMkJxI": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 65,
+        "startX": 100,
+        "startY": 673,
+        "width": 56
+      },
+      "collision": {
+        "height": 65,
+        "startX": 72,
+        "startY": 1343,
+        "width": 56
+      },
+      "type": "coin"
+    },
+    "ZaoCEz": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 62,
+        "startX": 545,
+        "startY": 1759,
+        "width": 322
+      },
+      "collision": {
+        "height": 62,
+        "startX": 384,
+        "startY": 258,
+        "width": 322
+      },
+      "type": "platform"
+    },
+    "ZkQjeH": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 65,
+        "startX": 160,
+        "startY": 609,
+        "width": 321
+      },
+      "collision": {
+        "height": 65,
+        "startX": -1,
+        "startY": 1406,
+        "width": 321
+      },
+      "type": "platform"
+    },
+    "aTVvMh": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 33,
+        "startX": 614,
+        "startY": 877,
+        "width": 53
+      },
+      "collision": {
+        "height": 33,
+        "startX": 587,
+        "startY": 1155,
+        "width": 53
+      },
+      "type": "platform"
+    },
+    "bSYldJ": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 65,
+        "startX": 289,
+        "startY": 673,
+        "width": 46
+      },
+      "collision": {
+        "height": 65,
+        "startX": 266,
+        "startY": 1342,
+        "width": 46
+      },
+      "type": "coin"
+    },
+    "dGWGqQ": {
+      "attributes": {
+        "bounceStrength": 10
+      },
+      "boundary": {
+        "height": 39,
+        "startX": 352,
+        "startY": 276,
+        "width": 64
+      },
+      "collision": {
+        "height": 39,
+        "startX": 320,
+        "startY": 1753,
+        "width": 64
+      },
+      "type": "trampoline"
+    },
+    "gK1MIP": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 22,
+        "startX": 768,
+        "startY": 779,
+        "width": 128
+      },
+      "collision": {
+        "height": 22,
+        "startX": 704,
+        "startY": 1257,
+        "width": 128
+      },
+      "type": "platform"
+    },
+    "ghs5kB": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 63,
+        "startX": 993,
+        "startY": 1442,
+        "width": 318
+      },
+      "collision": {
+        "height": 63,
+        "startX": 834,
+        "startY": 575,
+        "width": 318
+      },
+      "type": "platform"
+    },
+    "hjdzsp": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 64,
+        "startX": 194,
+        "startY": 1504,
+        "width": 257
+      },
+      "collision": {
+        "height": 64,
+        "startX": 65,
+        "startY": 512,
+        "width": 257
+      },
+      "type": "platform"
+    },
+    "mMgTHL": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 25,
+        "startX": 448,
+        "startY": 589,
+        "width": 256
+      },
+      "collision": {
+        "height": 25,
+        "startX": 320,
+        "startY": 1446,
+        "width": 256
+      },
+      "type": "platform"
+    },
+    "rQLbAM": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 67,
+        "startX": 161,
+        "startY": 674,
+        "width": 46
+      },
+      "collision": {
+        "height": 67,
+        "startX": 138,
+        "startY": 1341,
+        "width": 46
+      },
+      "type": "coin"
+    },
+    "sblwFS": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 31,
+        "startX": 320,
+        "startY": 1186,
+        "width": 233
+      },
+      "collision": {
+        "height": 31,
+        "startX": 203,
+        "startY": 847,
+        "width": 233
+      },
+      "type": "platform"
+    },
+    "uOo4iE": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 25,
+        "startX": 1024,
+        "startY": 929,
+        "width": 232
+      },
+      "collision": {
+        "height": 25,
+        "startX": 908,
+        "startY": 1107,
+        "width": 232
+      },
+      "type": "platform"
+    },
+    "uuAsf5": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 63,
+        "startX": 481,
+        "startY": 34,
+        "width": 55
+      },
+      "collision": {
+        "height": 63,
+        "startX": 453,
+        "startY": 1983,
+        "width": 55
+      },
+      "type": "coin"
+    },
+    "x6nWrY": {
+      "attributes": {
+        "bounceStrength": 10
+      },
+      "boundary": {
+        "height": 39,
+        "startX": 800,
+        "startY": 1492,
+        "width": 64
+      },
+      "collision": {
+        "height": 39,
+        "startX": 768,
+        "startY": 537,
+        "width": 64
+      },
+      "type": "trampoline"
+    },
+    "xP9Uv8": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 64,
+        "startX": 1186,
+        "startY": 1248,
+        "width": 61
+      },
+      "collision": {
+        "height": 64,
+        "startX": 1155,
+        "startY": 768,
+        "width": 61
+      },
+      "type": "coin"
+    },
+    "y1Wo6Z": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 32,
+        "startX": 1026,
+        "startY": 560,
+        "width": 100
+      },
+      "collision": {
+        "height": 32,
+        "startX": 976,
+        "startY": 1471,
+        "width": 100
+      },
+      "type": "platform"
+    },
+    "yP4eRK": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 24,
+        "startX": 608,
+        "startY": 396,
+        "width": 192
+      },
+      "collision": {
+        "height": 24,
+        "startX": 512,
+        "startY": 1640,
+        "width": 192
+      },
+      "type": "platform"
+    },
+    "yfKVdV": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 33,
+        "startX": 1190,
+        "startY": 1197,
+        "width": 52
+      },
+      "collision": {
+        "height": 33,
+        "startX": 1164,
+        "startY": 835,
+        "width": 52
+      },
+      "type": "platform"
+    }
+  },
+  "layerImages": {
+    "entity": "level1/entity.png",
+    "tileFg": "level1/tile_fg.png"
+  },
+  "metadata": {
+    "cols": 20,
+    "rows": 32,
+    "tileSizePx": 64
+  }
+}

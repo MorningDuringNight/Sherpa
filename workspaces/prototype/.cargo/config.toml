@@ -1,0 +1,2 @@
+[alias]
+vroom = "run --features bevy/dynamic_linking"

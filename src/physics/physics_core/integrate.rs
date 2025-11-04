@@ -3,10 +3,19 @@
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Systems for physics integration>
 use bevy::prelude::*;
-use super::component::{Velocity, Momentum, Impulse, NetForce, Mass};
+use crate::components::motion::{Velocity, NetForce, Momentum, Mass };
+use crate::player::Player;
 
-pub(super) fn netforce_to_momentum(
-    time: Res<Time<Fixed>>,
+pub fn clean_force_system(
+    mut query: Query<&mut NetForce>,
+) {
+    for mut net_force in query.iter_mut() {
+        net_force.0 = Vec2::ZERO;
+    }
+}
+
+pub fn integrate_force_system(
+    time: Res<Time>,
     mut query: Query<(&mut Momentum, &NetForce)>,
 ) {
     let delta_seconds = time.delta_secs();
@@ -15,15 +24,7 @@ pub(super) fn netforce_to_momentum(
     }
 }
 
-pub(super) fn impulse_to_momentum(
-    mut query: Query<(&mut Momentum, &Impulse)>,
-) {
-    for (mut momentum, impulse) in query.iter_mut() {
-        momentum.0 += impulse.0;
-    }
-}
-
-pub(super) fn momentum_to_velocity(
+pub fn integrate_momentum_system(
     mut query: Query<(&mut Velocity, &Momentum, &Mass)>,
 ) {
     for (mut velocity, momentum, mass) in query.iter_mut() {
@@ -31,7 +32,7 @@ pub(super) fn momentum_to_velocity(
     }
 }
 
-pub(super) fn velocity_to_transform(
+pub fn integrate_velocity_system(
     time: Res<Time<Fixed>>,
     mut query: Query<(&mut Transform, &Velocity)>,
 ) {
@@ -43,29 +44,29 @@ pub(super) fn velocity_to_transform(
 }
 
 // Force to give a windows boundary
-pub(super) fn boundary(
+pub fn boundary(
     mut query: Query<(&mut Transform, &mut Velocity, &mut Momentum)>,
 ) {
     let width = 1280.0 - 64.0; // minus player width
     let height = 720.0 - 64.0; // minus player height
     for (mut transform, mut velocity, mut momentum) in query.iter_mut() {
-        if transform.translation.x < - width / 2.0 {
-            transform.translation.x = - width / 2.0;
+        if transform.translation.x < 32.0{
+            transform.translation.x = 32.0;
             velocity.0.x = 0.0;
             momentum.0.x = 0.0;
         }
-        if transform.translation.x > width / 2.0 {
-            transform.translation.x = width / 2.0;
+        if transform.translation.x > width + 32.0{
+            transform.translation.x = width + 32.0;
             velocity.0.x = 0.0;
             momentum.0.x = 0.0;
         }
-        if transform.translation.y < - height / 2.0 {
-            transform.translation.y = - height / 2.0;
+        if transform.translation.y < 32.0 {
+            transform.translation.y = 32.0;
             velocity.0.y = 0.0;
             momentum.0.y = 0.0;
         }
-        if transform.translation.y > height / 2.0 {
-            transform.translation.y = height / 2.0;
+        if transform.translation.y > (64.0*32.0) {
+            transform.translation.y = height + 32.0;
             velocity.0.y = 0.0;
             momentum.0.y = 0.0;
         }
