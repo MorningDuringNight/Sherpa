@@ -26,6 +26,9 @@ use crate::physics::rope_force::{
 };
 use crate::player::load_players::spawn_players;
 
+use crate::observer::plugin::ObserverPlugin;
+
+
 // change usize to all: single player, single machine config data. 
 #[derive(Resource)]
 pub enum GameMode {
@@ -181,6 +184,7 @@ pub fn run(player_number: Option<usize>) {
         .add_plugins(MapPlugin)
         .add_plugins(PlayerPlugin)
         .add_plugins(PhysicsPlugin)
+        .add_plugins(ObserverPlugin)
         .add_plugins(UIPlugin)
         .add_event::<ToggleBotEvent>()
         .add_systems(Startup, init_player_camera)

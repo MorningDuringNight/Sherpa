@@ -8,6 +8,8 @@ mod physics;
 mod player;
 mod util;
 mod stateMachine;
+mod observer;
+
 
 use std::env;
 fn main() {
