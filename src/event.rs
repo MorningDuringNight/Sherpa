@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Tingxu Chen
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Event>
-use bevy::prelude::*;
+use bevy::{math::bounding::Aabb2d, prelude::*};
 
 // Event plugins
 pub struct EventPlugin;
@@ -14,7 +14,8 @@ impl Plugin for EventPlugin {
            .add_event::<Control2PhysicsIntent>()
            .add_event::<Player2ControlAttach>()
            .add_event::<Player2PhysicsAttach>()
-           .add_event::<Rope2PhysicsAttach>();
+           .add_event::<Rope2PhysicsAttach>()
+           .add_event::<Collision2PhysicsDetected>();
     }
 }
 
@@ -91,7 +92,20 @@ pub struct Rope2PhysicsAttach {
 }
 
 // Collision sends Physics Information
-// TODO-Collision: Write an event to send collision graphic information.
-//                 Entity, Overlap Info, ect.
+#[derive(Event, Debug, Clone, Copy)]
+pub struct Collision2PhysicsDetected {
+    pub entity_a: Entity,
+    pub entity_b: Entity,
+    pub collision_type: CollisionType,
+    pub aabb_a: Aabb2d,
+    pub aabb_b: Aabb2d,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CollisionType {
+    Platform,
+    Player,
+    Collectible,
+}
 
 // TODO-Map Loading: Write platform and coin spawn events.

@@ -11,10 +11,12 @@ mod control;
 
 mod config;
 mod schedule;
+mod collision;
 
 use self::physics_core::PhysicsCorePlugin;
 use self::player::player_insert_physics;
 use self::control::player_intent_to_force;
+use self::collision::resolve_collision_system;
 use self::schedule::PhysicsSet;
 
 pub struct PhysicsPlugin;
@@ -36,6 +38,11 @@ impl Plugin for PhysicsPlugin {
                     player_insert_physics,
                     player_intent_to_force,
                 ).in_set(PhysicsSet::Emit).chain()
+            )
+            .add_systems(
+                FixedUpdate,
+                resolve_collision_system
+                    .in_set(PhysicsSet::Integrate)
             );
     }
 }

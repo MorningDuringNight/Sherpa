@@ -7,6 +7,7 @@ mod lifetime;
 mod physics;
 mod player;
 mod rope;
+mod collision;
 
 fn main() {
     app::run();

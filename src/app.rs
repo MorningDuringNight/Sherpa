@@ -9,6 +9,7 @@ use crate::event::EventPlugin;
 use crate::camera::CameraPlugin;
 use crate::lifetime::LifetimePlugin;
 use crate::physics::PhysicsPlugin;
+use crate::collision::CollisionPlugin;
 
 pub fn run() {
     App::new()
@@ -22,5 +23,6 @@ pub fn run() {
         .add_plugins(CameraPlugin)
         .add_plugins(LifetimePlugin)
         .add_plugins(PhysicsPlugin)
+        .add_plugins(CollisionPlugin)
         .run();
 }
