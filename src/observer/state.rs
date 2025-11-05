@@ -3,26 +3,44 @@ use bevy::prelude::*;
 /// Stores the summarized game observation for AI use.
 #[derive(Resource, Default, Debug)]
 pub struct ObservationState {
-    pub player_positions: Vec<Vec2>,
-    pub rope_tension: f32,
+    pub positions: Vec2,
+    pub velocities: Vec2,
     pub map_region: Option<String>,
 }
 
+fn discretize_velocity(v: &f32) -> i32 {
+        info!("Velocity component: {}", v);
+        let threshold = 50.0;
+        if *v < -threshold {
+            -1
+        } else if *v > threshold {
+            1
+        } else {
+            0
+        }
+    }
+
 impl ObservationState {
     /// Convert the observation into a numerical vector for AI (Q-learning).
-    pub fn as_vector(&self) -> Vec<f32> {
-        let mut vec = vec![self.rope_tension];
-        for pos in &self.player_positions {
-            vec.push(pos.x);
-            vec.push(pos.y);
-        }
-        vec
+    pub fn as_vector(&self) -> Vec<i32> {
+        
+        let x: i32 = (self.positions.x as i32) / 64;
+        let y: i32 = (self.positions.y as i32) / 64;
+
+        let vx_disc = discretize_velocity(&self.velocities.x);
+        let vy_disc = discretize_velocity(&self.velocities.y);
+        vec![
+            x,
+            y,
+            vx_disc,
+            vy_disc
+        ]
     }
 
     /// Reset the state each frame before updates.
     pub fn clear(&mut self) {
-        self.player_positions.clear();
-        self.rope_tension = 0.0;
+        self.positions = Vec2::ZERO;
+        self.velocities = Vec2:: ZERO;
         self.map_region = None;
     }
 }
