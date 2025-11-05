@@ -9,11 +9,10 @@ pub struct ObservationState {
 }
 
 fn discretize_velocity(v: &f32) -> i32 {
-        info!("Velocity component: {}", v);
-        let threshold = 50.0;
+        let threshold = 10.0;
         if *v < -threshold {
             -1
-        } else if *v > threshold {
+        } else if *v > threshold  {
             1
         } else {
             0
