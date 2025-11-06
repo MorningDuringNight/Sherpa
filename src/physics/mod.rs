@@ -20,6 +20,8 @@ use self::gravity::gravity_system;
 use self::rope_force::clean_rope_force_system;
 use self::rope_force::rope_tension_system;
 use self::rope_force::rope_force_to_system;
+// use self::rope_force::debug_print_rope_mesh2d;
+// use self::rope_force::debug_print_player_world_pos;
 
 use self::collision::platform_collider_system;
 use self::collision::player_collider_system;
@@ -50,6 +52,8 @@ impl Plugin for PhysicsPlugin {
                     update_wall_jump_timer_system,
                     on_collision,
                     boundary,
+                    // debug_print_rope_mesh2d,
+                    // debug_print_player_world_pos,
                 ).chain()
                 .run_if(in_state(MyAppState::InGame))
             );

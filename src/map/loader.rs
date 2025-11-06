@@ -2,6 +2,7 @@
 use bevy::prelude::*;
 use std::path::Path;
 
+
 use super::game_object_builder::{GameObject};
 use super::mapdata::EntityKind;
 use super::util::*;
@@ -21,6 +22,9 @@ pub struct MapTextureHandles {
 
 #[derive(Component, Default)]
 pub struct Platform;
+
+#[derive(Component, Default)]
+pub struct MovingPlatform;
 
 #[derive(Component, Default)]
 pub struct Coin;
@@ -65,11 +69,20 @@ fn game_objects(
         };
         let transform = Transform::from_xyz(entity.boundary.start_x, entity.boundary.start_y, 0.0);
         let bundle = match entity.kind {
-            EntityKind::Platform => {
+            EntityKind::Platform | EntityKind::Spikes | EntityKind::Trampoline => {
                 let collider = collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
-                new_game_object!(id, sprite, transform, Visibility::default())
+                if entity.attributes.moving.is_some(){
+                    let eased_platform = create_eased(entity.attributes.moving.as_ref().unwrap());
+                    new_game_object!(id, sprite, transform, Visibility::default())
                     .with_collider(collider)
                     .with_marker::<Platform>()
+                    // .with_marker::<MovingPlatform>()
+                    .with_eased(eased_platform)
+                 }else{
+                    new_game_object!(id, sprite, transform, Visibility::default())
+                    .with_collider(collider)
+                    .with_marker::<Platform>()
+                 }   
             }
             EntityKind::Coin => {
                 let collider = collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
@@ -78,6 +91,10 @@ fn game_objects(
                     .with_marker::<Coin>()
             }
         };
+
+        // if bundle.eased_platform.is_some(){
+        //     println!("{}", bundle.eased_platform.as_ref().unwrap().start);
+        // }
 
         bundles.push(bundle);
     }

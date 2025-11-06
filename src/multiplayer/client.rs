@@ -4,7 +4,7 @@ use std::net::UdpSocket;
 use std::time::Duration;
 use async_channel::{Sender, Receiver};
 
-use crate::{app::{IsMainPlayer, MainPlayer}, player::Player};
+use crate::{app::{GameMode}, player::{Player}};
 
 /// Resource to hold the client socket after handshake
 #[derive(Resource)]
@@ -54,7 +54,7 @@ pub fn send_input_state_system(
 #[derive(Resource)]
 pub struct ServerAddress(pub String);
 
-pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>, is_main_player: Res<IsMainPlayer>) {
+pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>, gamemode: Res<GameMode>) {
 
     // Hostname resolution
     // let addr_str = &server_addr.0;
@@ -71,8 +71,7 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
         .expect("Failed to parse server address");
 
     // create client UDP socket and bind to a random available port on localhost
-    let bind_port = if is_main_player.0 { 60000 } else { 60001 };
-    let socket = UdpSocket::bind(format!( "0.0.0.0:{}", bind_port)).expect("Failed to bind UDP client socket");
+    let socket = UdpSocket::bind("0.0.0.0:0").expect("Failed to bind UDP client socket");
     socket
         .set_read_timeout(Some(Duration::from_secs(2)))
         .expect("Failed to set read timeout");
@@ -82,10 +81,10 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
 
     println!("[Client] Sending HELLO to {}", server_addr);
 
-    let msg = if is_main_player.as_ref().0 {
-        b"MAIN"
-    } else {
-        b"PLAY"
+    let msg = match *gamemode {
+        GameMode::NetCoop(id) if id == 0 => b"MAIN",
+        GameMode::NetCoop(id) if id == 1 => b"PLAY",
+        _ => b"ERRR",
     };
 
     socket
@@ -177,25 +176,35 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
 
 pub fn apply_snapshot_system(
     channels: Res<ClientNetChannels>,
-    mut main_query: Query<&mut Transform, (With<Player>, With<MainPlayer>)>,
-    mut other_query: Query<&mut Transform, (With<Player>, Without<MainPlayer>)>,
+    mut players: Query<(&mut Transform, &Player)>,
 ) {
     while let Ok(snapshot) = channels.rx_snapshots.try_recv() {
         if snapshot.positions.is_empty() {
             continue;
         }
 
-        if let Ok(mut main_transform) = main_query.single_mut() {
-            if let Some((x, y)) = snapshot.positions.get(0) {
-                main_transform.translation.x = *x;
-                main_transform.translation.y = *y;
-            }
-        }
-
-        if let Ok(mut other_transform) = other_query.single_mut() {
-            if let Some((x, y)) = snapshot.positions.get(1) {
-                other_transform.translation.x = *x;
-                other_transform.translation.y = *y;
+        // iterate through all players
+        // snapshots must come back in player_number order.
+        for (mut transform, player) in players.iter_mut() {
+            match player {
+                Player::Local(id) => {
+                    if let Some((x, y)) = snapshot.positions.get(*id) {
+                        // Local players are applied directly
+                        transform.translation.x = *x;
+                        transform.translation.y = *y;
+                    }
+                }
+                Player::Net(id) => {
+                    if let Some((x, y)) = snapshot.positions.get(*id) {
+                        // Net players will be interpolated later
+                        // TODO: replace with interpolation logic
+                        transform.translation.x = *x;
+                        transform.translation.y = *y;
+                    }
+                }
+                Player::Npc(_) => {
+                    // nothing yet.
+                }
             }
         }
     }

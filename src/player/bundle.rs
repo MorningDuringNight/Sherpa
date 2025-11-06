@@ -7,9 +7,6 @@ use crate::config::player::*;
 use bevy::math::bounding::Aabb2d;
 use bevy::prelude::*;
 
-#[derive(Component, Clone)]
-pub struct Player { }
-
 #[derive(Clone, Component)]
 pub struct PlayerControls {
     pub up: KeyCode,
@@ -42,8 +39,6 @@ impl Default for Mode {
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
-    pub sprite: Sprite,
-    pub player: Player,
     pub gravity: Gravity,
     pub control_force: ControlForce,
     pub rope_force: RopeForce,
@@ -55,13 +50,10 @@ pub struct PlayerBundle {
     pub size: PlayerCollider,
     pub jump_controller: JumpController,
     pub ground_state: GroundState,
-    pub follow: FollowedPlayer,
 }
 
 impl PlayerBundle {
-    #[cfg(feature = "client")]
     pub fn new(
-        texture: Handle<Image>,
         transform: Transform,
         velocity: Velocity,
         mass: Mass,
@@ -69,12 +61,6 @@ impl PlayerBundle {
         ground_state: GroundState,
     ) -> Self {
         Self {
-            sprite: Sprite {
-                image: texture,
-                custom_size: Some(PLAYER_SIZE),
-                ..Default::default()
-            },
-            player: Player {},
             gravity: Gravity(true),
             control_force: ControlForce(Vec2::ZERO),
             rope_force: RopeForce(Vec2::ZERO),
@@ -88,39 +74,8 @@ impl PlayerBundle {
             },
             jump_controller,
             ground_state,
-            //in_Mode: Mode{mode: a},
-            follow: FollowedPlayer{},
         }
+
     }
 
-    #[cfg(feature = "server")]
-    pub fn new(
-        transform: Transform,
-        velocity: Velocity,
-        mass: Mass,
-        jump_controller: JumpController,
-        ground_state: GroundState,
-    ) -> Self {
-        Self {
-            player: Player {},
-            sprite: Sprite {
-                custom_size: Some(PLAYER_SIZE),
-                ..Default::default()
-            },
-            gravity: Gravity(true),
-            control_force: ControlForce(Vec2::ZERO),
-            rope_force: RopeForce(Vec2::ZERO),
-            net_force: NetForce(Vec2::ZERO),
-            mass,
-            momentum: Momentum(Vec2::ZERO),
-            velocity,
-            transform,
-            size: PlayerCollider {
-                aabb: Aabb2d::new(Vec2::ZERO, PLAYER_SIZE * 0.5),
-            },
-            jump_controller,
-            ground_state,
-            follow: FollowedPlayer{},
-        }
-    }
 }

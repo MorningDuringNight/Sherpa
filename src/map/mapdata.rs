@@ -24,6 +24,8 @@ where
 pub enum EntityKind {
     Platform,
     Coin,
+    Spikes,
+    Trampoline,
 }
 
 #[derive(Deserialize, Debug)]
