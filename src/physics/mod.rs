@@ -3,6 +3,7 @@
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Physics system module and plugin>
 use bevy::prelude::*;
+use crate::config::MyAppState;
 
 pub mod integrate;
 pub mod gravity;
@@ -54,6 +55,7 @@ impl Plugin for PhysicsPlugin {
                     // debug_print_rope_mesh2d,
                     // debug_print_player_world_pos,
                 ).chain()
+                .run_if(in_state(MyAppState::InGame))
             );
     }
 }
