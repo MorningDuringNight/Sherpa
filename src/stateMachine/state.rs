@@ -9,8 +9,8 @@ pub enum BotState{
     right,
     left,
     jump,
-    // jump_r,
-    // jump_l,
+    jump_r,
+    jump_l,
 }
 
 impl BotState {

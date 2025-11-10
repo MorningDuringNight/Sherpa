@@ -24,9 +24,7 @@ impl Default for QCreate{
     fn default() -> Self{
         let mut table = HashMap::new();
         table.insert(
-            (vec![0, 0, 0, 0], BotState::new()), 
-            0.0
-        );
+            (vec![0, 0, 0, 0], BotState::new()), 0.0);
         Self {
             table: table,
             action_size: 4,

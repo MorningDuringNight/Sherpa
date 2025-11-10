@@ -271,7 +271,7 @@ pub fn decide_next_patrol(
             if player_jump {
                 keys.press(KeyCode::ArrowUp);
                 // info!("  Bot is moving left and jumping");
-                return BotState::jump;
+                return BotState::jump_l;
             } else {
                 // info!("  Bot is moving left");
                 return BotState::left;
@@ -284,7 +284,7 @@ pub fn decide_next_patrol(
             if player_jump {
                 keys.press(KeyCode::ArrowUp);
                 // info!("  Bot is moving right and jumping");
-                return BotState::jump;
+                return BotState::jump_r;
             } else {
                 // info!("  Bot is moving right");
                 return BotState::right;
@@ -319,14 +319,14 @@ pub fn decide_next_patrol(
             keys.press(KeyCode::ArrowUp);
             mem.dir = -1;
             // info!("  Bot is jumping left");
-            BotState::jump
+            BotState::jump_l
         }
         3 => {
             keys.press(KeyCode::ArrowRight);
             keys.press(KeyCode::ArrowUp);
             mem.dir = 1;
             // info!("  Bot is jumping right");
-            BotState::jump
+            BotState::jump_r
         }
         _ => {
             keys.press(KeyCode::ArrowDown);
