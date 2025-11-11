@@ -24,7 +24,7 @@ impl Default for QCreate{
         //the state is the vector that is made from observer and returned here
         //only do the positions 
         table.insert(
-            (vec![0, 0], BotState::idel), 0.0);
+            (vec![0, 0, 0, 0], BotState::idel), 0.0);
         Self {
             table: table,
             action_size: 6,
@@ -55,5 +55,8 @@ impl QCreate {
         self.table.get(&(state,action)).unwrap_or(&0.0);
     }  
 
+    // pub fn get_total(mut HashMap: HashMap<Vec<i32>,f64>, state:Vec<i32>){
+    //    let idels = HashMap.get(&(state,BotState::idel)).unwrap_or(&0.0);
+    // }
 
 }
