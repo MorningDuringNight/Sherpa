@@ -6,7 +6,7 @@ use crate::observer::{plugin,state,system};
 use std::collections::HashMap;
 
 pub struct qtable {
-    qvalue: Vec<Vec<f64>>,
+    qvalue: Vec<Vec<i32>>,
     config: QCreate,
 }
 
@@ -23,30 +23,37 @@ pub struct QCreate{
 impl Default for QCreate{
     fn default() -> Self{
         let mut table = HashMap::new();
+        //the state is the vector that is made from observer and returned here
+        //only do the positions 
         table.insert(
-            (vec![0, 0, 0, 0], BotState::new()), 0.0);
+            (vec![0, 0], BotState::idel), 0.0);
         Self {
             table: table,
-            action_size: 4,
+            action_size: 6,
             discount: 0.99,
             learning_rate: 0.4,
             explore: 0.4,
+        }
+    }
+}
 
+impl QCreate {
+    pub fn new(mut HashMap: HashMap<Vec<i32>,f64>, action_size: i32, discount: f64, learning_rate: f64, explore:f64) -> Self{
+
+                Self{
+            table: HashMap::new(),
+            action_size,
+            discount,
+            learning_rate,
+            explore,
         }
     }
 
-}
-
-impl qtable{
-    pub fn new() -> Self {
-        Self::new_with(Default::default())
+    pub fn add_state_overwrite(&mut self, state:Vec<i32>,action: BotState,q_value:f64){
+        self.table.insert((state, action), q_value);
     }
 
-    pub fn sized(&self) -> Self{
-        self.config..state_size
-    }
-
-    pub fn pick_state(&self, index: usize) -> Option<State> {
-        State::new_on(self, index).ok()
-    }
+    pub fn get_qvalue(&mut self, state:Vec<i32>, action: BotState) -> (){
+        self.table.get(&(state,action)).unwrap_or(&0.0);
+    }  
 }
