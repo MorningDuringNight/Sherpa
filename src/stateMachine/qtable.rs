@@ -4,13 +4,11 @@ use super::state::*;
 use serde::{Deserialize,Serialize};
 use crate::observer::{plugin,state,system};
 use std::collections::HashMap;
+use std::fs;
+use std::io;
 
-pub struct qtable {
-    qvalue: Vec<Vec<i32>>,
-    config: QCreate,
-}
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Serialize, Deserialize)]
 
 pub struct QCreate{
     pub table: HashMap<(Vec<i32>,BotState), f64>,
@@ -56,4 +54,6 @@ impl QCreate {
     pub fn get_qvalue(&mut self, state:Vec<i32>, action: BotState) -> (){
         self.table.get(&(state,action)).unwrap_or(&0.0);
     }  
+
+
 }
