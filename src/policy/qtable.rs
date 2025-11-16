@@ -146,7 +146,7 @@ pub enum Action {
 }
 
 impl Action {
-    fn index(self) -> usize {
+    pub fn index(self) -> usize {
         match self {
             Action::I  => 0,
             Action::L  => 1,

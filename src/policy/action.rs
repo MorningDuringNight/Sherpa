@@ -11,7 +11,7 @@ use crate::observer::system::Observation;
 const QTABLE_PATH: &str = "assets/qtable.csv";
 const ALPHA: f32 = 0.1;
 const GAMMA: f32 = 0.99;
-const EPSILON: f32 = 0.6;
+const EPSILON: f32 = 0.1;
 
 #[derive(Default)]
 pub struct LastState {
@@ -30,7 +30,7 @@ pub struct LastReward {
 
 #[derive(Event, Debug)]
 pub struct RLAction {
-    action: Action,
+    pub action: Action,
 }
 
 pub fn qlearning_update(
@@ -99,9 +99,12 @@ fn f_reward(r_pre: (usize, f32), r: (usize, f32)) -> f32 {
 fn epsilon_greedy(q: &QTable, s: [usize; 4]) -> Action {
     let mut rng = rand::thread_rng();
     if rng.gen_range(0.0..1.0) < EPSILON {
+        info!("Lucy");
         let idx = rng.gen_range(0..6);
         Action::from_index(idx)
     } else {
-        q.best_a(s[0], s[1], s[2], s[3])
+        let action = q.best_a(s[0], s[1], s[2], s[3]);
+        info!("state {}, {}, {}, {}, action {}", s[0], s[1], s[2], s[3], action.index());
+        action
     }
 }

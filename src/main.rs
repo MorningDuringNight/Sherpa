@@ -10,6 +10,7 @@ mod util;
 mod stateMachine;
 mod observer;
 mod policy;
+mod controller;
 
 
 use std::env;
