@@ -16,10 +16,34 @@ impl Plugin for ControllerPlugin {
 
 fn controller_update (
     mut events: EventReader<RLAction>,
-    mut commands: Commands,
+    mut keys: ResMut<ButtonInput<KeyCode>>,
 ) {
     for event in events.read() {
         let action = event.action;
-        info!("Action {}", action.index());
+        // info!("Action {}", action.index());
+        keys.release(KeyCode::KeyA);
+        keys.release(KeyCode::KeyD);
+        keys.release(KeyCode::KeyW);
+
+        match action {
+            Action::L => {
+                keys.press(KeyCode::KeyA);
+            },
+            Action::R => {
+                keys.press(KeyCode::KeyD);
+            },
+            Action::J => {
+                keys.press(KeyCode::KeyW);
+            },
+            Action::LJ => {
+                keys.press(KeyCode::KeyA);
+                keys.press(KeyCode::KeyW);
+            },
+            Action::RJ => {
+                keys.press(KeyCode::KeyD);
+                keys.press(KeyCode::KeyW);
+            },
+            _ => {}
+        }
     }
 }
