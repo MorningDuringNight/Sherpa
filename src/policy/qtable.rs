@@ -31,6 +31,17 @@ impl QTable {
         (((x * Y_N) + y) * VX_N + vx) * VY_N + vy
     }
 
+    fn index_to_state(mut idx: usize) -> (usize, usize, usize, usize) {
+        let vy = idx % VY_N;
+        idx /= VY_N;
+        let vx = idx % VX_N;
+        idx /= VX_N;
+        let y = idx % Y_N;
+        idx /= Y_N;
+        let x = idx;
+        (x, y, vx, vy)
+    }
+
     pub fn get(&self, x: usize, y: usize, vx: usize, vy: usize, a: Action) -> f32 {
         let idx = Self::state_index(x, y, vx, vy);
         self.qtable[idx][a.index()]
@@ -55,7 +66,7 @@ impl QTable {
         wtr.write_record(&["x", "y", "vx", "vy", "I", "L", "R", "J", "LJ", "RJ"])?;
 
         for idx in 0..NUM_STATES {
-            let (x, y, vx, vy) = index_to_state(idx);
+            let (x, y, vx, vy) = Self::index_to_state(idx);
             let row = &self.qtable[idx];
             wtr.write_record(&[
                 x.to_string(),
@@ -131,17 +142,8 @@ impl Action {
     }
 }
 
-fn state_to_index(x: usize, y: usize, vx: usize, vy: usize) -> usize {
-    (((x * Y_N) + y) * VX_N + vx) * VY_N + vy
-}
+// fn state_to_index(x: usize, y: usize, vx: usize, vy: usize) -> usize {
+//     (((x * Y_N) + y) * VX_N + vx) * VY_N + vy
+// }
 
-fn index_to_state(mut idx: usize) -> (usize, usize, usize, usize) {
-    let vy = idx % VY_N;
-    idx /= VY_N;
-    let vx = idx % VX_N;
-    idx /= VX_N;
-    let y = idx % Y_N;
-    idx /= Y_N;
-    let x = idx;
-    (x, y, vx, vy)
-}
+
