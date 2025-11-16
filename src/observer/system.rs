@@ -25,7 +25,7 @@ pub fn update_observation_system(
 
     // estimate rope tension by measuring distance between players
     let obs_vec: Vec<_> = obs.as_vector();
-    info!("Observer updated: {:?}", &obs_vec);
+    // info!("Observer updated: {:?}", &obs_vec);
 
     obs_w.write(Observation {
         observation: obs_vec,

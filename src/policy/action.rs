@@ -12,9 +12,11 @@ pub fn player_move(
     for obs in obs_r.read() {
         let x = obs.observation[0];
         let y = obs.observation[1];
-        let vx = obs.observation[2];
-        let vy = obs.observation[3];
+        let vx = obs.observation[2] + 1;
+        let vy = obs.observation[3] + 1;
 
         info!("Receive observation {}, {}, {}, {}", x, y, vx, vy);
+
+
     }
 }
