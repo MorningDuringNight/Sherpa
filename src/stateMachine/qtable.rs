@@ -32,6 +32,7 @@ impl Default for QCreate{
             learning_rate: 0.4,
             explore: 0.4,
         }
+
     }
 }
 
@@ -53,7 +54,7 @@ impl QCreate {
 
     pub fn get_qvalue(&mut self, state:Vec<i32>, action: BotState) -> (){
         self.table.get(&(state,action)).unwrap_or(&0.0);
-    }  
+    }
 
     // pub fn get_total(mut HashMap: HashMap<Vec<i32>,f64>, state:Vec<i32>){
     //    let idels = HashMap.get(&(state,BotState::idel)).unwrap_or(&0.0);

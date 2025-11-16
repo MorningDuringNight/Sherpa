@@ -6,6 +6,7 @@
 use std::time::Duration;
 use bevy::prelude::*;
 use crate::config::*;
+use crate::observer::state::{self, ObservationState};
 use crate::physics::PhysicsPlugin;
 use crate::player::{Player, PlayerPlugin};
 use crate::stateMachine::Bot;
@@ -103,13 +104,13 @@ fn bot_update(
     mut keys: ResMut<ButtonInput<KeyCode>>,
     mut botTimer: ResMut<botTimer>,
     time: Res<Time>,
-
+    obs: ResMut<ObservationState>
 ){  
     if botActive.0 == false{
         return;
     }
     else{
-        for (entity, transform, mut Bot,) in players.iter_mut(){
+        for (entity, transform, mut Bot,obs) in players.iter_mut(){
             //put repeating timer
             //if timer has not started: start timer and run function
             //if not start return
@@ -121,6 +122,7 @@ fn bot_update(
                     &time,
                     transform,
                     &mut keys,
+                    obs,
                 );
             }
             else {
