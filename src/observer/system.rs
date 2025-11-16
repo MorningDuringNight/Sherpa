@@ -10,6 +10,7 @@ pub struct Observation {
     pub observation: Vec<i32>,
     pub coin: usize,
     pub height: f32,
+    pub is_wall: f32,
 }
 
 /// System that collects live data from the world each frame.
@@ -34,9 +35,20 @@ pub fn update_observation_system(
     let obs_vec: Vec<_> = obs.as_vector();
     // info!("Observer updated: {:?}", &obs_vec);
 
+    let is_wall = if obs_vec[0] == 0 || obs_vec[0] == 31 {
+        2.0
+    } else {
+        if obs_vec[0] == 1 || obs_vec[0] == 30 {
+            1.0
+        } else {
+            0.0
+        }
+    };
+
     obs_w.write(Observation {
         observation: obs_vec,
         coin,
         height,
+        is_wall,
     });
 }

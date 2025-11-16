@@ -25,7 +25,7 @@ pub struct LastAction {
 
 #[derive(Default)]
 pub struct LastReward {
-    r: Option<(usize, f32)>, // coin, height
+    r: Option<(usize, f32, f32)>, // coin, height, is_wall
 }
 
 #[derive(Event, Debug)]
@@ -53,7 +53,7 @@ pub fn qlearning_update(
         // Q(s, a) <- Q(s, a) + α(r + γmaxQ(s', a') - Q(s, a))
         // Q(s, a) <- (1 - α)Q(s, a) + α(r + γmaxQ(s', a'))
         let s = [x, y, vx, vy];
-        let r = (obs.coin, obs.height);
+        let r = (obs.coin, obs.height, obs.is_wall);
         // info!("Receive observation {}, {}, {}, {}", x, y, vx, vy);
 
         if let (Some(s_pre), Some(a_pre), Some(r_pre)) = (&last_state.s, &last_action.a, &last_reward.r) {
@@ -65,14 +65,22 @@ pub fn qlearning_update(
             q.set(s_pre[0], s_pre[1], s_pre[2], s_pre[3], *a_pre, new_q);
             updated = true;
         }
-        let action = epsilon_greedy(&q, s);
-
-        e_act.write(RLAction {
-            action,
-        });
+        
+        if *step % 6 == 0 {
+            let action = epsilon_greedy(&q, s);
+            last_action.a = Some(action);
+            e_act.write(RLAction { action });
+        } else {
+            if let Some(a) = last_action.a {
+                e_act.write(RLAction { action: a });
+            } else {
+                let a = Action::I;
+                last_action.a = Some(a);
+                e_act.write(RLAction { action: a });
+            }
+        }
 
         last_state.s = Some(s);
-        last_action.a = Some(action);
         last_reward.r = Some(r);
     }
 
@@ -90,10 +98,11 @@ pub fn qlearning_update(
     }
 }
 
-fn f_reward(r_pre: (usize, f32), r: (usize, f32)) -> f32 {
+fn f_reward(r_pre: (usize, f32, f32), r: (usize, f32, f32)) -> f32 {
     let coin_diff = r.0 - r_pre.0;
     let y_diff = r.1 - r_pre.1;
-    100.0 * (coin_diff as f32) + 1.0 * y_diff - 0.1
+    let wall_diff = r.2 - r_pre.2;
+    30.0 * (coin_diff as f32) + if y_diff > 0.0 {5.0} else {10.0} * y_diff - 2.0 * wall_diff - 0.5
 }
 
 fn epsilon_greedy(q: &QTable, s: [usize; 4]) -> Action {
