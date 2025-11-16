@@ -8,8 +8,8 @@ use std::io;
 use csv::ReaderBuilder;
 use csv::WriterBuilder;
 
-const X_N: usize = 20;
-const Y_N: usize = 32;
+pub const X_N: usize = 20;
+pub const Y_N: usize = 32;
 const VX_N: usize = 3;
 const VY_N: usize = 3;
 const ACTION_N: usize = 6;
@@ -132,6 +132,29 @@ impl QTable {
         }
 
         Ok(table)
+    }
+
+    pub fn avg_q_xy(&self, x: usize, y: usize) -> [f32; ACTION_N] {
+        let mut sum = [0.0f32; ACTION_N];
+
+        for vx in 0..VX_N {
+            for vy in 0..VY_N {
+                let idx = Self::state_index(x, y, vx, vy);
+                let row = &self.qtable[idx];
+                for a in 0..ACTION_N {
+                    sum[a] += row[a];
+                }
+            }
+        }
+
+        let count = (VX_N * VY_N) as f32;
+        if count > 0.0 {
+            for a in 0..ACTION_N {
+                sum[a] /= count;
+            }
+        }
+
+        sum
     }
 }
 

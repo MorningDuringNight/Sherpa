@@ -102,7 +102,7 @@ fn f_reward(r_pre: (usize, f32, f32), r: (usize, f32, f32)) -> f32 {
     let coin_diff = r.0 - r_pre.0;
     let y_diff = r.1 - r_pre.1;
     let wall_diff = r.2 - r_pre.2;
-    30.0 * (coin_diff as f32) + if y_diff > 0.0 {5.0} else {10.0} * y_diff - 2.0 * wall_diff - 0.5
+    30.0 * (coin_diff as f32) + if y_diff > 0.0 {5.0} else {10.0} * y_diff - 10.0 * wall_diff - 0.5
 }
 
 fn epsilon_greedy(q: &QTable, s: [usize; 4]) -> Action {
