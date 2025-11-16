@@ -8,6 +8,8 @@ use bevy::prelude::*;
 use crate::config::*;
 use crate::physics::PhysicsPlugin;
 use crate::player::{Player, PlayerPlugin};
+use crate::policy::PolicyPlugin;
+use crate::controller::ControllerPlugin;
 use crate::stateMachine::Bot;
 use bevy::asset::AssetPlugin;
 use bevy::sprite::SpritePlugin;
@@ -185,16 +187,18 @@ pub fn run(player_number: Option<usize>) {
         .add_plugins(PlayerPlugin)
         .add_plugins(PhysicsPlugin)
         .add_plugins(ObserverPlugin)
+        .add_plugins(PolicyPlugin)
+        .add_plugins(ControllerPlugin)
         .add_plugins(UIPlugin)
         .add_event::<ToggleBotEvent>()
         .add_systems(Startup, init_player_camera)
         .add_systems(Update, update_camera)
-        .insert_resource(RopeGeometry::default())
-        .add_systems(Startup, init_ropes.after(spawn_players))
-        .add_systems(Update, rope_tension_system)
-        .add_systems(Update, rope_force_to_system)
-        .add_systems(Update, compute_rope_geometry)
-        .add_systems(Update, apply_rope_geometry);
+        .insert_resource(RopeGeometry::default());
+        // .add_systems(Startup, init_ropes.after(spawn_players))
+        // .add_systems(Update, rope_tension_system)
+        // .add_systems(Update, rope_force_to_system)
+        // .add_systems(Update, compute_rope_geometry)
+        // .add_systems(Update, apply_rope_geometry);
 
     app.run();
 }
