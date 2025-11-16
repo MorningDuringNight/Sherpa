@@ -158,7 +158,7 @@ impl QTable {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub enum Action {
     I,
     L,

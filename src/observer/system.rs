@@ -34,7 +34,6 @@ pub fn update_observation_system(
         obs.positions = transform.translation.truncate();
         obs.velocities = velocity.0; 
     }
-    let height = obs.positions.y;
 
     // estimate rope tension by measuring distance between players
     let obs_vec: Vec<_> = obs.as_vector();
@@ -49,13 +48,18 @@ pub fn update_observation_system(
     //         0.0
     //     }
     // };
+    let height = obs.positions.y * (obs_vec[1] as f32) / 2.0;
 
     let x = obs.positions.x;
     let dist_left = (x - LEFT_WALL).abs();
     let dist_right = (x - RIGHT_WALL).abs();
     let d = dist_left.min(dist_right);
     let t = (d / TILE).min(MAX_TILES);
-    let is_wall = 1.0 / (1.0 + t * t);
+    let mut is_wall = 1.0 / (1.0 + t * t);
+    if (obs_vec[2] == -1 && obs_vec[0] == 0) || (obs_vec[2] == 1 && obs_vec[0] == 31) {
+        is_wall += 2.0;
+    }
+    // info!("is wall {}", is_wall);
 
     obs_w.write(Observation {
         observation: obs_vec,

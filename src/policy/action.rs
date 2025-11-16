@@ -11,7 +11,7 @@ use crate::observer::system::Observation;
 const QTABLE_PATH: &str = "assets/qtable.csv";
 const ALPHA: f32 = 0.1;
 const GAMMA: f32 = 0.99;
-const EPSILON: f32 = 0.3;
+const EPSILON: f32 = 0.4;
 
 #[derive(Default)]
 pub struct LastState {
@@ -28,6 +28,11 @@ pub struct LastReward {
     r: Option<(usize, f32, f32)>, // coin, height, is_wall
 }
 
+#[derive(Default)]
+pub struct ActionCommit {
+    pub frames_left: u8,
+}
+
 #[derive(Event, Debug)]
 pub struct RLAction {
     pub action: Action,
@@ -40,6 +45,7 @@ pub fn qlearning_update(
     mut last_state: Local<LastState>,
     mut last_action: Local<LastAction>,
     mut last_reward: Local<LastReward>,
+    mut commit: Local<ActionCommit>,
     mut e_act: EventWriter<RLAction>,
 ) {
     let mut updated = false;
@@ -66,19 +72,44 @@ pub fn qlearning_update(
             updated = true;
         }
         
-        if *step % 6 == 0 {
-            let action = epsilon_greedy(&q, s);
-            last_action.a = Some(action);
-            e_act.write(RLAction { action });
-        } else {
-            if let Some(a) = last_action.a {
-                e_act.write(RLAction { action: a });
-            } else {
-                let a = Action::I;
-                last_action.a = Some(a);
-                e_act.write(RLAction { action: a });
+        // if *step % 10 == 0 {
+        //     let action = epsilon_greedy(&q, s);
+        //     last_action.a = Some(action);
+        //     e_act.write(RLAction { action });
+        // } else {
+        //     if let Some(a) = last_action.a {
+        //         e_act.write(RLAction { action: a });
+        //     } else {
+        //         let a = Action::I;
+        //         last_action.a = Some(a);
+        //         e_act.write(RLAction { action: a });
+        //     }
+        // }
+
+        let greedy = epsilon_greedy(&q, s);
+
+        let action_to_do = if commit.frames_left == 0 {
+            match greedy {
+                Action::I => {
+                    Action::I
+                }
+                a_non_idle => {
+                    commit.frames_left = 9;
+                    a_non_idle
+                }
             }
-        }
+        } else {
+            if greedy == Action::I {
+                commit.frames_left = 0;
+                Action::I
+            } else {
+                commit.frames_left -= 1;
+                last_action.a.unwrap_or(greedy)
+            }
+        };
+
+        e_act.write(RLAction { action: action_to_do });
+        last_action.a = Some(action_to_do);
 
         last_state.s = Some(s);
         last_reward.r = Some(r);
@@ -102,7 +133,12 @@ fn f_reward(r_pre: (usize, f32, f32), r: (usize, f32, f32)) -> f32 {
     let coin_diff = r.0 - r_pre.0;
     let y_diff = r.1 - r_pre.1;
     let wall_diff = r.2 - r_pre.2;
-    30.0 * (coin_diff as f32) + if y_diff > 0.0 {5.0} else {10.0} * y_diff - 10.0 * wall_diff - 0.5
+    let coin = 300.0 * (coin_diff as f32);
+    let height = 10.0 * y_diff;
+    let wall = - 1000.0 * wall_diff;
+    let rr = coin + height + wall;
+    // info!("{}, {}, {}, total{}", coin, height, wall, rr);
+    rr
 }
 
 fn epsilon_greedy(q: &QTable, s: [usize; 4]) -> Action {
