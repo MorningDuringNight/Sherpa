@@ -21,12 +21,18 @@ pub struct LastAction {
     a: Option<Action>,
 }
 
+#[derive(Default)]
+pub struct LastReward {
+    r: Option<(usize, f32)>, // coin, height
+}
+
 pub fn qlearning_update(
     mut obs_r: EventReader<Observation>,
     mut q: ResMut<QTable>,
     mut step: Local<u32>,
     mut last_state: Local<LastState>,
     mut last_action: Local<LastAction>,
+    mut last_reward: Local<LastReward>,
 ) {
     let mut updated = false;
 
@@ -36,11 +42,14 @@ pub fn qlearning_update(
         let vx = (obs.observation[2] + 1) as usize; // -1,0,1 -> 0,1,2
         let vy = (obs.observation[3] + 1) as usize;
 
+        // Q(s, a) <- Q(s, a) + α(r + γmaxQ(s', a') - Q(s, a))
+        // Q(s, a) <- (1 - α)Q(s, a) + α(r + γmaxQ(s', a'))
         let s = [x, y, vx, vy];
+        let r = (obs.coin, obs.height);
         // info!("Receive observation {}, {}, {}, {}", x, y, vx, vy);
 
-        if let (Some(s_pre), Some(a_pre)) = (&last_state.s, &last_action.a) {
-            let reward = f_reward(s);
+        if let (Some(s_pre), Some(a_pre), Some(r_pre)) = (&last_state.s, &last_action.a, &last_reward.r) {
+            let reward = f_reward(*r_pre, r);
             let old_q = q.get(s_pre[0], s_pre[1], s_pre[2], s_pre[3], *a_pre);
             let max_q = q.max_q(s[0], s[1], s[2], s[3]);
             let target = reward + GAMMA * max_q;
@@ -50,6 +59,7 @@ pub fn qlearning_update(
         }
         last_state.s = Some(s);
         last_action.a = Some(Action::I);
+        last_reward.r = Some(r);
     }
 
     if updated {
@@ -66,6 +76,8 @@ pub fn qlearning_update(
     }
 }
 
-fn f_reward(state: [usize; 4]) -> f32 {
-    state[1] as f32
+fn f_reward(r_pre: (usize, f32), r: (usize, f32)) -> f32 {
+    let coin_diff = r.0 - r_pre.0;
+    let y_diff = r.1 - r_pre.1;
+    100.0 * (coin_diff as f32) + 1.0 * y_diff - 0.1
 }
