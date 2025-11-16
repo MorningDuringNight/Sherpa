@@ -8,6 +8,7 @@ use bevy::prelude::*;
 use crate::config::*;
 use crate::physics::PhysicsPlugin;
 use crate::player::{Player, PlayerPlugin};
+use crate::policy::PolicyPlugin;
 use crate::stateMachine::Bot;
 use bevy::asset::AssetPlugin;
 use bevy::sprite::SpritePlugin;
@@ -185,6 +186,7 @@ pub fn run(player_number: Option<usize>) {
         .add_plugins(PlayerPlugin)
         .add_plugins(PhysicsPlugin)
         .add_plugins(ObserverPlugin)
+        .add_plugins(PolicyPlugin)
         .add_plugins(UIPlugin)
         .add_event::<ToggleBotEvent>()
         .add_systems(Startup, init_player_camera)
