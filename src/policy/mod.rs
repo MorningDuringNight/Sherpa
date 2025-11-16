@@ -7,18 +7,18 @@ use bevy::prelude::*;
 pub mod action;
 pub mod qtable;
 
-use self::action::player_move;
+use self::action::qlearning_update;
 use self::qtable::QTable;
 
 pub struct PolicyPlugin;
 impl Plugin for PolicyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, qtable_load_system)
-           .add_systems(Update, player_move);
+           .add_systems(Update, qlearning_update);
     }
 }
 
-const QTABLE_PATH: &str = "qtable.csv";
+const QTABLE_PATH: &str = "assets/qtable.csv";
 
 fn qtable_load_system(mut commands: Commands) {
     let table = QTable::load_from_csv(QTABLE_PATH)
