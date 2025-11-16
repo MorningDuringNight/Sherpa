@@ -3,6 +3,7 @@
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Action>
 use bevy::prelude::*;
+use rand::Rng;
 
 use super::qtable::{QTable, Action};
 use crate::observer::system::Observation;
@@ -10,6 +11,7 @@ use crate::observer::system::Observation;
 const QTABLE_PATH: &str = "assets/qtable.csv";
 const ALPHA: f32 = 0.1;
 const GAMMA: f32 = 0.99;
+const EPSILON: f32 = 0.6;
 
 #[derive(Default)]
 pub struct LastState {
@@ -26,6 +28,11 @@ pub struct LastReward {
     r: Option<(usize, f32)>, // coin, height
 }
 
+#[derive(Event, Debug)]
+pub struct RLAction {
+    action: Action,
+}
+
 pub fn qlearning_update(
     mut obs_r: EventReader<Observation>,
     mut q: ResMut<QTable>,
@@ -33,6 +40,7 @@ pub fn qlearning_update(
     mut last_state: Local<LastState>,
     mut last_action: Local<LastAction>,
     mut last_reward: Local<LastReward>,
+    mut e_act: EventWriter<RLAction>,
 ) {
     let mut updated = false;
 
@@ -57,8 +65,14 @@ pub fn qlearning_update(
             q.set(s_pre[0], s_pre[1], s_pre[2], s_pre[3], *a_pre, new_q);
             updated = true;
         }
+        let action = epsilon_greedy(&q, s);
+
+        e_act.write(RLAction {
+            action,
+        });
+
         last_state.s = Some(s);
-        last_action.a = Some(Action::I);
+        last_action.a = Some(action);
         last_reward.r = Some(r);
     }
 
@@ -80,4 +94,14 @@ fn f_reward(r_pre: (usize, f32), r: (usize, f32)) -> f32 {
     let coin_diff = r.0 - r_pre.0;
     let y_diff = r.1 - r_pre.1;
     100.0 * (coin_diff as f32) + 1.0 * y_diff - 0.1
+}
+
+fn epsilon_greedy(q: &QTable, s: [usize; 4]) -> Action {
+    let mut rng = rand::thread_rng();
+    if rng.gen_range(0.0..1.0) < EPSILON {
+        let idx = rng.gen_range(0..6);
+        Action::from_index(idx)
+    } else {
+        q.best_a(s[0], s[1], s[2], s[3])
+    }
 }

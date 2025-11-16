@@ -52,9 +52,25 @@ impl QTable {
         self.qtable[idx][a.index()] = value;
     }
 
+    pub fn best_a(&self, x: usize, y: usize, vx: usize, vy: usize) -> Action {
+        self.best_a_and_q(x, y, vx, vy).0
+    }
+
     pub fn max_q(&self, x: usize, y: usize, vx: usize, vy: usize) -> f32 {
+        self.best_a_and_q(x, y, vx, vy).1
+    }
+
+    pub fn best_a_and_q(&self, x: usize, y: usize, vx: usize, vy: usize) -> (Action, f32) {
         let idx = Self::state_index(x, y, vx, vy);
-        self.qtable[idx].iter().copied().fold(f32::NEG_INFINITY, f32::max)
+        let row = &self.qtable[idx];
+
+        let (best_idx, &best_q) = row
+            .iter()
+            .enumerate()
+            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .unwrap();
+
+        (Action::from_index(best_idx), best_q)
     }
 
     pub fn save_to_csv(&self, path: &str) -> std::io::Result<()> {
@@ -140,10 +156,16 @@ impl Action {
             Action::RJ => 5,
         }
     }
+    
+    pub const fn from_index(i: usize) -> Self {
+        match i {
+            0 => Action::I,
+            1 => Action::L,
+            2 => Action::R,
+            3 => Action::J,
+            4 => Action::LJ,
+            5 => Action::RJ,
+            _ => Action::I,
+        }
+    }
 }
-
-// fn state_to_index(x: usize, y: usize, vx: usize, vy: usize) -> usize {
-//     (((x * Y_N) + y) * VX_N + vx) * VY_N + vy
-// }
-
-
