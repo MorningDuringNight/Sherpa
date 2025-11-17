@@ -17,6 +17,7 @@ use crate::map::{MapPlugin, SCREEN};
 use crate::multiplayer::UdpClientPlugin;
 use crate::multiplayer::UdpServerPlugin;
 use crate::util::DevModePlugin;
+use crate::enemy::EnemyPlugin;
 
 use crate::game_ui::UIPlugin;
 
@@ -200,6 +201,7 @@ pub fn run(player_number: Option<usize>) {
         .add_plugins(PhysicsPlugin)
         .add_plugins(ObserverPlugin)
         .add_plugins(UIPlugin)
+        .add_plugins(EnemyPlugin)
 
         .add_systems(Update, update_camera
             .run_if(in_state(MyAppState::InGame)))
