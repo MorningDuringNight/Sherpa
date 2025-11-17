@@ -76,7 +76,7 @@ impl Bot{
         time: &Time,
         tf: &GlobalTransform,
         keys: &mut ButtonInput<KeyCode>,
-        mut obs: ResMut<ObservationState>,
+        obs: &ObservationState,
         // timer: Res<Time>,
     ) -> BotState{
         // print!("helped here");
@@ -100,7 +100,7 @@ pub fn decide_next_patrol(
     tf: &GlobalTransform,
     keys: &mut ButtonInput<KeyCode>,
     mem: &mut PatrolMemory,
-    mut obs: ResMut<ObservationState>,
+    obs: &ObservationState,
 ) -> BotState {
 
     let mut data: Vec<i32> = Vec::new();

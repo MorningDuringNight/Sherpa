@@ -110,7 +110,7 @@ fn bot_update(
         return;
     }
     else{
-        for (entity, transform, mut Bot,obs) in players.iter_mut(){
+        for (entity, transform, mut Bot) in players.iter_mut(){
             //put repeating timer
             //if timer has not started: start timer and run function
             //if not start return
@@ -122,7 +122,7 @@ fn bot_update(
                     &time,
                     transform,
                     &mut keys,
-                    obs,
+                    &obs,
                 );
             }
             else {
