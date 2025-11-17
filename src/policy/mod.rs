@@ -6,9 +6,11 @@ use bevy::prelude::*;
 
 pub mod action;
 pub mod qtable;
+mod debug;
 
 use self::action::qlearning_update;
 use self::action::RLAction;
+use self::debug::qtable_gizmos;
 use self::qtable::QTable;
 
 pub struct PolicyPlugin;
@@ -16,7 +18,8 @@ impl Plugin for PolicyPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<RLAction>()
            .add_systems(Startup, qtable_load_system)
-           .add_systems(Update, qlearning_update);
+           .add_systems(Update, qlearning_update)
+           .add_systems(Update, qtable_gizmos);
     }
 }
 
