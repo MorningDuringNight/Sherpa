@@ -9,9 +9,9 @@ use super::qtable::{QTable, Action};
 use crate::observer::system::Observation;
 
 const QTABLE_PATH: &str = "assets/qtable.csv";
-const ALPHA: f32 = 0.1;
-const GAMMA: f32 = 0.99;
-const EPSILON: f32 = 0.4;
+const ALPHA: f32 = 0.05;
+const GAMMA: f32 = 0.97;
+const EPSILON: f32 = 0.3;
 
 #[derive(Default)]
 pub struct LastState {
@@ -25,7 +25,7 @@ pub struct LastAction {
 
 #[derive(Default)]
 pub struct LastReward {
-    r: Option<(usize, f32, f32)>, // coin, height, is_wall
+    r: Option<(usize, f32, f32, f32)>, // coin, height, level, is_wall
 }
 
 #[derive(Default)]
@@ -59,17 +59,22 @@ pub fn qlearning_update(
         // Q(s, a) <- Q(s, a) + α(r + γmaxQ(s', a') - Q(s, a))
         // Q(s, a) <- (1 - α)Q(s, a) + α(r + γmaxQ(s', a'))
         let s = [x, y, vx, vy];
-        let r = (obs.coin, obs.height, obs.is_wall);
+        let r = (obs.coin, obs.height, obs.level, obs.is_wall);
         // info!("Receive observation {}, {}, {}, {}", x, y, vx, vy);
 
         if let (Some(s_pre), Some(a_pre), Some(r_pre)) = (&last_state.s, &last_action.a, &last_reward.r) {
-            let reward = f_reward(*r_pre, r);
-            let old_q = q.get(s_pre[0], s_pre[1], s_pre[2], s_pre[3], *a_pre);
-            let max_q = q.max_q(s[0], s[1], s[2], s[3]);
-            let target = reward + GAMMA * max_q;
-            let new_q = old_q + ALPHA * (target - old_q);
-            q.set(s_pre[0], s_pre[1], s_pre[2], s_pre[3], *a_pre, new_q);
-            updated = true;
+            if s != *s_pre { // Plan A: update only when move
+                let reward = f_reward(*r_pre, r);
+                let old_q = q.get(s_pre[0], s_pre[1], s_pre[2], s_pre[3], *a_pre);
+                let max_q = q.max_q(s[0], s[1], s[2], s[3]);
+                let target = reward + GAMMA * max_q;
+                let new_q = old_q + ALPHA * (target - old_q);
+                q.set(s_pre[0], s_pre[1], s_pre[2], s_pre[3], *a_pre, new_q);
+                updated = true;
+                // if commit.frames_left == 0 {
+                info!("Reward: {}, {}, {}, {}, {}", obs.coin, obs.height, obs.level, obs.is_wall, reward);
+                // }
+            }
         }
         
         // if *step % 10 == 0 {
@@ -129,16 +134,42 @@ pub fn qlearning_update(
     }
 }
 
-fn f_reward(r_pre: (usize, f32, f32), r: (usize, f32, f32)) -> f32 {
-    let coin_diff = r.0 - r_pre.0;
-    let y_diff = r.1 - r_pre.1;
-    let wall_diff = r.2 - r_pre.2;
-    let coin = 300.0 * (coin_diff as f32);
-    let height = 10.0 * y_diff;
-    let wall = - 1000.0 * wall_diff;
-    let rr = coin + height + wall;
-    // info!("{}, {}, {}, total{}", coin, height, wall, rr);
-    rr
+const COIN_R: f32 = 40.0;
+const UP_R: f32 = 1.0;
+const DOWN_R: f32 = 0.5;
+const LEVEL_R: f32 = 6.0;
+const WALL_R: f32 = 10.0;
+const GOOD_PLACE: f32 = 2.0;
+const HEIGHT_SCORE: f32 = 0.002;
+const AWAY_WALL: f32 = 2.0;
+const TIME_PENALTY: f32 = 0.5;
+
+fn f_reward(r_pre: (usize, f32, f32, f32), r: (usize, f32, f32, f32)) -> f32 {
+    let (c_prev, h_prev, level_prev, wall_prev) = r_pre;
+    let (c,      h,      level,      wall)      = r;
+
+    let coin_diff  = (c as i32 - c_prev as i32) as f32;
+    let h_diff     = h - h_prev;
+    let level_diff = level - level_prev;
+    let wall_diff  = wall - wall_prev;
+
+    let r_coin  = COIN_R * coin_diff;
+    let r_jump  = UP_R * h_diff.max(0.0) + DOWN_R * h_diff.min(0.0);
+    let r_level = LEVEL_R * level_diff;
+    let r_wall  = - WALL_R * wall_diff;
+    
+    let r_height_state = HEIGHT_SCORE * (h + 32.0);
+    let r_level_state = GOOD_PLACE * level;
+    let r_wall_state = - AWAY_WALL * wall;
+    
+    let time_penalty = - TIME_PENALTY;
+
+    let reward = r_coin + r_jump + r_level + r_wall +
+                 r_height_state + r_level_state + r_wall_state +
+                 time_penalty;
+    // info!("{}, {}, {}, {}, total{}", coin, height, level, wall, rr);
+    // info!("{}, {}, {}, {}, total{}", 50.0 * (r.0 as f32), 0.3 * r.1, 8.0 * r.2, - 200.0 * r.3, r1);
+    reward
 }
 
 fn epsilon_greedy(q: &QTable, s: [usize; 4]) -> Action {

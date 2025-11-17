@@ -8,7 +8,8 @@ use super::qtable::{QTable, Action};
 use super::qtable::{X_N, Y_N};
 
 const CELL_SIZE: f32 = 64.0;
-const MAX_ARROW_LEN: f32 = 20.0;
+const MAX_ARROW_LEN: f32 = 24.0;
+const MAX_IDLE_RADIUS: f32 = 12.0;
 
 pub fn qtable_gizmos(
     q: Res<QTable>,
@@ -18,18 +19,9 @@ pub fn qtable_gizmos(
         for y in 0..Y_N {
             let qs = q.avg_q_xy(x, y);
 
-            let dirs: &[(Action, Vec2)] = &[
-                (Action::L,  Vec2::new(-1.0,  0.0)),
-                (Action::R,  Vec2::new( 1.0,  0.0)),
-                (Action::J,  Vec2::new( 0.0,  1.0)),
-                (Action::LJ, Vec2::new(-0.7, 0.7)),
-                (Action::RJ, Vec2::new( 0.7, 0.7)),
-            ];
-
             let mut max_abs: f32 = 0.0;
-            for (a, _) in dirs {
-                let qv = qs[a.index()];
-                max_abs = max_abs.max(qv.abs());
+            for v in qs.iter() {
+                max_abs = max_abs.max(v.abs());
             }
             if max_abs == 0.0 {
                 continue;
@@ -38,6 +30,28 @@ pub fn qtable_gizmos(
             let cx = (x as f32 + 0.5) * CELL_SIZE;
             let cy = (y as f32 + 0.5) * CELL_SIZE;
             let center = Vec2::new(cx, cy);
+
+            let q_idle = qs[Action::I.index()];
+            if q_idle.abs() > 1e-5 {
+                let radius = (q_idle / max_abs).abs() * MAX_IDLE_RADIUS;
+
+                let idle_color = if q_idle >= 0.0 {
+                    Color::srgb(0.0, 1.0, 0.0)
+                } else {
+                    Color::srgb(1.0, 0.0, 0.0)
+                };
+
+                let r = radius.max(1.0);
+                gizmos.circle_2d(center, r, idle_color);
+            }
+
+            let dirs: &[(Action, Vec2)] = &[
+                (Action::L,  Vec2::new(-1.0,  0.0)),
+                (Action::R,  Vec2::new( 1.0,  0.0)),
+                (Action::J,  Vec2::new( 0.0,  1.0)),
+                (Action::LJ, Vec2::new(-0.7, 0.7)),
+                (Action::RJ, Vec2::new( 0.7, 0.7)),
+            ];
 
             for (a, dir) in dirs {
                 let qv = qs[a.index()];
