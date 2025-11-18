@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 use crate::player::Player;
 use crate::config::MyAppState;
+use crate::app::Background;
 
 
 #[derive(Component)]
@@ -147,47 +148,14 @@ pub fn load_ui_camera(
 
 pub fn load_main_menu(
     mut commands: Commands, 
+    background: Res<AssetServer>,
 ){
     commands.spawn((
-        Node{
-            width: Val::Percent(100.),
-            height: Val::Percent(100.),
-            margin: UiRect::all(Val::Percent(0.)),
-            padding: UiRect::all(Val::Percent(0.)),
-            flex_direction: FlexDirection::Row,
-            column_gap: Val::Percent(2.),
-            ..default()
-        },  
-    ))
-    .with_children(|parent|{
-        parent.spawn((
-                Node {
-                    width: Val::Percent(10.),
-                    ..Default::default()
-                },
-            
-            Text::new("Home Page"), 
-            RenderLayers::layer(1),
-        ));
-        parent.spawn((
-                Node {
-                    width: Val::Percent(15.),
-                    ..Default::default()
-                },
-            
-            Text::new("Press S to start"), 
-            RenderLayers::layer(1),
-        ));
-        parent.spawn((
-                Node {
-                    width: Val::Percent(15.),
-                    ..Default::default()
-                },
-            
-            Text::new("Press M for multi (unimplemented)"), 
-            RenderLayers::layer(1),
-        ));
-    });
+        Sprite::from_image(background.load("mainMenu.png")),
+        Transform::from_xyz(0., 0., -1.),
+        RenderLayers::layer(1),
+        Background,
+    ));
 }
 
 pub fn main_menu_input(
@@ -205,9 +173,9 @@ pub fn main_menu_input(
 
 pub fn despawn_ui(
     mut commands: Commands,
-    mut nodes: Query<Entity, With<Node>>,
+    mut background: Query<Entity, With<Background>>,
 ){
-    for node in nodes.iter_mut(){
-        commands.entity(node).despawn();
+    for bg in background.iter_mut(){
+        commands.entity(bg).despawn();
     }
 }
