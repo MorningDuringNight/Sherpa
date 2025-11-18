@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 /// Stores the summarized game observation for AI use.
-#[derive(Resource, Default, Debug)]
+#[derive(Resource, Default, Debug, Clone)]
 pub struct ObservationState {
     pub positions: Vec2,
     pub velocities: Vec2,

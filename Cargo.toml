@@ -11,6 +11,8 @@ rand.workspace = true
 rustls = "0.23.32"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+edit-xlsx = "0.4.6"
+calamine = { version = "0.31.0", features = ["chrono"] }
 
 [profile.dev]
 opt-level = 1
