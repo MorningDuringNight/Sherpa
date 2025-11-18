@@ -6,6 +6,7 @@
 use std::time::Duration;
 use bevy::prelude::*;
 use crate::config::*;
+use crate::observer::state::{self, ObservationState};
 use crate::physics::PhysicsPlugin;
 use crate::player::{Player, PlayerPlugin};
 use crate::stateMachine::Bot;
@@ -17,6 +18,7 @@ use crate::map::{MapPlugin, SCREEN};
 use crate::multiplayer::UdpClientPlugin;
 use crate::multiplayer::UdpServerPlugin;
 use crate::util::DevModePlugin;
+use crate::enemy::EnemyPlugin;
 
 use crate::game_ui::UIPlugin;
 
@@ -109,13 +111,13 @@ fn bot_update(
     mut keys: ResMut<ButtonInput<KeyCode>>,
     mut botTimer: ResMut<botTimer>,
     time: Res<Time>,
-
+    obs: ResMut<ObservationState>
 ){  
     if botActive.0 == false{
         return;
     }
     else{
-        for (entity, transform, mut Bot,) in players.iter_mut(){
+        for (entity, transform, mut Bot) in players.iter_mut(){
             //put repeating timer
             //if timer has not started: start timer and run function
             //if not start return
@@ -127,6 +129,7 @@ fn bot_update(
                     &time,
                     transform,
                     &mut keys,
+                    &obs,
                 );
             }
             else {
@@ -207,6 +210,7 @@ pub fn run(player_number: Option<usize>) {
         .add_plugins(PhysicsPlugin)
         .add_plugins(ObserverPlugin)
         .add_plugins(UIPlugin)
+        .add_plugins(EnemyPlugin)
 
         .add_systems(Update, update_camera
             .run_if(in_state(MyAppState::InGame)))
