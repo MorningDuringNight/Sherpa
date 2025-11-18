@@ -8,6 +8,8 @@ use super::mapdata::EntityKind;
 use super::util::*;
 use super::{MAP_NAME, MapFile};
 
+use crate::app::Background;
+
 #[derive(Resource)]
 pub struct MapDimensions {
     pub w: u32,
@@ -28,6 +30,7 @@ pub struct MovingPlatform;
 
 #[derive(Component, Default)]
 pub struct Coin;
+
 
 #[macro_export]
 macro_rules! new_game_object {
@@ -131,12 +134,19 @@ pub fn load_game_objects(
 pub fn load_background_layers(
     mut commands: Commands,
     images: Res<MapTextureHandles>,
+    background: Res<AssetServer>,
     map_dimensions: Res<MapDimensions>,
 ) {
     commands.spawn(background_layer(
         &(map_dimensions.w, map_dimensions.h),
         &(images.tile_fg),
         -1.0,
+    ));
+
+    commands.spawn((
+        Sprite::from_image(background.load("sherpa_background.png")),
+        Transform::from_xyz(640., 360., -1.),
+        Background
     ));
 }
 

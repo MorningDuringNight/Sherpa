@@ -35,6 +35,7 @@ impl Plugin for MapPlugin {
       
         #[cfg(feature = "server")]
         app.add_systems( OnEnter(MyAppState::InGame), (load_map_data, load_game_objects).chain());
+        
         app.add_systems(Update, linear_move_with_easing
              .run_if(in_state(MyAppState::InGame)));
     }

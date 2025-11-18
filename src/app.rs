@@ -28,7 +28,6 @@ use crate::player::load_players::spawn_players;
 
 use crate::observer::plugin::ObserverPlugin;
 
-
 // change usize to all: single player, single machine config data. 
 #[derive(Resource)]
 pub enum GameMode {
@@ -63,6 +62,9 @@ fn init_player_camera(mut commands: Commands) {
 #[derive(Component)]
 pub struct MainCamera;
 
+#[derive(Component, Default)]
+pub struct Background;
+
 #[derive(Component)]
 pub struct FollowedPlayer;
 
@@ -72,13 +74,17 @@ pub fn update_camera(
     mut camera_q: Query<&mut Transform, With<MainCamera>>,
     followed_q: Query<&Transform, (With<FollowedPlayer>, Without<MainCamera>)>,
     time: Res<Time>,
+    mut background: Query<&mut Transform, (With<Background>, Without<MainCamera>, Without<FollowedPlayer>)>,
 ) {
     let Ok(mut cam) = camera_q.single_mut() else { return };
     let Ok(player_tf) = followed_q.single() else { return };
+    let Ok(mut bg) = background.single_mut() else { return };
 
     let y = player_tf.translation.y.max(SCREEN.1 / 2.0);
     let target = Vec3::new(cam.translation.x, y, cam.translation.z);
     cam.translation.smooth_nudge(&target, CAMERA_DECAY_RATE, time.delta_secs());
+    let bgTarget = Vec3::new(bg.translation.x, y, bg.translation.z);
+    bg.translation.smooth_nudge(&bgTarget, CAMERA_DECAY_RATE, time.delta_secs());
 }
 // going to implement the replacement for the controls
 #[derive(Event)]
@@ -144,14 +150,15 @@ fn trigger_bot_input(
 
 pub fn run(player_number: Option<usize>) {
     let mut app = App::new();
-
+    
     #[cfg(all(feature = "client", debug_assertions))]
     app.add_plugins(DevModePlugin);
 
     #[cfg(feature = "client")]
     {
         app.add_plugins(DefaultPlugins);
-        app.add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input));
+        app.add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input)
+            .run_if(in_state(MyAppState::InGame)));
 
         if let Some(player_number) = player_number {
             app.insert_resource(GameMode::NetCoop(player_number));
