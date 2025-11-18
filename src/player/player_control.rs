@@ -3,20 +3,10 @@
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Systems for player control>
 
-use bevy::prelude::*;
-use crate::config::physics::{
-    PLAYER_MOVE_FORCE,
-    PLAYER_JUMP_FORCE,
-    PLAYER_CONTROL_SPEED_LIMIT,
-};
+use crate::components::motion::{ControlForce, GroundState, JumpController, NetForce, Velocity};
+use crate::config::physics::{PLAYER_CONTROL_SPEED_LIMIT, PLAYER_JUMP_FORCE, PLAYER_MOVE_FORCE};
 use crate::player::Player;
-use crate::components::motion::{
-    ControlForce,
-    GroundState,
-    JumpController,
-    NetForce,
-    Velocity,
-};
+use bevy::prelude::*;
 
 /// discrete per-frame input state for one player entity.
 #[derive(Event)]
@@ -40,19 +30,20 @@ pub fn player_movement_input_system(
     )>,
 ) {
     for event in reader.read() {
-        if let Ok((
-            velocity,
-            mut control_force,
-            mut net_force,
-            mut jump_controller,
-            ground_state,
-        )) = query.get_mut(event.entity)
+        if let Ok((velocity, mut control_force, mut net_force, mut jump_controller, ground_state)) =
+            query.get_mut(event.entity)
         {
             control_force.0.y = 0.0;
 
             apply_horizontal_movement(&velocity, &mut control_force, event);
 
-            apply_jump(&time, &mut control_force, &mut jump_controller, &ground_state, event);
+            apply_jump(
+                &time,
+                &mut control_force,
+                &mut jump_controller,
+                &ground_state,
+                event,
+            );
 
             net_force.0 += control_force.0;
         }
@@ -117,30 +108,44 @@ fn apply_jump(
     ground_state: &GroundState,
     event: &PlayerInputEvent,
 ) {
-    let can_jump = ground_state.is_grounded || !ground_state.coyote_timer.finished();
 
-    // Start jump on press
-    if event.jump_pressed && !jump_controller.is_jumping && can_jump {
-        control_force.0.y = PLAYER_JUMP_FORCE;
-        jump_controller.is_jumping = true;
-        jump_controller.jump_time_elapsed = 0.0;
+    let can_ground_jump = ground_state.is_grounded || !ground_state.coyote_timer.finished();
+    let can_wall_jump = !ground_state.is_grounded
+        && jump_controller.can_wall_jump
+        && !jump_controller.wall_jump_timer.finished();
+
+    // Vertical force
+    if event.jump_pressed && !jump_controller.is_jumping {
+        // Check grounded jump first
+        if can_ground_jump {
+            control_force.0.y = PLAYER_JUMP_FORCE;
+            jump_controller.is_jumping = true;
+            jump_controller.jump_time_elapsed = 0.0;
+        } else if can_wall_jump {
+            control_force.0.y = PLAYER_JUMP_FORCE;
+
+            // Consume wall jump
+            jump_controller.can_wall_jump = false;
+
+            // Start variable jump height tracking
+            jump_controller.is_jumping = true;
+            jump_controller.jump_time_elapsed = 0.0;
+        }
     }
-
-    // While holding, apply extra force until max duration
+    // Check if player is holding the jump key
     if jump_controller.is_jumping
         && event.jump_pressed
         && jump_controller.jump_time_elapsed < jump_controller.max_jump_duration
     {
         jump_controller.jump_time_elapsed += time.delta_secs();
+
+        // Apply smaller force while holding
         control_force.0.y += PLAYER_JUMP_FORCE * jump_controller.jump_multiplier;
     }
-
-    // Stop jumping if button released OR jump duration expired
-    if jump_controller.is_jumping
-        && (event.jump_just_released
-            || jump_controller.jump_time_elapsed >= jump_controller.max_jump_duration)
+    // End the jump either by letting go or time running out
+    if jump_controller.is_jumping && event.jump_just_released
+        || jump_controller.jump_time_elapsed >= jump_controller.max_jump_duration
     {
         jump_controller.is_jumping = false;
     }
 }
-
