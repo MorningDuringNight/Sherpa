@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 use crate::player::Player;
 use crate::config::MyAppState;
-use crate::app::Background;
+use crate::app::{Background, GameAssets};
 
 
 #[derive(Component)]
@@ -148,10 +148,10 @@ pub fn load_ui_camera(
 
 pub fn load_main_menu(
     mut commands: Commands, 
-    background: Res<AssetServer>,
+    game_assets: Res<GameAssets>,
 ){
     commands.spawn((
-        Sprite::from_image(background.load("mainMenu.png")),
+        Sprite::from_image(game_assets.main_menu.clone()),
         Transform::from_xyz(0., 0., -1.),
         RenderLayers::layer(1),
         Background,

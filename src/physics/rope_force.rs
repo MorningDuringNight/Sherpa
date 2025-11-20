@@ -78,8 +78,8 @@ pub fn rope_force_to_system(mut query: Query<(&RopeForce, &mut NetForce)>) {
 
 pub fn init_ropes(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    #[cfg(feature = "client")] mut meshes: ResMut<Assets<Mesh>>,
+    #[cfg(feature = "client")] mut materials: ResMut<Assets<ColorMaterial>>,
     q_players: Query<Entity, With<Player>>, // 或者用你标记主玩家的组件
 ) {
     let mut player_entities = Vec::new();
@@ -109,6 +109,7 @@ pub fn init_ropes(
         .id();
 
     // 生成 rope sprite
+    #[cfg(feature = "client")]
     spawn_rope_sprite(commands, rope_entity, 200.0, meshes, materials);
 }
 

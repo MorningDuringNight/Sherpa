@@ -6,6 +6,7 @@
 use bevy::prelude::*;
 
 use crate::app::FollowedPlayer;
+use crate::app::GameAssets;
 use crate::config::PLAYER_SIZE;
 use crate::config::PLAYER_SPAWN_MASS;
 use crate::config::PlayerSpawnPoint;
@@ -33,7 +34,7 @@ pub enum Player {
 
 pub fn spawn_players(
     mut commands: Commands, 
-    #[cfg(feature = "client")] asset_server: Res<AssetServer>,
+    game_assets: Res<GameAssets>,
     spawn_point: Res<PlayerSpawnPoint>,
     spawn_velocity: Res<PlayerSpawnVelocity>,
 
@@ -45,8 +46,8 @@ pub fn spawn_players(
 
     #[cfg(feature = "client")]
     let (p1_img, p2_img) = (
-        Some(asset_server.load("fish.PNG")),
-        Some(asset_server.load("fish.PNG")),
+        Some(game_assets.fish.clone()),
+        Some(game_assets.fish.clone()),
     );
 
     let p1 = single_player(
