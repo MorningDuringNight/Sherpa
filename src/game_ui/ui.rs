@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 use crate::player::Player;
+use crate::config::MyAppState;
+use crate::app::Background;
 
 
 #[derive(Component)]
@@ -24,8 +26,26 @@ pub struct CoinDisplay;
 #[derive(Component)]
 pub struct ScoreDisplay;
 
+// impl Plugin for UIPlugin{
+//     fn build(&self, app: &mut App){
+//         app
+//             .insert_resource( TotalCoin {amount:0,})
+//             .insert_resource(MaxHeight{amount:0,})
+//             .add_systems(Startup, load_ui_camera)
+//             .add_systems(OnEnter(MyAppState::InGame), load_ui_game)
+//             .add_systems(OnEnter(MyAppState::MainMenu), load_main_menu)
+//             .add_systems(Update, main_menu_input
+//                 .run_if(in_state(MyAppState::MainMenu)))
+//             .add_systems(Update, update_height
+//                 .run_if(in_state(MyAppState::InGame)))
+//             .add_systems(Update, update_ui
+//                 .run_if(in_state(MyAppState::InGame)))
+//             .add_systems(OnExit(MyAppState::MainMenu), despawn_ui);
+                
+//     }
+// }
 
-pub fn updateHeight(
+pub fn update_height(
     mut maxheight: ResMut<MaxHeight>,
     players: Query<&Transform, With<Player>>
 ){
@@ -36,19 +56,9 @@ pub fn updateHeight(
     }
 }
 
-pub fn loadUI(
+pub fn load_ui_game(
     mut commands: Commands, 
 ){
-    commands.spawn((
-        Camera2d,
-        Camera {
-            order: 1, // draw after player camera
-            clear_color: ClearColorConfig::None,
-            ..default()
-        },
-        RenderLayers::layer(1),
-        UICamera,
-     ));
     commands.spawn((
         Node{
             width: Val::Percent(100.),
@@ -104,7 +114,7 @@ pub fn loadUI(
     
 }
 
-pub fn updateUI(
+pub fn update_ui(
     coinCount: Res<TotalCoin>,
     maxScore: Res<MaxHeight>,
     mut query_coin: Query<&mut Text, With<CoinDisplay>>,
@@ -117,5 +127,55 @@ pub fn updateUI(
 
     for mut text in query_score.iter_mut(){
         text.0 = maxScore.amount.to_string();
+    }
+}
+
+pub fn load_ui_camera(
+    mut commands: Commands,
+){
+    commands.spawn((
+        Camera2d,
+        Camera {
+            order: 1, // draw after player camera
+            clear_color: ClearColorConfig::None,
+            ..default()
+        },
+        RenderLayers::layer(1),
+        UICamera,
+     ));
+}
+//home page stuff
+
+pub fn load_main_menu(
+    mut commands: Commands, 
+    background: Res<AssetServer>,
+){
+    commands.spawn((
+        Sprite::from_image(background.load("mainMenu.png")),
+        Transform::from_xyz(0., 0., -1.),
+        RenderLayers::layer(1),
+        Background,
+    ));
+}
+
+pub fn main_menu_input(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut next_state: ResMut<NextState<MyAppState>>
+){
+    if keyboard_input.pressed(KeyCode::KeyM){
+
+    }
+    if keyboard_input.pressed(KeyCode::KeyS){
+        next_state.set(MyAppState::InGame);
+    }
+
+}
+
+pub fn despawn_ui(
+    mut commands: Commands,
+    mut background: Query<Entity, With<Background>>,
+){
+    for bg in background.iter_mut(){
+        commands.entity(bg).despawn();
     }
 }

@@ -54,7 +54,7 @@ impl Default for JumpController {
             is_jumping: false,
             jump_time_elapsed: 0.0,
             max_jump_duration: 0.25,
-            jump_multiplier: 0.35,
+            jump_multiplier: 0.30,
             can_wall_jump: true,
             wall_jump_timer: Timer::from_seconds(0.2, TimerMode::Once),
         }
@@ -71,7 +71,7 @@ impl Default for GroundState {
     fn default() -> Self {
         Self {
             is_grounded: false,
-            coyote_timer: Timer::from_seconds(0.1, TimerMode::Once),
+            coyote_timer: Timer::from_seconds(0.2, TimerMode::Once),
         }
     }
 }

@@ -3,6 +3,8 @@
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Physics system module and plugin>
 use bevy::prelude::*;
+use crate::config::MyAppState;
+use crate::physics::collision::EnemyCollisionEvent;
 
 pub mod integrate;
 pub mod gravity;
@@ -34,6 +36,7 @@ impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_event::<PlayerCollisionEvent>()
+            .add_event::<EnemyCollisionEvent>()
             .add_systems(
                 FixedUpdate, 
                 (
@@ -54,6 +57,7 @@ impl Plugin for PhysicsPlugin {
                     // debug_print_rope_mesh2d,
                     // debug_print_player_world_pos,
                 ).chain()
+                .run_if(in_state(MyAppState::InGame))
             );
     }
 }

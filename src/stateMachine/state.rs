@@ -1,15 +1,16 @@
 use bevy::prelude::*;
 use super::move_State::*;
+use serde::{Deserialize,Serialize};
 //collect data from every frame booleans
 
-#[derive(Component, Clone,)]
+#[derive(Component, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub enum BotState{
     idel,
     right,
     left,
     jump,
-    // jump_r,
-    // jump_l,
+    jump_r,
+    jump_l,
 }
 
 impl BotState {

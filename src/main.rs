@@ -11,6 +11,7 @@ mod stateMachine;
 mod observer;
 mod policy;
 mod controller;
+mod enemy;
 
 
 use std::env;

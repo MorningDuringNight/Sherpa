@@ -3,6 +3,8 @@ mod game_object_builder;
 mod loader;
 mod mapdata;
 mod util;
+use crate::config::MyAppState;
+
 mod platformfunction;
 
 pub use game_object_builder::Collider;
@@ -21,7 +23,7 @@ impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
         #[cfg(feature = "client")]
         app.add_systems(
-            Startup,
+            OnEnter(MyAppState::InGame),
             (
                 load_map_data,
                 load_render_resources,
@@ -30,8 +32,11 @@ impl Plugin for MapPlugin {
             )
             .chain(),
         );
+      
         #[cfg(feature = "server")]
-        app.add_systems(Startup, (load_map_data, load_game_objects).chain());
-        app.add_systems(Update, linear_move_with_easing);
+        app.add_systems( OnEnter(MyAppState::InGame), (load_map_data, load_game_objects).chain());
+        
+        app.add_systems(Update, linear_move_with_easing
+             .run_if(in_state(MyAppState::InGame)));
     }
 }

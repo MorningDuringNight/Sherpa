@@ -6,6 +6,7 @@
 use std::time::Duration;
 use bevy::prelude::*;
 use crate::config::*;
+use crate::observer::state::{self, ObservationState};
 use crate::physics::PhysicsPlugin;
 use crate::player::{Player, PlayerPlugin};
 use crate::policy::PolicyPlugin;
@@ -19,6 +20,7 @@ use crate::map::{MapPlugin, SCREEN};
 use crate::multiplayer::UdpClientPlugin;
 use crate::multiplayer::UdpServerPlugin;
 use crate::util::DevModePlugin;
+use crate::enemy::EnemyPlugin;
 
 use crate::game_ui::UIPlugin;
 
@@ -29,7 +31,6 @@ use crate::physics::rope_force::{
 use crate::player::load_players::spawn_players;
 
 use crate::observer::plugin::ObserverPlugin;
-
 
 // change usize to all: single player, single machine config data. 
 #[derive(Resource)]
@@ -65,6 +66,9 @@ fn init_player_camera(mut commands: Commands) {
 #[derive(Component)]
 pub struct MainCamera;
 
+#[derive(Component, Default)]
+pub struct Background;
+
 #[derive(Component)]
 pub struct FollowedPlayer;
 
@@ -74,13 +78,17 @@ pub fn update_camera(
     mut camera_q: Query<&mut Transform, With<MainCamera>>,
     followed_q: Query<&Transform, (With<FollowedPlayer>, Without<MainCamera>)>,
     time: Res<Time>,
+    mut background: Query<&mut Transform, (With<Background>, Without<MainCamera>, Without<FollowedPlayer>)>,
 ) {
     let Ok(mut cam) = camera_q.single_mut() else { return };
     let Ok(player_tf) = followed_q.single() else { return };
+    let Ok(mut bg) = background.single_mut() else { return };
 
     let y = player_tf.translation.y.max(SCREEN.1 / 2.0);
     let target = Vec3::new(cam.translation.x, y, cam.translation.z);
     cam.translation.smooth_nudge(&target, CAMERA_DECAY_RATE, time.delta_secs());
+    let bgTarget = Vec3::new(bg.translation.x, y, bg.translation.z);
+    bg.translation.smooth_nudge(&bgTarget, CAMERA_DECAY_RATE, time.delta_secs());
 }
 // going to implement the replacement for the controls
 #[derive(Event)]
@@ -105,13 +113,13 @@ fn bot_update(
     mut keys: ResMut<ButtonInput<KeyCode>>,
     mut botTimer: ResMut<botTimer>,
     time: Res<Time>,
-
+    obs: ResMut<ObservationState>
 ){  
     if botActive.0 == false{
         return;
     }
     else{
-        for (entity, transform, mut Bot,) in players.iter_mut(){
+        for (entity, transform, mut Bot) in players.iter_mut(){
             //put repeating timer
             //if timer has not started: start timer and run function
             //if not start return
@@ -123,6 +131,7 @@ fn bot_update(
                     &time,
                     transform,
                     &mut keys,
+                    &obs,
                 );
             }
             else {
@@ -146,14 +155,15 @@ fn trigger_bot_input(
 
 pub fn run(player_number: Option<usize>) {
     let mut app = App::new();
-
+    
     #[cfg(all(feature = "client", debug_assertions))]
     app.add_plugins(DevModePlugin);
 
     #[cfg(feature = "client")]
     {
         app.add_plugins(DefaultPlugins);
-        app.add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input));
+        app.add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input)
+            .run_if(in_state(MyAppState::InGame)));
 
         if let Some(player_number) = player_number {
             app.insert_resource(GameMode::NetCoop(player_number));
@@ -183,6 +193,20 @@ pub fn run(player_number: Option<usize>) {
         .insert_resource(PlayerSpawnVelocity { velocity: PLAYER_INITIAL_VELOCITY })
         .insert_resource(botTimer{time:Timer::new(Duration::from_secs(1),TimerMode::Repeating)})
         .insert_resource(BotActive(false))
+        .insert_resource(RopeGeometry::default());
+    // #[cfg(debug_assertions)] // not added in release mode.
+    // app.add_plugins(DevModePlugin);
+
+   
+    
+    app
+        .insert_resource(Time::<Fixed>::from_hz(60.0))
+        .insert_resource(PlayerSpawnPoint { position: PLAYER_INITIAL_POSITION })
+        .insert_resource(PlayerSpawnVelocity { velocity: PLAYER_INITIAL_VELOCITY })
+
+        .add_systems(OnEnter(MyAppState::InGame), init_player_camera)
+
+
         .add_plugins(MapPlugin)
         .add_plugins(PlayerPlugin)
         .add_plugins(PhysicsPlugin)
@@ -194,11 +218,31 @@ pub fn run(player_number: Option<usize>) {
         .add_systems(Startup, init_player_camera)
         .add_systems(Update, update_camera)
         .insert_resource(RopeGeometry::default());
-        // .add_systems(Startup, init_ropes.after(spawn_players))
-        // .add_systems(Update, rope_tension_system)
-        // .add_systems(Update, rope_force_to_system)
-        // .add_systems(Update, compute_rope_geometry)
-        // .add_systems(Update, apply_rope_geometry);
+        .add_systems(Startup, init_ropes.after(spawn_players))
+        .add_systems(Update, rope_tension_system)
+        .add_systems(Update, rope_force_to_system)
+        .add_systems(Update, compute_rope_geometry)
+        .add_systems(Update, apply_rope_geometry);
+        .add_plugins(EnemyPlugin)
 
-    app.run();
+        .add_systems(Update, update_camera
+            .run_if(in_state(MyAppState::InGame)))
+        .insert_resource(RopeGeometry::default())
+
+        // .add_systems(Startup, init_ropes)
+        .add_systems(OnEnter(MyAppState::InGame), init_ropes.after(spawn_players))
+        .add_systems(Update, rope_tension_system
+            .run_if(in_state(MyAppState::InGame)))
+        .add_systems(Update, rope_force_to_system
+            .run_if(in_state(MyAppState::InGame)))
+        .add_systems(Update, compute_rope_geometry
+            .run_if(in_state(MyAppState::InGame)))
+        .add_event::<ToggleBotEvent>()
+        .add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input)
+            .run_if(in_state(MyAppState::InGame)))
+        .add_systems(Update, apply_rope_geometry
+            .run_if(in_state(MyAppState::InGame)))
+        .insert_state(MyAppState::MainMenu)
+        .run();
 }
+
