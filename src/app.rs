@@ -173,6 +173,26 @@ fn trigger_bot_input(
     }
 }
 
+pub struct InGameSystems;
+
+impl Plugin for InGameSystems {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            Update,
+            (
+                rope_tension_system,
+                rope_force_to_system,
+                compute_rope_geometry,
+                bot_update,
+                bot_update_toggle,
+                trigger_bot_input,
+                apply_rope_geometry,
+            )
+            .run_if(in_state(MyAppState::InGame)),
+        );
+    }
+}
+
 pub fn run(player_number: Option<usize>) {
     let mut app = App::new();
     
@@ -258,17 +278,9 @@ pub fn run(player_number: Option<usize>) {
         .insert_resource(RopeGeometry::default())
 
         .add_systems(Startup, init_ropes.after(spawn_players))
-        .add_systems(Update, rope_tension_system
-            .run_if(in_state(MyAppState::InGame)))
-        .add_systems(Update, rope_force_to_system
-            .run_if(in_state(MyAppState::InGame)))
-        .add_systems(Update, compute_rope_geometry
-            .run_if(in_state(MyAppState::InGame)))
         .add_event::<ToggleBotEvent>()
-        .add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input)
-            .run_if(in_state(MyAppState::InGame)))
-        .add_systems(Update, apply_rope_geometry
-            .run_if(in_state(MyAppState::InGame)));
+
+        .add_plugins(InGameSystems);
 
     #[cfg(feature = "server")]
         app.insert_state(MyAppState::InGame);
