@@ -19,5 +19,5 @@ pub fn update_observation_system(
 
     // estimate rope tension by measuring distance between players
 
-    info!("Observer updated: {:?}", obs.as_vector());
+    // info!("Observer updated: {:?}", obs.as_vector());
 }

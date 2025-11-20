@@ -116,7 +116,7 @@ pub fn init_ropes(
 /// 系统 2：应用几何信息（只写 rope sprite 的 transform + sprite）
 pub fn apply_rope_geometry(
     rope_geometry: Res<RopeGeometry>,
-    mut meshes: ResMut<Assets<Mesh>>,
+    #[cfg(feature = "client")] mut meshes: ResMut<Assets<Mesh>>,
     mut q_rope_sprites: Query<(&mut Transform, &mut Mesh2d, &RopeSprite)>,
 ) {
     for (rope_entity, head, tail) in rope_geometry.updates.iter() {
@@ -141,10 +141,13 @@ pub fn apply_rope_geometry(
                 let thickness = 2.0;
                 // sprite.custom_size = Some(Vec2::new(*length, 2.0));
 
-                let mesh_new = polyline_ribbon_mesh(&pts, thickness);
-                let mesh_handle = meshes.add(mesh_new);
-                // 更新 mesh2d
-                *mesh = Mesh2d(mesh_handle);
+                #[cfg(feature = "client")] 
+                {
+                    let mesh_new = polyline_ribbon_mesh(&pts, thickness);
+                    let mesh_handle = meshes.add(mesh_new);
+                    // 更新 mesh2d
+                    *mesh = Mesh2d(mesh_handle);
+                }
 
                 break;
             }

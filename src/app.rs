@@ -243,7 +243,7 @@ pub fn run(player_number: Option<usize>) {
         .insert_resource(PlayerSpawnPoint { position: PLAYER_INITIAL_POSITION })
         .insert_resource(PlayerSpawnVelocity { velocity: PLAYER_INITIAL_VELOCITY })
 
-        .add_systems(OnEnter(MyAppState::InGame), init_player_camera)
+        .add_systems(Startup, init_player_camera)
 
 
         .add_plugins(MapPlugin)
@@ -257,7 +257,7 @@ pub fn run(player_number: Option<usize>) {
             .run_if(in_state(MyAppState::InGame)))
         .insert_resource(RopeGeometry::default())
 
-        .add_systems(OnEnter(MyAppState::InGame), init_ropes.after(spawn_players))
+        .add_systems(Startup, init_ropes.after(spawn_players))
         .add_systems(Update, rope_tension_system
             .run_if(in_state(MyAppState::InGame)))
         .add_systems(Update, rope_force_to_system
@@ -268,8 +268,12 @@ pub fn run(player_number: Option<usize>) {
         .add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input)
             .run_if(in_state(MyAppState::InGame)))
         .add_systems(Update, apply_rope_geometry
-            .run_if(in_state(MyAppState::InGame)))
-        .insert_state(MyAppState::MainMenu)
-        .run();
+            .run_if(in_state(MyAppState::InGame)));
+
+    #[cfg(feature = "server")]
+        app.insert_state(MyAppState::InGame);
+    #[cfg(feature = "client")]
+        app.insert_state(MyAppState::MainMenu);
+    app.run();
 }
 

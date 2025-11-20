@@ -28,7 +28,7 @@ pub struct UdpClientPlugin {
 impl Plugin for UdpClientPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ServerAddress(self.server_addr.clone()))
-            .add_systems( OnEnter(MyAppState::MainMenu), client_handshake)
+            .add_systems(Startup, client_handshake)
             .add_systems(FixedUpdate, (
                 send_input_state_system,
             ).chain()
