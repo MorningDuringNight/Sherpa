@@ -8,11 +8,11 @@ edition = "2024"
 async-channel = "2.5.0"
 bevy.workspace = true
 rand.workspace = true
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls-native-roots"] }
-tokio   = { version = "1", features = ["rt-multi-thread", "macros"] }
+rustls = "0.23.32"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-csv = "1"
+edit-xlsx = "0.4.6"
+calamine = { version = "0.31.0", features = ["chrono"] }
 
 [profile.dev]
 opt-level = 1
