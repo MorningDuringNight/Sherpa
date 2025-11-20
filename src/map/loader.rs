@@ -8,7 +8,7 @@ use super::mapdata::EntityKind;
 use super::util::*;
 use super::{MAP_NAME, MapFile};
 
-use crate::app::Background;
+use crate::app::{Background, GameAssets};
 
 #[derive(Resource)]
 pub struct MapDimensions {
@@ -134,7 +134,7 @@ pub fn load_game_objects(
 pub fn load_background_layers(
     mut commands: Commands,
     images: Res<MapTextureHandles>,
-    background: Res<AssetServer>,
+    game_assets: Res<GameAssets>,
     map_dimensions: Res<MapDimensions>,
 ) {
     commands.spawn(background_layer(
@@ -144,7 +144,7 @@ pub fn load_background_layers(
     ));
 
     commands.spawn((
-        Sprite::from_image(background.load("sherpa_background.png")),
+        Sprite::from_image(game_assets.background.clone()),
         Transform::from_xyz(640., 360., -1.),
         Background
     ));
@@ -171,13 +171,13 @@ pub fn load_map_data(mut commands: Commands) {
 
 pub fn load_render_resources(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    game_assets: Res<GameAssets>,
     map: Res<MapFile>,
     mut atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     // load images
-    let tile_fg_handle = asset_server.load(&map.layer_images.tile_fg);
-    let entity_handle = asset_server.load(&map.layer_images.entity);
+    let tile_fg_handle = game_assets.tile_fg.clone();
+    let entity_handle = game_assets.entity.clone();
 
     // build layout from image slices.
     let texture_atlas = atlas_layout(&map, &mut atlas_layouts);

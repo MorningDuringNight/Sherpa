@@ -30,6 +30,17 @@ use crate::player::load_players::spawn_players;
 
 use crate::observer::plugin::ObserverPlugin;
 
+fn dummy<T: bevy::asset::Asset>() -> Handle<T> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static COUNTER: AtomicU64 = AtomicU64::new(1);
+
+    // Bevy supports weak_from_u128, so just expand the u64 into u128
+    let id = COUNTER.fetch_add(1, Ordering::Relaxed) as u128;
+
+    Handle::<T>::weak_from_u128(id)
+}
+
 // change usize to all: single player, single machine config data. 
 #[derive(Resource)]
 pub enum GameMode {
@@ -59,6 +70,17 @@ fn init_player_camera(mut commands: Commands) {
         MainCamera,
     ));
 }
+
+#[derive(Resource)]
+pub struct GameAssets {
+    pub fish: Handle<Image>,
+    pub background: Handle<Image>,
+    pub tile_fg: Handle<Image>,
+    pub entity: Handle<Image>,
+    pub main_menu: Handle<Image>,
+}
+
+
 
 // camera components
 #[derive(Component)]
@@ -151,6 +173,26 @@ fn trigger_bot_input(
     }
 }
 
+pub struct InGameSystems;
+
+impl Plugin for InGameSystems {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            Update,
+            (
+                rope_tension_system,
+                rope_force_to_system,
+                compute_rope_geometry,
+                bot_update,
+                bot_update_toggle,
+                trigger_bot_input,
+                apply_rope_geometry,
+            )
+            .run_if(in_state(MyAppState::InGame)),
+        );
+    }
+}
+
 pub fn run(player_number: Option<usize>) {
     let mut app = App::new();
     
@@ -176,14 +218,37 @@ pub fn run(player_number: Option<usize>) {
             // server_addr: "100.110.71.63:5000".to_string(), // tailscaled.
             // server_addr: "3.22.185.76:5000".to_string(),
         });
+
+        let asset_server = app.world().get_resource::<AssetServer>().unwrap().clone();
+        let game_assets = GameAssets {
+            fish: asset_server.load("fish.PNG"),
+            background: asset_server.load("sherpa_background.png"),
+            tile_fg: asset_server.load("level1/tile_fg.png"),
+            entity: asset_server.load("level1/entity.png"),
+            main_menu: asset_server.load("mainMenu.png"),
+        };
+        app.insert_resource(game_assets);
     }
 
     #[cfg(feature = "server")]
     {
         app.add_plugins(MinimalPlugins);
+        app.add_plugins(bevy::state::app::StatesPlugin);
+        app.add_plugins(bevy::input::InputPlugin);
+
         app.insert_resource(GameMode::Simulated);
         app.add_plugins(UdpServerPlugin);
+
+        let game_assets = GameAssets {
+            fish: dummy(),
+            background: dummy(),
+            tile_fg: dummy(),
+            entity: dummy(),
+            main_menu: dummy(),
+        };
+        app.insert_resource(game_assets);
     }
+
 
     app
         .insert_resource(Time::<Fixed>::from_hz(60.0))
@@ -192,17 +257,13 @@ pub fn run(player_number: Option<usize>) {
         .insert_resource(botTimer{time:Timer::new(Duration::from_secs(1),TimerMode::Repeating)})
         .insert_resource(BotActive(false))
         .insert_resource(RopeGeometry::default());
-    // #[cfg(debug_assertions)] // not added in release mode.
-    // app.add_plugins(DevModePlugin);
-
-   
     
     app
         .insert_resource(Time::<Fixed>::from_hz(60.0))
         .insert_resource(PlayerSpawnPoint { position: PLAYER_INITIAL_POSITION })
         .insert_resource(PlayerSpawnVelocity { velocity: PLAYER_INITIAL_VELOCITY })
 
-        .add_systems(OnEnter(MyAppState::InGame), init_player_camera)
+        .add_systems(Startup, init_player_camera)
 
 
         .add_plugins(MapPlugin)
@@ -216,20 +277,15 @@ pub fn run(player_number: Option<usize>) {
             .run_if(in_state(MyAppState::InGame)))
         .insert_resource(RopeGeometry::default())
 
-        // .add_systems(Startup, init_ropes)
-        .add_systems(OnEnter(MyAppState::InGame), init_ropes.after(spawn_players))
-        .add_systems(Update, rope_tension_system
-            .run_if(in_state(MyAppState::InGame)))
-        .add_systems(Update, rope_force_to_system
-            .run_if(in_state(MyAppState::InGame)))
-        .add_systems(Update, compute_rope_geometry
-            .run_if(in_state(MyAppState::InGame)))
+        .add_systems(Startup, init_ropes.after(spawn_players))
         .add_event::<ToggleBotEvent>()
-        .add_systems(Update, (bot_update, bot_update_toggle, trigger_bot_input)
-            .run_if(in_state(MyAppState::InGame)))
-        .add_systems(Update, apply_rope_geometry
-            .run_if(in_state(MyAppState::InGame)))
-        .insert_state(MyAppState::MainMenu)
-        .run();
+
+        .add_plugins(InGameSystems);
+
+    #[cfg(feature = "server")]
+        app.insert_state(MyAppState::InGame);
+    #[cfg(feature = "client")]
+        app.insert_state(MyAppState::MainMenu);
+    app.run();
 }
 

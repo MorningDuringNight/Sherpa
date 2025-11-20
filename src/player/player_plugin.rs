@@ -28,9 +28,9 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, spawn_point: Res<PlayerSpawnPoint>, spawn_velocity: Res<PlayerSpawnVelocity>) {
+fn spawn_player(mut commands: Commands, game_assets: Res<GameAssets>, spawn_point: Res<PlayerSpawnPoint>, spawn_velocity: Res<PlayerSpawnVelocity>) {
     let transform = Transform::from_translation(spawn_point.position);
-    let texture = asset_server.load("spriteguy.png");
+    let texture = game_assets.fish.clone();
     let controls = PlayerControls {
         up: KeyCode::KeyW,
         down: KeyCode::KeyS,
@@ -47,7 +47,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>, spawn_po
     // Ideally we would have a better way
     // use load player assets
     let transform = Transform::from_translation(spawn_point.position + Vec3::new(300.0, 0.0, 0.0));
-    let texture = asset_server.load("portrait_rainey.png");
+    let texture = game_assets.fish.clone();
     let controls = PlayerControls {
         up: KeyCode::ArrowUp,
         down: KeyCode::ArrowDown,
