@@ -6,15 +6,40 @@ use bevy::prelude::*;
 
 use super::qtable::{QTable, Action};
 use super::qtable::{X_N, Y_N};
+use super::Tupper;
 
 const CELL_SIZE: f32 = 64.0;
 const MAX_ARROW_LEN: f32 = 24.0;
 const MAX_IDLE_RADIUS: f32 = 12.0;
 
-pub fn qtable_gizmos(
-    q: Res<QTable>,
-    mut gizmos: Gizmos,
+pub fn make_gizmos(is_P1: bool) -> impl FnMut(
+    Res<Tupper>,
+    Gizmos,
 ) {
+    move | qt, gizmos| {
+        qtable_gizmos(
+            qt,
+            gizmos,
+            is_P1,
+        );
+    }
+}
+
+pub fn qtable_gizmos(
+    qt: Res<Tupper>,
+    mut gizmos: Gizmos,
+    is_P1: bool,
+) {
+
+    let Tupper(q1, q2) = qt.as_ref();
+    
+    let q = if is_P1 {
+        q1
+    } else {
+        q2
+    };
+    
+
     for x in 0..X_N {
         for y in 0..Y_N {
             let qs = q.avg_q_xy(x, y);

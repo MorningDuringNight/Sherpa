@@ -11,6 +11,7 @@ pub struct ControllerPlugin;
 impl Plugin for ControllerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, controller_update);
+        app.add_systems(Update, controller_update2);
     }
 }
 
@@ -42,6 +43,40 @@ fn controller_update (
             Action::RJ => {
                 keys.press(KeyCode::KeyD);
                 keys.press(KeyCode::KeyW);
+            },
+            _ => {}
+        }
+    }
+}
+
+fn controller_update2 (
+    mut events: EventReader<RLAction>,
+    mut keys: ResMut<ButtonInput<KeyCode>>,
+) {
+    for event in events.read() {
+        let action = event.action;
+        // info!("Action {}", action.index());
+        keys.release(KeyCode::ArrowLeft);
+        keys.release(KeyCode::ArrowRight);
+        keys.release(KeyCode::ArrowUp);
+
+        match action {
+            Action::L => {
+                keys.press(KeyCode::ArrowLeft);
+            },
+            Action::R => {
+                keys.press(KeyCode::ArrowRight);
+            },
+            Action::J => {
+                keys.press(KeyCode::ArrowUp);
+            },
+            Action::LJ => {
+                keys.press(KeyCode::ArrowLeft);
+                keys.press(KeyCode::ArrowUp);
+            },
+            Action::RJ => {
+                keys.press(KeyCode::ArrowRight);
+                keys.press(KeyCode::ArrowUp);
             },
             _ => {}
         }

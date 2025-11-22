@@ -2,16 +2,19 @@
 // Copyright (c) 2025 Tingxu Chen
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Action>
-use bevy::prelude::*;
+use bevy::{log::tracing_subscriber::field::debug, prelude::*};
 use rand::Rng;
 
 use super::qtable::{QTable, Action};
-use crate::observer::system::Observation;
+use crate::{observer::system::Observation, policy::Tupper};
 
 const QTABLE_PATH: &str = "assets/qtable.csv";
+const QTABLE_P2: &str = "assets/qtableSec.csv";
 const ALPHA: f32 = 0.05;
 const GAMMA: f32 = 0.97;
 const EPSILON: f32 = 0.3;
+
+
 
 #[derive(Default)]
 pub struct LastState {
@@ -38,18 +41,62 @@ pub struct RLAction {
     pub action: Action,
 }
 
+pub fn make_qlearning_system(path: String, is_P1: bool) -> impl FnMut(
+    EventReader<Observation>,
+    ResMut<Tupper>,
+    Local<u32>,
+    Local<LastState>,
+    Local<LastAction>,
+    Local<LastReward>,
+    Local<ActionCommit>,
+    EventWriter<RLAction>,
+) {
+    move |obs_r,
+          q,
+          step,
+          last_state,
+          last_action,
+          last_reward,
+          commit,
+          e_act| {
+        qlearning_update(
+            &path,
+            is_P1,
+            obs_r,
+            q,
+            step,
+            last_state,
+            last_action,
+            last_reward,
+            commit,
+            e_act,
+        );
+    }
+}
+
 pub fn qlearning_update(
+    path: &String,
+    is_P1: bool, 
     mut obs_r: EventReader<Observation>,
-    mut q: ResMut<QTable>,
+    mut qt: ResMut<Tupper>,
     mut step: Local<u32>,
     mut last_state: Local<LastState>,
     mut last_action: Local<LastAction>,
     mut last_reward: Local<LastReward>,
     mut commit: Local<ActionCommit>,
     mut e_act: EventWriter<RLAction>,
-) {
+    )  
+{
     let mut updated = false;
 
+    let Tupper(q1, q2) = qt.as_mut();
+    
+    let mut q = if is_P1 {
+        q1
+    } else {
+        q2
+    };
+    
     for obs in obs_r.read() {
         let x = obs.observation[0] as usize;
         let y = obs.observation[1] as usize;
@@ -125,7 +172,7 @@ pub fn qlearning_update(
         // info!("P {}", *step);
         if *step % 200 == 0 {
             info!("Update {}", *step);
-            if let Err(e) = q.save_to_csv(QTABLE_PATH) {
+            if let Err(e) = q.save_to_csv(path) {
                 eprintln!("Failed to save qtable: {e}");
             } else {
                 println!("QTable saved at step {}", *step);
@@ -133,6 +180,8 @@ pub fn qlearning_update(
         }
     }
 }
+
+
 
 const COIN_R: f32 = 40.0;
 const UP_R: f32 = 1.0;
