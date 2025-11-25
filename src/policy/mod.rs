@@ -10,6 +10,7 @@ mod debug;
 
 use self::action::make_qlearning_system;
 use self::action::RLAction;
+use self::action::RLAction2;
 use self::debug::make_gizmos;
 use self::qtable::QTable;
 
@@ -21,7 +22,9 @@ impl Plugin for PolicyPlugin {
 
         // let q1 = PathWay{path: "assets/qtable.csv"};
         // let q2 = PathWay{path: "assets/qtable.csv"};
+        
         app.add_event::<RLAction>()
+           .add_event::<RLAction2>()
            .add_systems(Startup, qtable_load_system)
         //    .add_systems(Update, qlearning_update)
            .add_systems(Update, make_qlearning_system(QTABLE_PATH.to_string(),true))

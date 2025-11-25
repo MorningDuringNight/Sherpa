@@ -5,6 +5,7 @@
 use bevy::prelude::*;
 
 use crate::policy::action::RLAction;
+use crate::policy::action::RLAction2;
 use crate::policy::qtable::Action;
 
 pub struct ControllerPlugin;
@@ -50,7 +51,7 @@ fn controller_update (
 }
 
 fn controller_update2 (
-    mut events: EventReader<RLAction>,
+    mut events: EventReader<RLAction2>,
     mut keys: ResMut<ButtonInput<KeyCode>>,
 ) {
     for event in events.read() {

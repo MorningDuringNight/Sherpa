@@ -41,6 +41,11 @@ pub struct RLAction {
     pub action: Action,
 }
 
+#[derive(Event, Debug)]
+pub struct RLAction2 {
+    pub action: Action,
+}
+
 pub fn make_qlearning_system(path: String, is_P1: bool) -> impl FnMut(
     EventReader<Observation>,
     ResMut<Tupper>,
@@ -50,6 +55,7 @@ pub fn make_qlearning_system(path: String, is_P1: bool) -> impl FnMut(
     Local<LastReward>,
     Local<ActionCommit>,
     EventWriter<RLAction>,
+    EventWriter<RLAction2>
 ) {
     move |obs_r,
           q,
@@ -58,7 +64,8 @@ pub fn make_qlearning_system(path: String, is_P1: bool) -> impl FnMut(
           last_action,
           last_reward,
           commit,
-          e_act| {
+          e_act,
+          e_act2| {
         qlearning_update(
             &path,
             is_P1,
@@ -70,6 +77,7 @@ pub fn make_qlearning_system(path: String, is_P1: bool) -> impl FnMut(
             last_reward,
             commit,
             e_act,
+            e_act2,
         );
     }
 }
@@ -85,6 +93,7 @@ pub fn qlearning_update(
     mut last_reward: Local<LastReward>,
     mut commit: Local<ActionCommit>,
     mut e_act: EventWriter<RLAction>,
+    mut e_act2: EventWriter<RLAction2>,
     )  
 {
     let mut updated = false;
@@ -137,7 +146,7 @@ pub fn qlearning_update(
         //         e_act.write(RLAction { action: a });
         //     }
         // }
-
+        
         let greedy = epsilon_greedy(&q, s);
 
         let action_to_do = if commit.frames_left == 0 {
@@ -159,10 +168,14 @@ pub fn qlearning_update(
                 last_action.a.unwrap_or(greedy)
             }
         };
-
-        e_act.write(RLAction { action: action_to_do });
+        if is_P1{
+            e_act.write(RLAction { action: action_to_do });
+        }
+        else{
+            e_act2.write(RLAction2 { action: action_to_do });
+        }
+       
         last_action.a = Some(action_to_do);
-
         last_state.s = Some(s);
         last_reward.r = Some(r);
     }
