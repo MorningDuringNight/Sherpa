@@ -92,7 +92,7 @@ fn resolve_collision(
 
         // colliding with top  
         if offset.y > 0.0 {
-            player_pos.y += 32.0;
+            player_pos.y += 16.0;
             ground.is_grounded = true;
             // velocity.x *= PLATFORM_FRICTION;
             momentum.x *= PLATFORM_FRICTION;
@@ -102,7 +102,7 @@ fn resolve_collision(
         }
         // colliding with bottom
         else {
-            player_pos.y -= 32.0;
+            player_pos.y -= 16.0;
         }
     }
 }

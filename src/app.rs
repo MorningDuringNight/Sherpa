@@ -229,7 +229,13 @@ pub fn run(player_number: Option<usize>) {
             .run_if(in_state(MyAppState::InGame)))
         .add_systems(Update, apply_rope_geometry
             .run_if(in_state(MyAppState::InGame)))
-        .insert_state(MyAppState::MainMenu)
-        .run();
+        .insert_state(MyAppState::MainMenu);
+
+    // #[cfg(feature = "client")]
+    // app.insert_state(MyAppState::InGame);
+    // #[cfg(feature = "server")]
+    // app.insert_state(MyAppState::InGame);
+    
+    app.run();
 }
 

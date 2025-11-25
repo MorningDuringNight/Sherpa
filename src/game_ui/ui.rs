@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
+use bevy::color::palettes::css::BLACK;
 use crate::player::Player;
 use crate::config::MyAppState;
 use crate::app::Background;
@@ -77,7 +78,9 @@ pub fn load_ui_game(
                     ..Default::default()
                 },
             
-            Text::new("Coins: "), 
+            (Text::new("Coins: "),
+            TextColor(BLACK.into()),
+            ),
             RenderLayers::layer(1),
         ));
         parent.spawn((
@@ -86,7 +89,9 @@ pub fn load_ui_game(
                     ..Default::default()
                 },
             
-            Text::new("coins"), 
+            (Text::new("coins"), 
+            TextColor(BLACK.into()),
+            ),
             RenderLayers::layer(1),
             CoinDisplay,
         ));
@@ -96,7 +101,9 @@ pub fn load_ui_game(
                     ..Default::default()
                 },
             
-            Text::new("Score: "), 
+            (Text::new("Score: "), 
+            TextColor(BLACK.into()),
+            ),
             RenderLayers::layer(1),
         ));
         parent.spawn((
@@ -105,7 +112,9 @@ pub fn load_ui_game(
                     ..Default::default()
                 },
             
-            Text::new("score"), 
+            (Text::new("score"), 
+            TextColor(BLACK.into()),
+            ),
             RenderLayers::layer(1),
             ScoreDisplay,
         ));
@@ -160,13 +169,27 @@ pub fn load_main_menu(
 
 pub fn main_menu_input(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut next_state: ResMut<NextState<MyAppState>>
+    mut next_state: ResMut<NextState<MyAppState>>,
+    mut coinCount: ResMut<TotalCoin>,
+    mut height: ResMut<MaxHeight>,
 ){
     if keyboard_input.pressed(KeyCode::KeyM){
 
     }
     if keyboard_input.pressed(KeyCode::KeyS){
         next_state.set(MyAppState::InGame);
+        coinCount.amount = 0;
+        height.amount = 0;
+    }
+
+}
+
+pub fn game_death(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut next_state: ResMut<NextState<MyAppState>>
+){
+    if keyboard_input.pressed(KeyCode::KeyT){
+        next_state.set(MyAppState::EndCredit);
     }
 
 }
@@ -174,8 +197,10 @@ pub fn main_menu_input(
 pub fn despawn_ui(
     mut commands: Commands,
     mut background: Query<Entity, With<Background>>,
+    mut nodes: Query<Entity, With<Node>>,
+    mut objects: Query<Entity, With<Transform>>,
 ){
-    for bg in background.iter_mut(){
-        commands.entity(bg).despawn();
+    for object in objects.iter_mut(){
+        commands.entity(object).despawn();
     }
 }
