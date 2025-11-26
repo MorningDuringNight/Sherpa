@@ -4,6 +4,7 @@ use bevy::prelude::*;
 
 use crate::enemy::bundle::{Enemy, EnemyBundle, EnemySpeed};
 use crate::player::Player;
+use crate::enemy::MyAppState;
 
 const ENEMY_SPAWN_HEIGHT: f32 = 800.0;
 const ENEMY_SPAWN_TIME: f32 = 8.0;
@@ -46,7 +47,7 @@ pub fn spawn_enemy_system(
     }
 
     if found {
-        commands.spawn(EnemyBundle::new(horizontal, highest + ENEMY_SPAWN_HEIGHT));
+        commands.spawn((EnemyBundle::new(horizontal, highest + ENEMY_SPAWN_HEIGHT), StateScoped(MyAppState::InGame)));
     }
 }
 

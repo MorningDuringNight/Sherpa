@@ -1,6 +1,8 @@
 use bevy::math::bounding::Aabb2d;
 use bevy::prelude::*;
 
+use crate::map::MyAppState;
+
 use super::mapdata::Boundary;
 
 #[derive(Component, Debug)]
@@ -91,7 +93,7 @@ impl GameObject {
     }
 
     pub fn spawn(self, commands: &mut Commands) -> Entity {
-        let mut ec = commands.spawn((self.sprite, self.transform, self.visibility, self.name));
+        let mut ec = commands.spawn((self.sprite, self.transform, self.visibility, self.name, StateScoped(MyAppState::InGame)));
 
         if let Some(collider) = self.collider {
             ec.insert(collider);

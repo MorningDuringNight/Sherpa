@@ -4,6 +4,8 @@ use crate::player::Player;
 use crate::config::MyAppState;
 use crate::app::{Background, GameAssets};
 
+use bevy::color::palettes::css::BLACK;
+
 
 #[derive(Component)]
 pub struct UICamera;
@@ -77,7 +79,8 @@ pub fn load_ui_game(
                     ..Default::default()
                 },
             
-            Text::new("Coins: "), 
+            (Text::new("Coins: "), 
+                TextColor(BLACK.into())),
             RenderLayers::layer(1),
         ));
         parent.spawn((
@@ -86,7 +89,8 @@ pub fn load_ui_game(
                     ..Default::default()
                 },
             
-            Text::new("coins"), 
+            (Text::new("coins"), 
+                TextColor(BLACK.into())),
             RenderLayers::layer(1),
             CoinDisplay,
         ));
@@ -96,7 +100,8 @@ pub fn load_ui_game(
                     ..Default::default()
                 },
             
-            Text::new("Score: "), 
+            (Text::new("Score: "), 
+                TextColor(BLACK.into())),
             RenderLayers::layer(1),
         ));
         parent.spawn((
@@ -105,7 +110,8 @@ pub fn load_ui_game(
                     ..Default::default()
                 },
             
-            Text::new("score"), 
+            (Text::new("score"), 
+                TextColor(BLACK.into())),
             RenderLayers::layer(1),
             ScoreDisplay,
         ));
@@ -160,22 +166,42 @@ pub fn load_main_menu(
 
 pub fn main_menu_input(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut next_state: ResMut<NextState<MyAppState>>
+    mut next_state: ResMut<NextState<MyAppState>>,
+    mut coin_count: ResMut<TotalCoin>,
+    mut height: ResMut<MaxHeight>,
 ){
     if keyboard_input.pressed(KeyCode::KeyM){
 
     }
     if keyboard_input.pressed(KeyCode::KeyS){
+        coin_count.amount = 0;
+        height.amount = 0;
         next_state.set(MyAppState::InGame);
     }
 
 }
 
+pub fn game_death(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut next_state: ResMut<NextState<MyAppState>>,
+){
+    if keyboard_input.pressed(KeyCode::KeyT){
+        next_state.set(MyAppState::EndCredit);
+    }
+}
+
+
+
+///fix
 pub fn despawn_ui(
     mut commands: Commands,
     mut background: Query<Entity, With<Background>>,
+    mut objects: Query<Entity, (With<StateScoped<MyAppState>>)>,
 ){
-    for bg in background.iter_mut(){
-        commands.entity(bg).despawn();
+    for object in background.iter_mut(){
+        commands.entity(object).despawn();
+    }
+     for object in objects.iter_mut(){
+        commands.entity(object).despawn();
     }
 }
