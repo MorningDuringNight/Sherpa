@@ -16,10 +16,19 @@ impl Plugin for UIPlugin{
             .add_systems(OnEnter(MyAppState::MainMenu), load_main_menu)
             .add_systems(Update, main_menu_input
                 .run_if(in_state(MyAppState::MainMenu)))
+            .add_systems(Update, main_menu_input
+                .run_if(in_state(MyAppState::EndCredit)))
             .add_systems(Update, update_height
                 .run_if(in_state(MyAppState::InGame)))
             .add_systems(Update, update_ui
                 .run_if(in_state(MyAppState::InGame)))
-            .add_systems(OnExit(MyAppState::MainMenu), despawn_ui);
+
+            .add_systems(OnExit(MyAppState::MainMenu), despawn_ui)
+            .add_systems(OnExit(MyAppState::InGame), despawn_ui)
+            .add_systems(OnExit(MyAppState::EndCredit), despawn_ui)
+
+            .add_systems(Update, game_death
+                .run_if(in_state(MyAppState::InGame)));
     }
 }
+

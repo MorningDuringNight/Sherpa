@@ -167,3 +167,15 @@ fn single_player(
 
     entity_commands.id()
 }
+
+pub fn reset_player(
+    players: Query<&mut Transform, With<Player>>,
+    spawn_point: Res<PlayerSpawnPoint>
+){
+    let mut count = 0.;
+    for mut player in players{
+        player.translation.x = spawn_point.position.x + (count*300.0);
+        player.translation.y = 0.0;
+        count+=1.;
+    }
+}

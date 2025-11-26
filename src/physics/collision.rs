@@ -10,6 +10,8 @@ use bevy::{prelude::*, transform};
 use crate::config::physics::GRAVITY;
 use crate::game_ui::ui::TotalCoin;
 
+use crate::config::player::{PLAYER_LENGTH, PLAYER_WIDTH};
+
 #[derive(Event, Debug)]
 pub struct PlayerCollisionEvent {
     pub player: Entity,
@@ -71,10 +73,10 @@ fn resolve_collision(
                                   // 
         if offset.x > 0.0 {
             // Collided from the left side of a wall → push player to the left
-            player_pos.x += 32.0;
+            player_pos.x += PLAYER_WIDTH/2.;
         } else {
             // Collided from the right side of a wall → push player to the right
-            player_pos.x -= 32.0;
+            player_pos.x -= PLAYER_WIDTH/2.;
         }
 
         // Refresh wall jump timer to use wall jump
@@ -92,7 +94,7 @@ fn resolve_collision(
 
         // colliding with top  
         if offset.y > 0.0 {
-            player_pos.y += 32.0;
+            player_pos.y += PLAYER_LENGTH/2.;
             ground.is_grounded = true;
             // velocity.x *= PLATFORM_FRICTION;
             momentum.x *= PLATFORM_FRICTION;
@@ -102,7 +104,7 @@ fn resolve_collision(
         }
         // colliding with bottom
         else {
-            player_pos.y -= 32.0;
+            player_pos.y -= PLAYER_LENGTH/2.;
         }
     }
 }
