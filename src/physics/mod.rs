@@ -4,7 +4,7 @@
 // Description: <Physics system module and plugin>
 use bevy::prelude::*;
 use crate::config::MyAppState;
-use crate::physics::collision::EnemyCollisionEvent;
+use crate::physics::collision::{EnemyPlayerCollisionEvent, EnemyPlatformCollisionEvent};
 
 pub mod integrate;
 pub mod gravity;
@@ -36,7 +36,8 @@ impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_event::<PlayerCollisionEvent>()
-            .add_event::<EnemyCollisionEvent>()
+            .add_event::<EnemyPlatformCollisionEvent>()
+            .add_event::<EnemyPlayerCollisionEvent>()
             .add_systems(
                 FixedUpdate, 
                 (

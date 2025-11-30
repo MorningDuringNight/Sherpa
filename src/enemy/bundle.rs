@@ -9,9 +9,10 @@ pub struct EnemyCollider {
     pub aabb: Aabb2d,
 }
 
-#[derive(Component, Debug)]
-pub struct EnemySpeed {
+#[derive(Component, Debug, Clone, Copy)]
+pub struct EnemyMovement {
     pub speed: f32,
+    pub down: bool,
 }
 
 #[derive(Bundle)]
@@ -19,7 +20,7 @@ pub struct EnemyBundle {
     pub enemy: Enemy,
     pub transform: Transform,
     pub collider: EnemyCollider,
-    pub speed: EnemySpeed,
+    pub movement: EnemyMovement,
     pub sprite: Sprite,
 }
 
@@ -28,13 +29,13 @@ impl EnemyBundle {
         Self {
             enemy: Enemy,
             collider: EnemyCollider {
-                aabb: Aabb2d::new(Vec2::ZERO, Vec2::new(32.0, 32.0)),
+                aabb: Aabb2d::new(Vec2::ZERO, Vec2::new(16.0, 16.0)),
             },
-            speed: EnemySpeed{ speed: 150.0 },
+            movement: EnemyMovement{ speed: 150.0 , down: true },
             transform: Transform::from_xyz(x, y, 0.0),
             sprite: Sprite {
                 color: Color::srgb(1.0, 0.0, 0.0),
-                custom_size: Some(Vec2::new(64.0, 64.0)),
+                custom_size: Some(Vec2::new(32.0, 32.0)),
                 ..Default::default()
             }
         }
