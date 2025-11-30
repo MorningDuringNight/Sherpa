@@ -22,7 +22,8 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_player);
+        // spawn_player has been replaced by spawn_players, no longer used
+        // app.add_systems(Startup, spawn_player);
     }
 }
 

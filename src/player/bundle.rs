@@ -37,6 +37,13 @@ impl Default for Mode {
     }
 }
 
+/// Control mode marker component to identify whether player is currently controlled by player or AI
+#[derive(Component, Clone, Copy, PartialEq, Debug)]
+pub enum ControlMode {
+    Player,  // Player control
+    AI,      // AI control
+}
+
 #[derive(Bundle)]
 pub struct PlayerBundle {
     pub gravity: Gravity,

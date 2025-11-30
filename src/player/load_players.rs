@@ -15,7 +15,8 @@ use crate::player::bundle::{PlayerBundle, PlayerControls};
 use crate::components::motion::{GroundState, JumpController, Mass, Velocity};
 use crate::components::rope::{Rope, RopeConstraint};
 
-use crate::app::{GameMode};
+use crate::app::{GameMode, PlayerKeyMappings};
+use crate::player::ControlMode;
 use crate::stateMachine::Bot;
 use crate::stateMachine::BotState;
 use crate::stateMachine::StateMachine;
@@ -36,8 +37,8 @@ pub fn spawn_players(
     #[cfg(feature = "client")] asset_server: Res<AssetServer>,
     spawn_point: Res<PlayerSpawnPoint>,
     spawn_velocity: Res<PlayerSpawnVelocity>,
-
     gamemode: Res<GameMode>,
+    mut key_mappings: ResMut<PlayerKeyMappings>,
 ) {
 
     #[cfg(feature = "server")]
@@ -45,8 +46,8 @@ pub fn spawn_players(
 
     #[cfg(feature = "client")]
     let (p1_img, p2_img) = (
-        Some(asset_server.load("spriteguy.png")),
         Some(asset_server.load("portrait_rainey.png")),
+        Some(asset_server.load("spriteguy.png")),
     );
 
     let p1 = single_player(
@@ -84,32 +85,61 @@ pub fn spawn_players(
         right: KeyCode::ArrowRight
     });
 
+    // Save key mappings to resource (use reference to avoid move)
+    #[cfg(feature = "client")]
+    {
+        if let (Some(wasd), Some(arrow)) = (wasd_controls.as_ref(), arrow_controls.as_ref()) {
+            key_mappings.p1 = wasd.clone();
+            key_mappings.p2 = arrow.clone();
+        }
+    }
+
     // player 1 is always the player that the camera is tied to.
     let mut camera_follow_player = 0;
     match *gamemode {
         GameMode::LocalCoop => {
-            let bot = Bot::new();
+            // Initial state: both players are player-controlled
+            // Remove Bot component from p2, as initial state should be player control
             let state_machine = StateMachine::new(BotState::idel);
             // add FollowCamera to one of these.
-            commands.entity(p1).insert((wasd_controls.unwrap(), Player::Local(0), state_machine));
-            commands.entity(p2).insert((arrow_controls.unwrap(), Player::Local(1), bot));
+            commands.entity(p1).insert((
+                wasd_controls.as_ref().unwrap().clone(), 
+                Player::Local(0), 
+                state_machine,
+                ControlMode::Player  // Initially player-controlled
+            ));
+            commands.entity(p2).insert((
+                arrow_controls.as_ref().unwrap().clone(), 
+                Player::Local(1),
+                ControlMode::Player  // Initially player-controlled, no Bot component
+            ));
 
             
         }
         GameMode::LocalWithNpc(local_player_number) => {
             camera_follow_player = local_player_number;
             // insert NPC for player that isnt player_number
-            commands.entity(*player_list[local_player_number]).insert((wasd_controls.unwrap(), Player::Local(local_player_number)));
+            commands.entity(*player_list[local_player_number]).insert((
+                wasd_controls.as_ref().unwrap().clone(), 
+                Player::Local(local_player_number),
+                ControlMode::Player
+            ));
 
             player_list.iter().enumerate().filter(|(i, _)| *i != local_player_number)
                 .for_each(|(i, entity)| {
-                    commands.entity(**entity).insert(Player::Npc(i));
+                    commands.entity(**entity).insert((
+                        Player::Npc(i),
+                        ControlMode::AI
+                    ));
                 }
             );
         }
         GameMode::AiWithAi => {
             player_list.iter().enumerate().for_each(|(i, entity)| {
-                    commands.entity(**entity).insert(Player::Npc(i));
+                    commands.entity(**entity).insert((
+                        Player::Npc(i),
+                        ControlMode::AI
+                    ));
                 }
             );
         }
@@ -117,16 +147,26 @@ pub fn spawn_players(
             camera_follow_player = local_player_number;
             // insert net player marker for all players that arent LocalPlayer
             // insert localPlayer marker component for this player
-            commands.entity(*player_list[local_player_number]).insert((wasd_controls.unwrap(), Player::Local(local_player_number)));
+            commands.entity(*player_list[local_player_number]).insert((
+                wasd_controls.as_ref().unwrap().clone(), 
+                Player::Local(local_player_number),
+                ControlMode::Player
+            ));
             player_list.iter().enumerate().filter(|(i, _)| *i != local_player_number)
                 .for_each(|(i, entity)| {
-                    commands.entity(**entity).insert(Player::Net(i));
+                    commands.entity(**entity).insert((
+                        Player::Net(i),
+                        ControlMode::Player  // Network players are also player-controlled (via network input)
+                    ));
                 }
             );
         }
         GameMode::Simulated => {
             player_list.iter().enumerate().for_each(|(i, entity)| {
-                commands.entity(**entity).insert(Player::Local(i));
+                commands.entity(**entity).insert((
+                    Player::Local(i),
+                    ControlMode::Player
+                ));
             });
         }
     }

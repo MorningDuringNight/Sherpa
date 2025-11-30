@@ -7,7 +7,10 @@ use std::time::Duration;
 use bevy::prelude::*;
 use crate::config::*;
 use crate::physics::PhysicsPlugin;
-use crate::player::{Player, PlayerPlugin};
+use crate::player::{PlayerPlugin, ControlMode};
+use crate::player::bundle::PlayerControls;
+use crate::policy::PolicyPlugin;
+use crate::controller::ControllerPlugin;
 use crate::stateMachine::Bot;
 use bevy::asset::AssetPlugin;
 use bevy::sprite::SpritePlugin;
@@ -87,6 +90,13 @@ struct ToggleBotEvent;
 #[derive(Resource)]
 struct BotActive(bool);
 
+/// Stores key mappings for each player, used to restore when switching control modes
+#[derive(Resource)]
+pub struct PlayerKeyMappings {
+    pub p1: PlayerControls,
+    pub p2: PlayerControls,
+}
+
 fn bot_update_toggle(
     mut bot_active: ResMut<BotActive>,
     keyboard: Res<ButtonInput<KeyCode>>,
@@ -98,38 +108,31 @@ fn bot_update_toggle(
 }
 
 fn bot_update(
-    mut players: Query<(Entity, &GlobalTransform, &mut Bot), With<Bot>>,
-    botActive: Res<BotActive>,
+    mut players: Query<(&GlobalTransform, &mut Bot, &PlayerControls, &ControlMode), With<Bot>>,
+    _botActive: Res<BotActive>,
     mut keys: ResMut<ButtonInput<KeyCode>>,
     mut botTimer: ResMut<botTimer>,
     time: Res<Time>,
 
 ){  
-    if botActive.0 == false{
-        return;
-    }
-    else{
-        for (entity, transform, mut Bot,) in players.iter_mut(){
-            //put repeating timer
-            //if timer has not started: start timer and run function
-            //if not start return
-            //if started just finished then runfunction
-            //
-            botTimer.as_deref_mut().tick(time.delta());
-            if botTimer.time.finished(){
-                Bot.change(
-                    &time,
-                    transform,
-                    &mut keys,
-                );
-            }
-            else {
-                return;
-            }
-
-            //players.current_state = newState;
+    // Even if global BotActive is false, still allow players with ControlMode::AI to be controlled by Bot
+    // This supports independent control via key 1/2 toggle
+    for (transform, mut bot, player_controls, control_mode) in players.iter_mut(){
+        // Only process AI-controlled players
+        if *control_mode != ControlMode::AI {
+            continue;
         }
         
+        // Use global timer (can be changed to per-Bot independent timer later)
+        botTimer.as_deref_mut().tick(time.delta());
+        if botTimer.time.finished(){
+            bot.change(
+                &time,
+                transform,
+                &mut keys,
+                player_controls,
+            );
+        }
     }
 }
 
@@ -175,16 +178,52 @@ pub fn run(player_number: Option<usize>) {
         app.add_plugins(UdpServerPlugin);
     }
 
+    // Initialize key mapping resource (will be updated in spawn_players)
+    #[cfg(feature = "client")]
+    let default_wasd = PlayerControls {
+        up: KeyCode::KeyW,
+        down: KeyCode::KeyS,
+        left: KeyCode::KeyA,
+        right: KeyCode::KeyD,
+    };
+    #[cfg(feature = "client")]
+    let default_arrow = PlayerControls {
+        up: KeyCode::ArrowUp,
+        down: KeyCode::ArrowDown,
+        left: KeyCode::ArrowLeft,
+        right: KeyCode::ArrowRight,
+    };
+    #[cfg(not(feature = "client"))]
+    let default_wasd = PlayerControls {
+        up: KeyCode::KeyW,
+        down: KeyCode::KeyS,
+        left: KeyCode::KeyA,
+        right: KeyCode::KeyD,
+    };
+    #[cfg(not(feature = "client"))]
+    let default_arrow = PlayerControls {
+        up: KeyCode::ArrowUp,
+        down: KeyCode::ArrowDown,
+        left: KeyCode::ArrowLeft,
+        right: KeyCode::ArrowRight,
+    };
+
     app
         .insert_resource(Time::<Fixed>::from_hz(60.0))
         .insert_resource(PlayerSpawnPoint { position: PLAYER_INITIAL_POSITION })
         .insert_resource(PlayerSpawnVelocity { velocity: PLAYER_INITIAL_VELOCITY })
         .insert_resource(botTimer{time:Timer::new(Duration::from_secs(1),TimerMode::Repeating)})
         .insert_resource(BotActive(false))
+        .insert_resource(PlayerKeyMappings {
+            p1: default_wasd,
+            p2: default_arrow,
+        })
         .add_plugins(MapPlugin)
         .add_plugins(PlayerPlugin)
         .add_plugins(PhysicsPlugin)
         .add_plugins(ObserverPlugin)
+        .add_plugins(PolicyPlugin)
+        .add_plugins(ControllerPlugin)
         .add_plugins(UIPlugin)
         .add_event::<ToggleBotEvent>()
         .add_systems(Startup, init_player_camera)

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use rand::prelude::*;
 use super::state::*;
+use crate::player::bundle::PlayerControls;
 
 #[derive(Component, Clone)]
 pub struct Bot {
@@ -69,6 +70,7 @@ impl Bot{
         time: &Time,
         tf: &GlobalTransform,
         keys: &mut ButtonInput<KeyCode>,
+        player_controls: &PlayerControls,
         // timer: Res<Time>,
     ) -> BotState{
         let next = decide_next_patrol(
@@ -77,6 +79,7 @@ impl Bot{
             tf,
             keys,
             &mut self.patrol_memory,
+            player_controls,
         );
         self.state_machine.current = next.clone();
         next
@@ -187,6 +190,7 @@ pub fn decide_next_patrol(
     tf: &GlobalTransform,
     keys: &mut ButtonInput<KeyCode>,
     mem: &mut PatrolMemory,
+    player_controls: &PlayerControls,
 ) -> BotState {
     // 打印mem指针
     // info!("PatrolMemory ptr: {:p}", mem);
@@ -218,10 +222,11 @@ pub fn decide_next_patrol(
     }
 
     
-    keys.release(KeyCode::ArrowLeft);
-    keys.release(KeyCode::ArrowRight);
-    keys.release(KeyCode::ArrowUp);
-    keys.release(KeyCode::ArrowDown);
+    // 释放当前玩家的按键（使用PlayerControls中的按键映射）
+    keys.release(player_controls.left);
+    keys.release(player_controls.right);
+    keys.release(player_controls.up);
+    keys.release(player_controls.down);
 
 
     let mut rng = rand::thread_rng();
@@ -230,25 +235,25 @@ pub fn decide_next_patrol(
     if changed {
         // info!("[1] Bot is stuck, trying to escape...");
         let r: u8 = rng.gen_range(0..=1);
-        match r {
+            match r {
             0 => {
                 if mem.dir == -1 {
-                    keys.press(KeyCode::ArrowLeft);
+                    keys.press(player_controls.left);
                     // info!("  Bot is jumping left to escape");
                 } else {
-                    keys.press(KeyCode::ArrowRight);
+                    keys.press(player_controls.right);
                     // info!("  Bot is jumping right to escape");
                 }
-                keys.press(KeyCode::ArrowUp);
+                keys.press(player_controls.up);
                 return BotState::jump;
             }
             _ => {
                 if mem.dir == -1 {
-                    keys.press(KeyCode::ArrowLeft);
+                    keys.press(player_controls.left);
                     // info!("  Bot is moving left to escape");
                     return BotState::left;
                 } else {
-                    keys.press(KeyCode::ArrowRight);
+                    keys.press(player_controls.right);
                     // info!("  Bot is moving right to escape");
                     return BotState::right;
                 }
@@ -260,6 +265,7 @@ pub fn decide_next_patrol(
     if rng.gen_bool(0.6){
         // info!("[2] Bot is following the player...");
 
+        // 检测其他玩家的按键（用于跟随行为）
         let player_left = keys.any_pressed([KeyCode::KeyA, KeyCode::ArrowLeft]);
         let player_right = keys.any_pressed([KeyCode::KeyD, KeyCode::ArrowRight]);
         let player_jump = keys.any_pressed([KeyCode::KeyW, KeyCode::ArrowUp]);
@@ -267,9 +273,9 @@ pub fn decide_next_patrol(
             if mem.dir != -1 {
                 mem.dir = -1;
             }
-            keys.press(KeyCode::ArrowLeft);
+            keys.press(player_controls.left);
             if player_jump {
-                keys.press(KeyCode::ArrowUp);
+                keys.press(player_controls.up);
                 // info!("  Bot is moving left and jumping");
                 return BotState::jump;
             } else {
@@ -280,9 +286,9 @@ pub fn decide_next_patrol(
             if mem.dir != 1 {
                 mem.dir = 1;
             }
-            keys.press(KeyCode::ArrowRight);
+            keys.press(player_controls.right);
             if player_jump {
-                keys.press(KeyCode::ArrowUp);
+                keys.press(player_controls.up);
                 // info!("  Bot is moving right and jumping");
                 return BotState::jump;
             } else {
@@ -290,7 +296,7 @@ pub fn decide_next_patrol(
                 return BotState::right;
             }
         } else if player_jump {
-            keys.press(KeyCode::ArrowUp);
+            keys.press(player_controls.up);
             // info!("  Bot is jumping");
             return BotState::jump;
         } else {
@@ -303,33 +309,33 @@ pub fn decide_next_patrol(
     // info!("[3] Bot is patrolling, random choice: {}", r);
     match r {
         0 => {
-            keys.press(KeyCode::ArrowLeft);
+            keys.press(player_controls.left);
             mem.dir = -1;
             // info!("  Bot is moving left");
             BotState::left
         }
         1 => {
-            keys.press(KeyCode::ArrowRight);
+            keys.press(player_controls.right);
             mem.dir = 1;
             // info!("  Bot is moving right");
             BotState::right
         }
         2 => {
-            keys.press(KeyCode::ArrowLeft);
-            keys.press(KeyCode::ArrowUp);
+            keys.press(player_controls.left);
+            keys.press(player_controls.up);
             mem.dir = -1;
             // info!("  Bot is jumping left");
             BotState::jump
         }
         3 => {
-            keys.press(KeyCode::ArrowRight);
-            keys.press(KeyCode::ArrowUp);
+            keys.press(player_controls.right);
+            keys.press(player_controls.up);
             mem.dir = 1;
             // info!("  Bot is jumping right");
             BotState::jump
         }
         _ => {
-            keys.press(KeyCode::ArrowDown);
+            keys.press(player_controls.down);
             // info!("  Bot is idling");
             BotState::idel
         }

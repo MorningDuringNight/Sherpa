@@ -4,10 +4,10 @@ pub mod load_players;
 pub mod player_control;
 
 
-use self::player_control::{player_movement_input_system, player_input_collection_system, PlayerInputEvent};
+use self::player_control::{player_movement_input_system, player_input_collection_system, toggle_player_control_system, cleanup_ai_keys_system, PlayerInputEvent};
 
 pub use self::load_players::{spawn_players, Player};
-pub use bundle::{PlayerCollider};
+pub use bundle::{PlayerCollider, ControlMode};
 
 pub struct PlayerPlugin;
 
@@ -20,7 +20,11 @@ impl Plugin for PlayerPlugin {
         #[cfg(feature = "client")]
         // doesn't do much at all when running with client+server
         // kind sorta client side prediction already.
-        app.add_systems(Update, player_input_collection_system);
+        app.add_systems(Update, (
+            toggle_player_control_system,
+            cleanup_ai_keys_system.after(toggle_player_control_system),
+            player_input_collection_system,
+        ));
     }
 
 
