@@ -18,6 +18,20 @@ pub struct PlayerInputEvent {
     pub jump_just_released: bool,
 }
 
+#[derive(Resource)]
+pub struct PredictionOn(pub bool);
+
+pub fn toggle_prediction_system(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut prediction_on: ResMut<PredictionOn>,
+) {
+    // When 'P' is just pressed, toggle the value
+    if keyboard.just_pressed(KeyCode::KeyP) {
+        prediction_on.0 = !prediction_on.0;
+        info!("Prediction toggled: {}", prediction_on.0);
+    }
+}
+
 pub fn player_movement_input_system(
     time: Res<Time>,
     mut reader: EventReader<PlayerInputEvent>,
@@ -28,7 +42,11 @@ pub fn player_movement_input_system(
         &mut JumpController,
         &mut GroundState,
     )>,
+    prediction_on: Res<PredictionOn>
 ) {
+    if !prediction_on.as_ref().0 {
+        return;
+    }
     for event in reader.read() {
         if let Ok((velocity, mut control_force, mut net_force, mut jump_controller, ground_state)) =
             query.get_mut(event.entity)

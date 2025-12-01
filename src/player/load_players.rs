@@ -39,6 +39,7 @@ pub fn spawn_players(
     spawn_velocity: Res<PlayerSpawnVelocity>,
 
     gamemode: Res<GameMode>,
+    player_mass: Res<PlayerMass>,
 ) {
 
     #[cfg(feature = "server")]
@@ -55,6 +56,7 @@ pub fn spawn_players(
         p1_img,
         Transform::from_translation(spawn_point.position),
         spawn_velocity.velocity,
+        player_mass.as_ref().0,
     );
 
     let p2 = single_player(
@@ -62,6 +64,7 @@ pub fn spawn_players(
         p2_img,
         Transform::from_translation(spawn_point.position + Vec3::new(300.0, 0.0, 0.0)),
         spawn_velocity.velocity,
+        player_mass.as_ref().0,
     );
 
     let player_list = [&p1, &p2];
@@ -135,6 +138,9 @@ pub fn spawn_players(
 
 }
 
+#[derive(Resource)]
+pub struct PlayerMass(pub f32);
+
 // make player base w or w/o sprite.
 // add controls and sprite depending on gamemode.
 fn single_player(
@@ -142,10 +148,12 @@ fn single_player(
     texture: Option<Handle<Image>>,
     transform: Transform,
     velocity: Vec2,
+    player_mass: f32,
 ) -> Entity {
     let jump_controller = JumpController::default();
     let ground_state = GroundState::default();
-    let mass = Mass(PLAYER_SPAWN_MASS);
+
+    let mass = Mass(player_mass);
     let velocity = Velocity(velocity);
 
     let mut entity_commands = commands.spawn(PlayerBundle::new(
