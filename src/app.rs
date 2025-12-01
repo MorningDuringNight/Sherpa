@@ -249,6 +249,12 @@ pub fn run(player_number: Option<usize>) {
         app.insert_resource(game_assets);
     }
 
+    #[cfg(feature = "server")]
+        app.insert_state(MyAppState::InGame);
+    #[cfg(feature = "client")]
+        app.insert_state(MyAppState::MainMenu);
+
+    app.enable_state_scoped_entities::<MyAppState>();
 
     app
         .insert_resource(Time::<Fixed>::from_hz(60.0))
@@ -282,10 +288,7 @@ pub fn run(player_number: Option<usize>) {
 
         .add_plugins(InGameSystems);
 
-    #[cfg(feature = "server")]
-        app.insert_state(MyAppState::InGame);
-    #[cfg(feature = "client")]
-        app.insert_state(MyAppState::MainMenu);
+
     app.run();
 }
 

@@ -145,7 +145,7 @@ pub fn load_background_layers(
 
     commands.spawn((
         Sprite::from_image(game_assets.background.clone()),
-        Transform::from_xyz(640., 360., -1.),
+        Transform::from_xyz(640., 360., -2.),
         Background
     ));
 }
