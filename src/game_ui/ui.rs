@@ -6,6 +6,9 @@ use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 
 use bevy::color::palettes::css::BLACK;
+use bevy::color::palettes::css::BLUE;
+
+use crate::game_ui::read_leaderboard;
 
 #[derive(Component)]
 pub struct UICamera;
@@ -25,6 +28,12 @@ pub struct CoinDisplay;
 
 #[derive(Component)]
 pub struct ScoreDisplay;
+
+#[derive(Component)]
+pub struct WinDisplay;
+
+#[derive(Component)]
+pub struct EntryDisplay;
 
 // impl Plugin for UIPlugin{
 //     fn build(&self, app: &mut App){
@@ -189,11 +198,105 @@ pub fn despawn_ui(
     mut commands: Commands,
     mut background: Query<Entity, With<Background>>,
     mut objects: Query<Entity, (With<StateScoped<MyAppState>>)>,
+    mut nodes: Query<Entity, With<Node>>,
 ) {
     for object in background.iter_mut() {
         commands.entity(object).despawn();
     }
     for object in objects.iter_mut() {
         commands.entity(object).despawn();
+    }
+    for object in nodes.iter_mut() {
+        commands.entity(object).despawn();
+    }
+}
+
+//leaderboard_ui
+
+pub fn load_ui_leaderboard(mut commands: Commands, game_assets: Res<GameAssets>) {
+    commands
+        .spawn((Node {
+            width: Val::Percent(100.),
+            height: Val::Percent(100.),
+            margin: UiRect::all(Val::Percent(0.)),
+            padding: UiRect::all(Val::Percent(0.)),
+            flex_direction: FlexDirection::Column,
+            column_gap: Val::Percent(2.),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            ..default()
+        },))
+        .with_children(|header| {
+            header.spawn((
+                Node {
+                    width: Val::Percent(50.),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    ..Default::default()
+                },
+                BackgroundColor(Color::srgb(0.7, 0.8, 0.9)),
+                (Text::new("You Lose!"), TextColor(BLACK.into())),
+                RenderLayers::layer(1),
+                WinDisplay,
+            ));
+        })
+        .with_children(|parent| {
+            parent.spawn((
+                Node {
+                    width: Val::Percent(50.),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    ..Default::default()
+                },
+                (
+                    Text::new("Type     Coins     Score"),
+                    TextColor(BLACK.into()),
+                ),
+                BackgroundColor(Color::srgb(0.7, 0.8, 0.9)),
+                RenderLayers::layer(1),
+            ));
+            for i in 0..10 {
+                parent.spawn((
+                    Node {
+                        width: Val::Percent(50.),
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
+                        ..Default::default()
+                    },
+                    (Text::new("Unknown Value"), TextColor(BLACK.into())),
+                    BackgroundColor(Color::srgb(0.7, 0.8, 0.9)),
+                    RenderLayers::layer(1),
+                    EntryDisplay,
+                ));
+            }
+        });
+
+    commands.spawn((
+        Sprite::from_image(game_assets.background.clone()),
+        Transform::from_xyz(0., 0., 1.),
+        RenderLayers::layer(1),
+        Background,
+    ));
+}
+
+pub fn update_end(
+    maxScore: Res<MaxHeight>,
+    mut query_entry: Query<&mut Text, With<EntryDisplay>>,
+    mut query_win: Query<&mut Text, (With<WinDisplay>, Without<EntryDisplay>)>,
+) {
+    if maxScore.amount >= 2000 {
+        for mut win in query_win.iter_mut() {
+            win.0 = "You Win!!!".to_string();
+        }
+    }
+    let entities = read_leaderboard();
+    println!("reading");
+    for (mut line, entity) in query_entry.into_iter().zip(entities) {
+        println!("def reading");
+        line.0 = (entity.gametype
+            + "     "
+            + &entity.coin.to_string()
+            + "     "
+            + &entity.score.to_string());
     }
 }
