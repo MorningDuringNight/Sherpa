@@ -1,6 +1,7 @@
 mod app;
 mod components;
 mod config;
+mod controller;
 mod enemy;
 mod game_ui;
 mod map;
@@ -8,6 +9,7 @@ mod multiplayer;
 mod observer;
 mod physics;
 mod player;
+mod policy;
 mod stateMachine;
 mod util;
 

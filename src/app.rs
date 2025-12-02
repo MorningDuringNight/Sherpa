@@ -7,6 +7,8 @@ use crate::config::*;
 use crate::observer::state::{self, ObservationState};
 use crate::physics::PhysicsPlugin;
 use crate::player::{Player, PlayerPlugin};
+use crate::policy::PolicyPlugin;
+use crate::controller::ControllerPlugin;
 use crate::stateMachine::Bot;
 use bevy::asset::AssetPlugin;
 use bevy::prelude::*;
@@ -294,6 +296,8 @@ pub fn run(player_number: Option<usize>) {
         .add_plugins(PlayerPlugin)
         .add_plugins(PhysicsPlugin)
         .add_plugins(ObserverPlugin)
+        .add_plugins(PolicyPlugin)
+        .add_plugins(ControllerPlugin)
         .add_plugins(UIPlugin)
         .add_plugins(EnemyPlugin)
         .add_systems(Update, update_camera.run_if(in_state(MyAppState::InGame)))
