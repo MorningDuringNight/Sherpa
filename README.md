@@ -100,7 +100,7 @@ Q type learning while slow can provide a rather comprehensive learning algorithm
 - [ ] **5%**: Wall jump once off walls
 
 #### Other
-- [ ]  5%: **One Time Ability**: The players each get one time ability to put down a platform next to a wall which they can stand on. This platform exists for 10 real life seconds and will disappear once time has elapsed.
+- [ ]  5%: **One Time Ability**: The players each get one time ability to put down a platform underneath the player while they are in the air which they can stand on. This platform exists for 10 real life seconds and will disappear once time has elapsed.
 - [ ] 5%: **Finish** Players finishing the first map achieve a completion screen
 
 ## Stretch Goals
