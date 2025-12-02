@@ -108,7 +108,6 @@ fn apply_jump(
     ground_state: &GroundState,
     event: &PlayerInputEvent,
 ) {
-
     let can_ground_jump = ground_state.is_grounded || !ground_state.coyote_timer.finished();
     let can_wall_jump = !ground_state.is_grounded
         && jump_controller.can_wall_jump

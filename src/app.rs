@@ -4,11 +4,11 @@
 // Description: <Create App and setup camera>
 
 use crate::config::*;
+use crate::controller::ControllerPlugin;
 use crate::observer::state::{self, ObservationState};
 use crate::physics::PhysicsPlugin;
 use crate::player::{Player, PlayerPlugin};
 use crate::policy::PolicyPlugin;
-use crate::controller::ControllerPlugin;
 use crate::stateMachine::Bot;
 use bevy::asset::AssetPlugin;
 use bevy::prelude::*;
@@ -132,7 +132,7 @@ pub fn update_camera(
 struct ToggleBotEvent;
 
 #[derive(Resource)]
-struct BotActive(bool);
+pub struct BotActive(pub bool);
 
 fn bot_update_toggle(mut bot_active: ResMut<BotActive>, keyboard: Res<ButtonInput<KeyCode>>) {
     //toggle logic
@@ -189,9 +189,6 @@ impl Plugin for InGameSystems {
                 rope_tension_system,
                 rope_force_to_system,
                 compute_rope_geometry,
-                bot_update,
-                bot_update_toggle,
-                trigger_bot_input,
                 apply_rope_geometry,
             )
                 .run_if(in_state(MyAppState::InGame)),
@@ -208,10 +205,10 @@ pub fn run(player_number: Option<usize>) {
     #[cfg(feature = "client")]
     {
         app.add_plugins(DefaultPlugins);
-        app.add_systems(
-            Update,
-            (bot_update, bot_update_toggle, trigger_bot_input).run_if(in_state(MyAppState::InGame)),
-        );
+        // app.add_systems(
+        //     Update,
+        //     (bot_update, bot_update_toggle, trigger_bot_input).run_if(in_state(MyAppState::InGame)),
+        // );
 
         // sets the gamemode via command line flags
         // if let Some(player_number) = player_number {
@@ -295,9 +292,6 @@ pub fn run(player_number: Option<usize>) {
         .add_plugins(MapPlugin)
         .add_plugins(PlayerPlugin)
         .add_plugins(PhysicsPlugin)
-        .add_plugins(ObserverPlugin)
-        .add_plugins(PolicyPlugin)
-        .add_plugins(ControllerPlugin)
         .add_plugins(UIPlugin)
         .add_plugins(EnemyPlugin)
         .add_systems(Update, update_camera.run_if(in_state(MyAppState::InGame)))

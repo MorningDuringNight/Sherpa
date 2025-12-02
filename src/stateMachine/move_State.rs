@@ -1,13 +1,13 @@
-use bevy::prelude::*;
-use rand::prelude::*;
 use super::state::*;
+use crate::observer::state::ObservationState;
+use bevy::prelude::*;
 use calamine::*;
 use edit_xlsx::*;
+use rand::prelude::*;
 use std::fs::File;
 use std::io::*;
-use std::path;
 use std::iter::*;
-use crate::observer::state::ObservationState;
+use std::path;
 
 #[derive(Component, Clone)]
 pub struct Bot {
@@ -16,7 +16,7 @@ pub struct Bot {
 }
 
 #[derive(Event)]
-pub struct PlayerEvent{
+pub struct PlayerEvent {
     pub entity: Entity,
     pub left: bool,
     pub right: bool,
@@ -50,26 +50,24 @@ impl PatrolMemory {
     }
 }
 
-impl Bot{
+impl Bot {
     pub fn new() -> Self {
         Self {
             state_machine: StateMachine::new(BotState::idel),
             patrol_memory: PatrolMemory::new(),
         }
     }
-    // brach this 
+    // brach this
     pub fn playerToEvent(
         player_events: EventReader<PlayerEvent>,
         mut state_query: Query<&mut StateMachine>,
-    ){
-        // timer mode 
+    ) {
+        // timer mode
         // different timer resource
         // run in a fixed update schedual
         // first statement of state transition if timer not trigger return nothing
         // other state transition
-        
     }
-
 
     pub fn change(
         &mut self, /*input: &Input*/
@@ -78,7 +76,7 @@ impl Bot{
         keys: &mut ButtonInput<KeyCode>,
         obs: &ObservationState,
         // timer: Res<Time>,
-    ) -> BotState{
+    ) -> BotState {
         // print!("helped here");
         let next = decide_next_patrol(
             self.state_machine.current.clone(),
@@ -86,11 +84,10 @@ impl Bot{
             tf,
             keys,
             &mut self.patrol_memory,
-            obs
+            obs,
         );
         self.state_machine.current = next.clone();
         next
-        
     }
 }
 
@@ -102,31 +99,38 @@ pub fn decide_next_patrol(
     mem: &mut PatrolMemory,
     obs: &ObservationState,
 ) -> BotState {
-
     let mut data: Vec<i32> = Vec::new();
     let mut numer_choose = 0;
-    let mut workbook: Xlsx<_> = open_workbook("test.xlsx").expect("file opened");
+    let mut workbook: Xlsx<_> = open_workbook("assets/test.xlsx").expect("file opened");
 
     if let Ok(range) = workbook.worksheet_range("sheet1") {
-    let numbers = obs.as_vector().into_iter().map(|x| x.to_string()).collect::<Vec<String>>().join(", ");
-    let row_count = range.rows().count();
-    
-    let mut data = Vec::new();
-    for row in 0..row_count {
-        let mut row_data = Vec::new();
-        for col in 1..6 {
-            if let Some(cell) = range.get_value((row.try_into().unwrap(), col)) {
-                row_data.push(cell.clone());
-            } else {
-                
+        let numbers = obs
+            .as_vector()
+            .into_iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>()
+            .join(", ");
+        let row_count = range.rows().count();
+
+        let mut data = Vec::new();
+        for row in 0..row_count {
+            let mut row_data = Vec::new();
+            for col in 1..6 {
+                if let Some(cell) = range.get_value((row.try_into().unwrap(), col)) {
+                    row_data.push(cell.clone());
+                } else {
+                }
             }
+            data.push(row_data);
         }
-        data.push(row_data);
-    }
-    
     }
 
-    if let Some(max_index) = data.iter().enumerate().max_by_key(|&(_, &val)| val).map(|(idx, _)| idx) {
+    if let Some(max_index) = data
+        .iter()
+        .enumerate()
+        .max_by_key(|&(_, &val)| val)
+        .map(|(idx, _)| idx)
+    {
         // Now max_index is a usize that you can use
         numer_choose = max_index;
     }
@@ -141,7 +145,7 @@ pub fn decide_next_patrol(
     //     mem.dir = -mem.dir;
     // }
     // 解决bot卡住不动的问题
-    
+
     let pos = tf.translation().truncate();
     let moved = pos.distance(mem.last_pos);
     let mut changed = false;
@@ -160,12 +164,10 @@ pub fn decide_next_patrol(
         mem.still_time = 0.0;
     }
 
-    
     keys.release(KeyCode::ArrowLeft);
     keys.release(KeyCode::ArrowRight);
     keys.release(KeyCode::ArrowUp);
     keys.release(KeyCode::ArrowDown);
-
 
     let mut rng = rand::rng();
 
@@ -285,102 +287,100 @@ pub fn decide_next_patrol(
     }
 }
 
-
 //temporary random movement to change state
-        // let rng = rand::rng();
-        // let mut input;
-        // //remove when done please
-        // let next = match self.state_machine.current{ // bevy timer repeating
-        //     //idel change to 
-        //     BotState::idel =>{
-        //         input = rand::rng().random_range(0..=4);
-        //         println!("print idel {}", input);
-        //         if input == 0{
-        //             keys.press(KeyCode::ArrowRight);
-        //             // timer.0.reset(); // Reset the timer when the key is pressed
-        //             // timer.0.set_duration(Duration::from_secs(2)); // Set the desired duration
-        //             // timer.0.set_mode(TimerMode::Once); // Set to once
-        //             BotState::right
-        //         }
-        //         else if input == 1{
-        //             keys.press(KeyCode::ArrowLeft);
-        //             BotState::left
-        //         }
-        //         else if input == 2{
-        //             keys.press(KeyCode::ArrowUp);
-        //             BotState::jump
-        //         }
-        //         else if input == 3{
-        //             keys.press(KeyCode::ArrowDown);
-        //             BotState::idel
-        //         }
-        //         else if input == 4{
-        //             keys.press(KeyCode::ArrowLeft);
-        //             BotState::left
-        //         }
-        //         else{
-        //             //println!("print Hurt you");
-        //             BotState::idel
-        //         }
-        //     }
+// let rng = rand::rng();
+// let mut input;
+// //remove when done please
+// let next = match self.state_machine.current{ // bevy timer repeating
+//     //idel change to
+//     BotState::idel =>{
+//         input = rand::rng().random_range(0..=4);
+//         println!("print idel {}", input);
+//         if input == 0{
+//             keys.press(KeyCode::ArrowRight);
+//             // timer.0.reset(); // Reset the timer when the key is pressed
+//             // timer.0.set_duration(Duration::from_secs(2)); // Set the desired duration
+//             // timer.0.set_mode(TimerMode::Once); // Set to once
+//             BotState::right
+//         }
+//         else if input == 1{
+//             keys.press(KeyCode::ArrowLeft);
+//             BotState::left
+//         }
+//         else if input == 2{
+//             keys.press(KeyCode::ArrowUp);
+//             BotState::jump
+//         }
+//         else if input == 3{
+//             keys.press(KeyCode::ArrowDown);
+//             BotState::idel
+//         }
+//         else if input == 4{
+//             keys.press(KeyCode::ArrowLeft);
+//             BotState::left
+//         }
+//         else{
+//             //println!("print Hurt you");
+//             BotState::idel
+//         }
+//     }
 
-        //     BotState::right =>{
-        //         println!("print righj");
-        //         input = rand::rng().random_range(0..=3);
-        //         if input == 0{
-        //             keys.press(KeyCode::ArrowRight);
-        //             BotState::right
-        //         }
-        //         else if input == 1{
-        //             keys.press(KeyCode::ArrowLeft);
-        //             BotState::left
-        //         }
+//     BotState::right =>{
+//         println!("print righj");
+//         input = rand::rng().random_range(0..=3);
+//         if input == 0{
+//             keys.press(KeyCode::ArrowRight);
+//             BotState::right
+//         }
+//         else if input == 1{
+//             keys.press(KeyCode::ArrowLeft);
+//             BotState::left
+//         }
 
-        //         else if input == 3{
-        //             keys.press(KeyCode::ArrowDown);
-        //             BotState::idel
-        //         }
-        //         else{
-        //             keys.press(KeyCode::ArrowDown);
-        //             BotState::idel
-        //         }
-        //     }
+//         else if input == 3{
+//             keys.press(KeyCode::ArrowDown);
+//             BotState::idel
+//         }
+//         else{
+//             keys.press(KeyCode::ArrowDown);
+//             BotState::idel
+//         }
+//     }
 
-        //      BotState::left =>{
-        //         println!("print lkeft");
-        //         input = rand::rng().random_range(0..=3);
-        //         if input == 10{
-        //             keys.press(KeyCode::ArrowRight);
-        //             BotState::right
-        //         }
-        //         else if input == 1{
-        //             keys.press(KeyCode::ArrowLeft);
-        //             BotState::left
-        //         }
-        //         else if input == 100{
-        //             keys.press(KeyCode::ArrowDown);
-        //             BotState::idel
-        //         }
-        //         else{
-        //             keys.press(KeyCode::ArrowDown);
-        //             BotState::idel
-        //         }
-        //     }
-        //      BotState::jump =>{
-        //         println!("print jump");
-        //         input = rand::rng().random_range(0..=2);
-        //         if input == 2{
-        //             keys.press(KeyCode::ArrowDown);
-        //             BotState::idel
-        //         }
-        //         else{
-        //             keys.press(KeyCode::ArrowDown);
-        //             BotState::idel
-        //         }
-        //     }
-            
-            
-        //     };
-        //     //return next;
-        //     self.state_machine.current = next.clone();
-        //     next
+//      BotState::left =>{
+//         println!("print lkeft");
+//         input = rand::rng().random_range(0..=3);
+//         if input == 10{
+//             keys.press(KeyCode::ArrowRight);
+//             BotState::right
+//         }
+//         else if input == 1{
+//             keys.press(KeyCode::ArrowLeft);
+//             BotState::left
+//         }
+//         else if input == 100{
+//             keys.press(KeyCode::ArrowDown);
+//             BotState::idel
+//         }
+//         else{
+//             keys.press(KeyCode::ArrowDown);
+//             BotState::idel
+//         }
+//     }
+//      BotState::jump =>{
+//         println!("print jump");
+//         input = rand::rng().random_range(0..=2);
+//         if input == 2{
+//             keys.press(KeyCode::ArrowDown);
+//             BotState::idel
+//         }
+//         else{
+//             keys.press(KeyCode::ArrowDown);
+//             BotState::idel
+//         }
+//     }
+
+//     };
+//     //return next;
+//     self.state_machine.current = next.clone();
+//     next
