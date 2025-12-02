@@ -1,16 +1,15 @@
 use super::Collider;
 use super::mapdata::Boundary;
 
-
 use super::MapFile;
 use super::game_object_builder::GameObject;
 use bevy::math::bounding::Aabb2d;
 use bevy::prelude::*;
 use std::collections::HashMap;
 
-use crate::map::game_object_builder::EasedPlatform;
-use crate::map::game_object_builder::CubicEasing;
 use super::mapdata::Moving;
+use crate::map::game_object_builder::CubicEasing;
+use crate::map::game_object_builder::EasedPlatform;
 
 #[derive(Resource)]
 pub struct AtlasLayoutResource {
@@ -46,22 +45,20 @@ pub fn collider_from_boundary(
         })
 }
 
-pub fn create_eased(
-    moving: &Moving,
-) -> EasedPlatform{
-    EasedPlatform{
+pub fn create_eased(moving: &Moving) -> EasedPlatform {
+    EasedPlatform {
         start: Vec2::new(moving.start_x as f32, moving.start_y as f32),
         end: Vec2::new(moving.end_x as f32, moving.end_y as f32),
         t: 0.0,
         speed: moving.speed as f32,
         forward: true,
-        easing: CubicEasing{
+        easing: CubicEasing {
             x1: 0.42,
             y1: 0.0,
             x2: 0.58,
             y2: 1.0,
-        }
-    }    
+        },
+    }
 }
 
 pub fn background_layer(
@@ -108,8 +105,8 @@ pub fn atlas_layout(
     atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
 ) -> AtlasLayoutResource {
     let texture_size = UVec2::new(
-        map_data.metadata.cols * map_data.metadata.tile_size_px,
-        map_data.metadata.rows * map_data.metadata.tile_size_px,
+        map_data.metadata.cols * map_data.metadata.tile_size_px, // WIDTH
+        map_data.metadata.rows * map_data.metadata.tile_size_px, // HEIGHT
     );
 
     let (layout, indices) = build_layout(map_data, texture_size);
@@ -134,12 +131,10 @@ fn build_layout(
         .map(|(entity_id, entity)| {
             let b = &entity.boundary;
             let rect = URect::new(
-                // Urect expects left centered origins
-                // Translate to left centered origins.
-                (b.start_x - b.width / 2.0) as u32,
-                (texture_size.y as f32 - (b.start_y + b.height / 2.0)) as u32,
-                (b.start_x + b.width / 2.0) as u32,
-                (texture_size.y as f32 - (b.start_y - b.height / 2.0)) as u32,
+                b.start_x as u32,
+                b.start_y as u32,
+                (b.start_x + b.width) as u32,
+                (b.start_y + b.height) as u32,
             );
             let index = layout.add_texture(rect);
             (entity_id.clone(), index)

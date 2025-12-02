@@ -1,5 +1,6 @@
 use crate::app::{Background, GameAssets, GameMode};
 use crate::config::MyAppState;
+use crate::physics::MaxHeightReached;
 use crate::player::Player;
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
@@ -175,10 +176,10 @@ pub fn main_menu_input(
 }
 
 pub fn game_death(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut ev_r: EventReader<MaxHeightReached>,
     mut next_state: ResMut<NextState<MyAppState>>,
 ) {
-    if keyboard_input.pressed(KeyCode::KeyT) {
+    for ev in ev_r.read() {
         next_state.set(MyAppState::EndCredit);
     }
 }
