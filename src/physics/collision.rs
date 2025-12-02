@@ -42,7 +42,7 @@ pub fn on_collision(
 }
 
 use crate::components::motion::{GroundState, JumpController, Mass, Momentum, Velocity};
-use crate::map::Collider;
+use crate::map::{Collider, Platform};
 
 const PLATFORM_FRICTION: f32 = 0.88;
 
@@ -130,6 +130,7 @@ pub fn platform_collider_system(
     colliders: Query<(Entity, &Transform, &Collider), Without<Player>>,
     spikes: Query<(), With<crate::map::Spike>>,
     trampolines: Query<(&crate::map::TrampolineBounce,), With<crate::map::TrampolineBounce>>,
+    platforms: Query<(), With<Platform>>,
     mut game_over: EventWriter<MaxHeightReached>,
 ) {
     let dt = time.delta_secs();
@@ -155,20 +156,23 @@ pub fn platform_collider_system(
             if player_aabb.intersects(&collider_aabb) {
                 let mut player_pos = transform.translation;
 
-                let platform_top = collider_aabb.max.y;
-                let player_bottom = player_pos.y - (PLAYER_LENGTH / 2.0);
+                if platforms.get(game_object).is_ok() {
+                    // println!("Player collided with platform entity: {:?}", game_object);
+                    let platform_top = collider_aabb.max.y;
+                    let player_bottom = player_pos.y - (PLAYER_LENGTH / 2.0);
 
-                // Distance check for "standing on platform"
-                let vertical_distance = player_bottom - platform_top;
-                let is_standing_on = vertical_distance.abs() < 2.0;
+                    // Distance check for "standing on platform"
+                    let vertical_distance = player_bottom - platform_top;
+                    let is_standing_on = vertical_distance.abs() < 2.0;
 
-                // Only block upward collisions (allow falling through from below)
-                let is_above = player_bottom >= platform_top - 1.0;
-                let is_falling = velocity.0.y < 0.0;
+                    // Only block upward collisions (allow falling through from below)
+                    let is_above = player_bottom >= platform_top - 1.0;
+                    let is_falling = velocity.0.y < 0.0;
 
-                // Allow collision if: standing on platform OR falling onto it from above
-                if !(is_standing_on || (is_above && is_falling)) {
-                    continue;
+                    // Allow collision if: standing on platform OR falling onto it from above
+                    if !(is_standing_on || (is_above && is_falling)) {
+                        continue;
+                    }
                 }
 
                 // (Original collision resolution begins)
