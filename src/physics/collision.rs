@@ -149,18 +149,19 @@ pub fn platform_collider_system(
             if player_aabb.intersects(&collider_aabb) {
                 let mut player_pos = transform.translation;
 
-                //// CHANGE: compute real platform top and player bottom
                 let platform_top = collider_aabb.max.y;
                 let player_bottom = player_pos.y - (PLAYER_LENGTH / 2.0);
 
-                //// CHANGE: check if player is ABOVE platform
+                // Distance check for "standing on platform"
+                let vertical_distance = player_bottom - platform_top;
+                let is_standing_on = vertical_distance.abs() < 2.0;
+
+                // Only block upward collisions (allow falling through from below)
                 let is_above = player_bottom >= platform_top - 1.0;
+                let is_falling = velocity.0.y < 0.0;
 
-                //// CHANGE: check if falling
-                let is_falling = velocity.0.y <= 0.0;
-
-                //// CHANGE: one-way platform — only collide when falling onto top
-                if !(is_above && is_falling) {
+                // Allow collision if: standing on platform OR falling onto it from above
+                if !(is_standing_on || (is_above && is_falling)) {
                     continue;
                 }
 
