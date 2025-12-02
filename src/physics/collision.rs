@@ -1,14 +1,14 @@
-use crate::config::physics::{PLAYER_MOVE_FORCE, PLAYER_JUMP_FORCE, PLAYER_CONTROL_SPEED_LIMIT};
-use crate::player::{self, PlayerCollider};
+use crate::config::physics::{PLAYER_CONTROL_SPEED_LIMIT, PLAYER_JUMP_FORCE, PLAYER_MOVE_FORCE};
 use crate::enemy::bundle::{Enemy, EnemyCollider};
+use crate::player::{self, PlayerCollider};
 use bevy::math::bounding::{Aabb2d, AabbCast2d, BoundingVolume, RayCast2d};
 use bevy::math::{Dir2, Ray2d};
 
-use bevy::math::bounding::IntersectsVolume;
-use crate::player::Player;
-use bevy::{prelude::*, transform};
 use crate::config::physics::GRAVITY;
 use crate::game_ui::ui::TotalCoin;
+use crate::player::Player;
+use bevy::math::bounding::IntersectsVolume;
+use bevy::{prelude::*, transform};
 
 use crate::config::player::{PLAYER_LENGTH, PLAYER_WIDTH};
 
@@ -70,13 +70,13 @@ fn resolve_collision(
     if offset.x.abs() > offset.y.abs() {
         // Horizontal collision
         player_pos.x -= offset.x;
-                                  // 
+        //
         if offset.x > 0.0 {
             // Collided from the left side of a wall → push player to the left
-            player_pos.x += PLAYER_WIDTH/2.;
+            player_pos.x += PLAYER_WIDTH / 2.;
         } else {
             // Collided from the right side of a wall → push player to the right
-            player_pos.x -= PLAYER_WIDTH/2.;
+            player_pos.x -= PLAYER_WIDTH / 2.;
         }
 
         // Refresh wall jump timer to use wall jump
@@ -92,9 +92,9 @@ fn resolve_collision(
         velocity.y = 0.0;
         momentum.y = 0.0;
 
-        // colliding with top  
+        // colliding with top
         if offset.y > 0.0 {
-            player_pos.y += PLAYER_LENGTH/2.;
+            player_pos.y += PLAYER_LENGTH / 2.;
             ground.is_grounded = true;
             // velocity.x *= PLATFORM_FRICTION;
             momentum.x *= PLATFORM_FRICTION;
@@ -104,31 +104,41 @@ fn resolve_collision(
         }
         // colliding with bottom
         else {
-            player_pos.y -= PLAYER_LENGTH/2.;
+            player_pos.y -= PLAYER_LENGTH / 2.;
         }
     }
 }
-
-
 
 /// Main player–platform collision system
 pub fn platform_collider_system(
     mut events: EventWriter<PlayerCollisionEvent>,
     time: Res<Time>,
-    mut players: Query<(
-        Entity,
-        &mut Transform,
-        &mut Velocity,
-        &mut Momentum,
-        &PlayerCollider,
-        &mut GroundState,
-        &mut JumpController,
-    ), With<Player>>,
+    mut players: Query<
+        (
+            Entity,
+            &mut Transform,
+            &mut Velocity,
+            &mut Momentum,
+            &PlayerCollider,
+            &mut GroundState,
+            &mut JumpController,
+        ),
+        With<Player>,
+    >,
     colliders: Query<(Entity, &Transform, &Collider), Without<Player>>,
 ) {
     let dt = time.delta_secs();
 
-    for (player, mut transform, mut velocity, mut momentum, player_collider, mut ground, mut jump_controller) in players.iter_mut() {
+    for (
+        player,
+        mut transform,
+        mut velocity,
+        mut momentum,
+        player_collider,
+        mut ground,
+        mut jump_controller,
+    ) in players.iter_mut()
+    {
         let mut player_aabb = predicted_aabb(&transform, &velocity, player_collider, dt);
         ground.is_grounded = false;
 
@@ -138,6 +148,23 @@ pub fn platform_collider_system(
 
             if player_aabb.intersects(&collider_aabb) {
                 let mut player_pos = transform.translation;
+
+                //// CHANGE: compute real platform top and player bottom
+                let platform_top = collider_aabb.max.y;
+                let player_bottom = player_pos.y - (PLAYER_LENGTH / 2.0);
+
+                //// CHANGE: check if player is ABOVE platform
+                let is_above = player_bottom >= platform_top - 1.0;
+
+                //// CHANGE: check if falling
+                let is_falling = velocity.0.y <= 0.0;
+
+                //// CHANGE: one-way platform — only collide when falling onto top
+                if !(is_above && is_falling) {
+                    continue;
+                }
+
+                // (Original collision resolution begins)
                 let player_center = player_aabb.center();
                 let closest = collider_aabb.closest_point(player_center);
                 let offset = player_center - closest;
@@ -156,14 +183,12 @@ pub fn platform_collider_system(
                     game_object,
                 });
 
-                // Update the AABB after resolution
                 player_aabb = player_collider.aabb.translated_by(player_pos.truncate());
                 transform.translation = player_pos;
             }
         }
     }
 }
-
 
 pub fn player_collider_system(
     time: Res<Time>,
@@ -189,8 +214,24 @@ pub fn player_collider_system(
 
         if let Some(obj1) = one.last_mut() {
             for obj2 in two.iter_mut() {
-                let &mut (id1, ref mut vel1, ref mut trans1, ref mut mom1, collider1, ref mut jump_controller1, ref mut ground_state1) = obj1;
-                let &mut (id2, ref mut vel2, ref mut trans2, ref mut mom2, collider2, ref mut jump_controller2, ref mut ground_state2) = obj2;
+                let &mut (
+                    id1,
+                    ref mut vel1,
+                    ref mut trans1,
+                    ref mut mom1,
+                    collider1,
+                    ref mut jump_controller1,
+                    ref mut ground_state1,
+                ) = obj1;
+                let &mut (
+                    id2,
+                    ref mut vel2,
+                    ref mut trans2,
+                    ref mut mom2,
+                    collider2,
+                    ref mut jump_controller2,
+                    ref mut ground_state2,
+                ) = obj2;
 
                 // Predict future positions
                 let future_pos1 = trans1.translation.truncate() + vel1.0 * dt;
@@ -221,9 +262,8 @@ pub fn player_collider_system(
                         mom2.0.x = total_momentum * 0.5;
                         vel1.0.x = 0.0;
                         vel2.0.x = 0.0;
-                    } 
-                    else {
-                        // Resolve vertically 
+                    } else {
+                        // Resolve vertically
                         if aabb1.center().y < aabb2.center().y {
                             // Push obj1 down, obj2 up
                             trans1.translation.y -= overlap_y / 2.0;
@@ -234,11 +274,10 @@ pub fn player_collider_system(
                             jump_controller2.is_jumping = false;
                             ground_state2.is_grounded = true;
                             ground_state2.coyote_timer.reset();
-                            
+
                             // Apply friction to top of player
                             mom2.0.x *= PLATFORM_FRICTION;
-                        }
-                        else {
+                        } else {
                             // Push obj1 up, obj2 down
                             trans1.translation.y += overlap_y / 2.0;
                             trans2.translation.y -= overlap_y / 2.0;
@@ -248,7 +287,7 @@ pub fn player_collider_system(
                             jump_controller1.is_jumping = false;
                             ground_state1.is_grounded = true;
                             ground_state1.coyote_timer.reset();
-                            
+
                             // Apply friction to top of player
                             mom1.0.x *= PLATFORM_FRICTION;
                         }
@@ -266,20 +305,23 @@ pub fn player_collider_system(
     }
 }
 
-fn check_aabb(pos1: Vec2, width: Vec2, pos2: Vec2, width2: Vec2) -> bool{
+fn check_aabb(pos1: Vec2, width: Vec2, pos2: Vec2, width2: Vec2) -> bool {
     //possible future use for collision top and collision bottom
-    let collisioned = (pos1.x - pos2.x).abs() <= width.x + width2.x && (pos1.y - pos2.y).abs() <= width.y + width2.y;
+    let collisioned = (pos1.x - pos2.x).abs() <= width.x + width2.x
+        && (pos1.y - pos2.y).abs() <= width.y + width2.y;
     //let collision_top = (pos1.y - pos2.y).abs() <= width.y + width2.y && (pos1.y - pos2.y).abs() <= width.y + width2.y;
     return collisioned;
 }
 
-fn check_top(pos1: Vec2, width: Vec2, pos2: Vec2, width2: Vec2) -> bool{
-    return (pos1.x - pos2.x).abs() <= width.x + width2.x && (pos1.y > pos2.y || pos2.y > pos1.y) && (pos1.y - width.y) <= (pos2.y + width2.y);
+fn check_top(pos1: Vec2, width: Vec2, pos2: Vec2, width2: Vec2) -> bool {
+    return (pos1.x - pos2.x).abs() <= width.x + width2.x
+        && (pos1.y > pos2.y || pos2.y > pos1.y)
+        && (pos1.y - width.y) <= (pos2.y + width2.y);
 }
 
 pub fn update_coyote_timer_system(
     time: Res<Time>,
-    mut query:Query<&mut GroundState, With<Player>>,
+    mut query: Query<&mut GroundState, With<Player>>,
 ) {
     for mut ground_state in &mut query {
         // If in air tick the coyote timer
@@ -295,7 +337,7 @@ pub fn update_coyote_timer_system(
 
 pub fn update_wall_jump_timer_system(
     time: Res<Time>,
-    mut query: Query<&mut JumpController, With<Player>>
+    mut query: Query<&mut JumpController, With<Player>>,
 ) {
     for mut jump_controller in &mut query {
         jump_controller.wall_jump_timer.tick(time.delta());
@@ -305,16 +347,16 @@ pub fn update_wall_jump_timer_system(
 pub fn enemy_player_collision_system(
     mut events: EventWriter<EnemyCollisionEvent>,
     enemy_query: Query<(Entity, &Transform, &EnemyCollider), With<Enemy>>,
-    player_query: Query<(Entity, &Transform, &PlayerCollider), With<Player>>
+    player_query: Query<(Entity, &Transform, &PlayerCollider), With<Player>>,
 ) {
     for (enemy_entity, enemy_transform, enemy_collider) in enemy_query.iter() {
         let enemy_pos = enemy_transform.translation.truncate();
         let enemy_aabb = enemy_collider.aabb.translated_by(enemy_pos);
-        
+
         for (player_entity, player_transform, player_collider) in player_query.iter() {
             let player_pos = player_transform.translation.truncate();
             let player_aabb = player_collider.aabb.translated_by(player_pos);
-        
+
             if enemy_aabb.intersects(&player_aabb) {
                 events.write(EnemyCollisionEvent {
                     player: player_entity,

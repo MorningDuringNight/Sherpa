@@ -2,17 +2,16 @@
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: Rope force + rendering system
 
-use bevy::prelude::*;
+use crate::components::motion::{NetForce, RopeForce};
 use crate::components::rope::{Rope, RopeConstraint};
-use crate::components::motion::{RopeForce, NetForce};
-use crate::player::Player;          // 用于 query 玩家实体
+use crate::player::Player;
+use bevy::prelude::*; // 用于 query 玩家实体
 
 use crate::config::PlayerSpawnPoint;
 
-use bevy::render::mesh::{Mesh2d, Indices, PrimitiveTopology};
+use bevy::render::mesh::{Indices, Mesh2d, PrimitiveTopology};
 use bevy::render::render_asset::RenderAssetUsages;
-use bevy::sprite::{MeshMaterial2d, ColorMaterial};
-
+use bevy::sprite::{ColorMaterial, MeshMaterial2d};
 
 /// 临时存放 rope 的几何信息
 #[derive(Resource, Default)]
@@ -84,7 +83,7 @@ pub fn init_ropes(
 ) {
     let mut player_entities = Vec::new();
     for entity in q_players.iter() {
-    player_entities.push(entity);   
+        player_entities.push(entity);
     }
     println!("{:?}", player_entities.len());
     if player_entities.len() < 2 {
@@ -141,7 +140,7 @@ pub fn apply_rope_geometry(
                 let thickness = 2.0;
                 // sprite.custom_size = Some(Vec2::new(*length, 2.0));
 
-                #[cfg(feature = "client")] 
+                #[cfg(feature = "client")]
                 {
                     let mesh_new = polyline_ribbon_mesh(&pts, thickness);
                     let mesh_handle = meshes.add(mesh_new);
@@ -155,7 +154,6 @@ pub fn apply_rope_geometry(
     }
 }
 
-
 pub fn spawn_rope_sprite(
     mut commands: Commands,
     rope_entity: Entity,
@@ -164,7 +162,7 @@ pub fn spawn_rope_sprite(
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) -> Entity {
     // 先生成 sprite 实体，并保存 ID
-    
+
     // 1) 计算绳子曲线采样点
     // 将spawn_point.position作为head，spawn_point.position + Vec3::new(300.0, -100.0, 0.0)作为tail
     // 但是要转换成 Vec2
@@ -185,29 +183,33 @@ pub fn spawn_rope_sprite(
     // 3) 材质（可换成贴图）
     let material = materials.add(ColorMaterial::from(Color::WHITE));
 
-    let sprite_entity = commands.spawn((
-        // Sprite {
-        //     color: Color::linear_rgb(1.0, 0.0, 0.0), // 红色
-        //     custom_size: Some(Vec2::new(initial_length, 2.0)),
-        //     ..default()
-        // },
-        
-        Mesh2d(mesh_handle),
-        MeshMaterial2d::<ColorMaterial>(material),
-        Transform::from_xyz(0.0, 0.0, 0.0),
-        GlobalTransform::default(),
-        Visibility::Visible,
-        InheritedVisibility::VISIBLE,
-        ViewVisibility::default(),
-        // Transform {
-        //     translation: Vec3::new(0.0, 0.0, 1.0),
-        //     ..default()
-        // },
-        RopeSprite { rope_entity },
-    )).id();
+    let sprite_entity = commands
+        .spawn((
+            // Sprite {
+            //     color: Color::linear_rgb(1.0, 0.0, 0.0), // 红色
+            //     custom_size: Some(Vec2::new(initial_length, 2.0)),
+            //     ..default()
+            // },
+            Mesh2d(mesh_handle),
+            MeshMaterial2d::<ColorMaterial>(material),
+            Transform::from_xyz(0.0, 0.0, 0.0),
+            GlobalTransform::default(),
+            Visibility::Visible,
+            InheritedVisibility::VISIBLE,
+            ViewVisibility::default(),
+            // Transform {
+            //     translation: Vec3::new(0.0, 0.0, 1.0),
+            //     ..default()
+            // },
+            RopeSprite { rope_entity },
+        ))
+        .id();
 
     // 再打印 sprite_entity 和 rope_entity
-    println!("Spawned rope sprite {:?} for rope {:?}", sprite_entity, rope_entity);
+    println!(
+        "Spawned rope sprite {:?} for rope {:?}",
+        sprite_entity, rope_entity
+    );
 
     sprite_entity
 }
@@ -221,10 +223,9 @@ pub fn compute_rope_geometry(
     rope_geometry.updates.clear();
 
     for (rope_entity, rope) in &q_ropes {
-        if let Ok([head_transform, tail_transform]) = q_transforms.get_many([
-            rope.attached_entity_head,
-            rope.attached_entity_tail,
-        ]) {
+        if let Ok([head_transform, tail_transform]) =
+            q_transforms.get_many([rope.attached_entity_head, rope.attached_entity_tail])
+        {
             let head = head_transform.translation;
             let tail = tail_transform.translation;
             let head2 = Vec2::new(head.x, head.y);
@@ -254,7 +255,7 @@ fn point_curve(pts: &mut Vec<Vec2>, steps: &usize, head: &Vec2, tail: &Vec2, L: 
 
     // 计算水平距离差
     let x_diff = tail.x - head.x;
-    
+
     // 计算垂直距离差
     let y_diff = tail.y - head.y;
 
@@ -300,7 +301,7 @@ fn point_curve(pts: &mut Vec<Vec2>, steps: &usize, head: &Vec2, tail: &Vec2, L: 
         }
     }
     let mut a = (a_low + a_high) * 0.5;
-    
+
     let r = (y_diff / L).clamp(-0.999_999, 0.999_999);
     let mut x0: f32;
     if head.x < tail.x {
@@ -312,9 +313,9 @@ fn point_curve(pts: &mut Vec<Vec2>, steps: &usize, head: &Vec2, tail: &Vec2, L: 
 
     if a.abs() < 0.0001 {
         a = 0.0001;
-    // println!("a = {}", a);
-    // println!("x0 = {}", x0);
-    // println!("c = {}", c);
+        // println!("a = {}", a);
+        // println!("x0 = {}", x0);
+        // println!("c = {}", c);
     }
 
     // u_max = max(|(tail.x - x0)/a|, |(head.x - x0)/a|)
@@ -379,7 +380,10 @@ fn polyline_ribbon_mesh(points: &[Vec2], width: f32) -> Mesh {
 
     // 4) 组装 Mesh —— 0.16 需要 RenderAssetUsages
     // let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::RENDER_WORLD);
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default());
+    let mut mesh = Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::default(),
+    );
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
     mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
     mesh.insert_indices(Indices::U32(indices)); // 0.16 用 insert_indices
@@ -400,43 +404,69 @@ pub fn debug_print_player_world_pos(q: Query<(Entity, &GlobalTransform), With<Pl
 pub fn debug_print_rope_mesh2d(
     meshes: Res<Assets<Mesh>>,
     materials: Res<Assets<ColorMaterial>>,
-    q: Query<(Entity, &Mesh2d, Option<&MeshMaterial2d<ColorMaterial>>, &GlobalTransform), With<RopeSprite>>,
+    q: Query<
+        (
+            Entity,
+            &Mesh2d,
+            Option<&MeshMaterial2d<ColorMaterial>>,
+            &GlobalTransform,
+        ),
+        With<RopeSprite>,
+    >,
 ) {
     for (e, mesh2d, mat2d, gt) in &q {
         let wp = gt.translation();
-        println!("\n[RopeMesh] entity={:?} world=({:.1},{:.1},{:.1})", e, wp.x, wp.y, wp.z);
+        println!(
+            "\n[RopeMesh] entity={:?} world=({:.1},{:.1},{:.1})",
+            e, wp.x, wp.y, wp.z
+        );
 
         // 读取网格
         if let Some(mesh) = meshes.get(&mesh2d.0) {
             // 顶点（局部坐标）
-            if let Some(positions) = mesh.attribute(Mesh::ATTRIBUTE_POSITION).and_then(|a| a.as_float3()) {
+            if let Some(positions) = mesh
+                .attribute(Mesh::ATTRIBUTE_POSITION)
+                .and_then(|a| a.as_float3())
+            {
                 println!("  vertices: {}", positions.len());
                 // 计算局部 AABB（帮助确认是否“局部化”成功）
                 let mut min = [f32::INFINITY; 3];
                 let mut max = [f32::NEG_INFINITY; 3];
                 for v in positions {
-                    min[0] = min[0].min(v[0]); max[0] = max[0].max(v[0]);
-                    min[1] = min[1].min(v[1]); max[1] = max[1].max(v[1]);
-                    min[2] = min[2].min(v[2]); max[2] = max[2].max(v[2]);
+                    min[0] = min[0].min(v[0]);
+                    max[0] = max[0].max(v[0]);
+                    min[1] = min[1].min(v[1]);
+                    max[1] = max[1].max(v[1]);
+                    min[2] = min[2].min(v[2]);
+                    max[2] = max[2].max(v[2]);
                 }
-                println!("  local AABB: x[{:.1},{:.1}] y[{:.1},{:.1}] z[{:.1},{:.1}]",
-                    min[0], max[0], min[1], max[1], min[2], max[2]);
+                println!(
+                    "  local AABB: x[{:.1},{:.1}] y[{:.1},{:.1}] z[{:.1},{:.1}]",
+                    min[0], max[0], min[1], max[1], min[2], max[2]
+                );
             } else {
                 println!("  positions: <missing>");
             }
 
             // UV
-            if let Some(uvs) = mesh.attribute(Mesh::ATTRIBUTE_UV_0).and_then(|a| a.as_float3()) {
-                let sample: Vec<[f32;3]> = uvs.iter().take(6).cloned().collect();
-                println!("  uv0 count: {}  sample(first up to 6) = {:?}", uvs.len(), sample);
+            if let Some(uvs) = mesh
+                .attribute(Mesh::ATTRIBUTE_UV_0)
+                .and_then(|a| a.as_float3())
+            {
+                let sample: Vec<[f32; 3]> = uvs.iter().take(6).cloned().collect();
+                println!(
+                    "  uv0 count: {}  sample(first up to 6) = {:?}",
+                    uvs.len(),
+                    sample
+                );
             } else {
                 println!("  uv0: <missing>");
             }
 
             // 索引（三角形数）
             match mesh.indices() {
-                Some(Indices::U32(v)) => println!("  indices: {} ({} tris)", v.len(), v.len()/3),
-                Some(Indices::U16(v)) => println!("  indices: {} ({} tris)", v.len(), v.len()/3),
+                Some(Indices::U32(v)) => println!("  indices: {} ({} tris)", v.len(), v.len() / 3),
+                Some(Indices::U16(v)) => println!("  indices: {} ({} tris)", v.len(), v.len() / 3),
                 None => println!("  indices: <none> (non-indexed)"),
             }
         } else {
@@ -447,7 +477,11 @@ pub fn debug_print_rope_mesh2d(
         if let Some(mat2d) = mat2d {
             if let Some(mat) = materials.get(&mat2d.0) {
                 if let Some(tex) = &mat.texture {
-                    println!("  material: color={:?}  texture_handle={:?}", mat.color, tex.id());
+                    println!(
+                        "  material: color={:?}  texture_handle={:?}",
+                        mat.color,
+                        tex.id()
+                    );
                 } else {
                     println!("  material: color={:?}  texture=<none>", mat.color);
                 }

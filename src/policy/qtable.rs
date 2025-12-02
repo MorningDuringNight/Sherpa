@@ -3,13 +3,13 @@
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Q table Resource>
 use bevy::prelude::*;
-use std::fs::File;
-use std::io;
 use csv::ReaderBuilder;
 use csv::WriterBuilder;
+use std::fs::File;
+use std::io;
 
 pub const X_N: usize = 20;
-pub const Y_N: usize = 32;
+pub const Y_N: usize = 64;
 const VX_N: usize = 3;
 const VY_N: usize = 3;
 const ACTION_N: usize = 6;
@@ -75,9 +75,7 @@ impl QTable {
 
     pub fn save_to_csv(&self, path: &str) -> std::io::Result<()> {
         let file = File::create(path)?;
-        let mut wtr = WriterBuilder::new()
-            .has_headers(true)
-            .from_writer(file);
+        let mut wtr = WriterBuilder::new().has_headers(true).from_writer(file);
 
         wtr.write_record(&["x", "y", "vx", "vy", "I", "L", "R", "J", "LJ", "RJ"])?;
 
@@ -106,23 +104,20 @@ impl QTable {
         let mut table = QTable::new();
 
         let file = File::open(path)?;
-        let mut rdr = ReaderBuilder::new()
-            .has_headers(true)
-            .from_reader(file);
+        let mut rdr = ReaderBuilder::new().has_headers(true).from_reader(file);
 
         for result in rdr.records() {
-            let record = result
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            let record = result.map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
             let x: usize = record[0].parse().unwrap();
             let y: usize = record[1].parse().unwrap();
             let vx: usize = record[2].parse().unwrap();
             let vy: usize = record[3].parse().unwrap();
 
-            let i_q: f32  = record[4].parse().unwrap();
-            let l_q: f32  = record[5].parse().unwrap();
-            let r_q: f32  = record[6].parse().unwrap();
-            let j_q: f32  = record[7].parse().unwrap();
+            let i_q: f32 = record[4].parse().unwrap();
+            let l_q: f32 = record[5].parse().unwrap();
+            let r_q: f32 = record[6].parse().unwrap();
+            let j_q: f32 = record[7].parse().unwrap();
             let lj_q: f32 = record[8].parse().unwrap();
             let rj_q: f32 = record[9].parse().unwrap();
 
@@ -171,15 +166,15 @@ pub enum Action {
 impl Action {
     pub fn index(self) -> usize {
         match self {
-            Action::I  => 0,
-            Action::L  => 1,
-            Action::R  => 2,
-            Action::J  => 3,
+            Action::I => 0,
+            Action::L => 1,
+            Action::R => 2,
+            Action::J => 3,
             Action::LJ => 4,
             Action::RJ => 5,
         }
     }
-    
+
     pub const fn from_index(i: usize) -> Self {
         match i {
             0 => Action::I,
