@@ -1,661 +1,501 @@
 {
   "collisionAreas": [],
   "entities": {
-    "1Bjsto": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 49,
-        "startX": 802,
-        "startY": 1433,
-        "width": 61
-      },
-      "collision": {
-        "height": 49,
-        "startX": 771,
-        "startY": 591,
-        "width": 61
-      },
-      "type": "platform"
-    },
-    "57uUIz": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 65.5,
-        "startX": 481,
-        "startY": 1441,
-        "width": 191
-      },
-      "collision": {
-        "height": 65.5,
-        "startX": 385,
-        "startY": 574.5,
-        "width": 191
-      },
-      "type": "platform"
-    },
-    "5t0nMl": {
-      "attributes": {},
-      "boundary": {
-        "height": 28,
-        "startX": 742,
-        "startY": 14,
-        "width": 165
-      },
-      "collision": {
-        "height": 28,
-        "startX": 659,
-        "startY": 2020,
-        "width": 165
-      },
-      "type": "spikes"
-    },
-    "8e5DcN": {
+    "0fwLvU": {
       "attributes": {
         "value": 1
       },
       "boundary": {
-        "height": 64.5,
-        "startX": 37,
-        "startY": 672,
-        "width": 54
+        "height": 60,
+        "startX": 1030,
+        "startY": 3329,
+        "width": 56
       },
       "collision": {
-        "height": 64.5,
-        "startX": 10,
-        "startY": 1343.5,
-        "width": 54
+        "height": 60,
+        "startX": 1030,
+        "startY": 3329,
+        "width": 56
       },
       "type": "coin"
     },
-    "9va2IB": {
+    "15IcpO": {
       "attributes": {
         "oneWay": false
       },
       "boundary": {
-        "height": 66,
-        "startX": 256,
-        "startY": 609,
-        "width": 128
+        "height": 21,
+        "startX": 769,
+        "startY": 297,
+        "width": 511
       },
       "collision": {
-        "height": 66,
-        "startX": 192,
-        "startY": 1406,
-        "width": 128
+        "height": 21,
+        "startX": 769,
+        "startY": 297,
+        "width": 511
       },
       "type": "platform"
     },
-    "An3NTn": {
-      "attributes": {
-        "bounceStrength": 10
-      },
-      "boundary": {
-        "height": 39,
-        "startX": 1057,
-        "startY": 20,
-        "width": 63
-      },
-      "collision": {
-        "height": 39,
-        "startX": 1025,
-        "startY": 2009,
-        "width": 63
-      },
-      "type": "trampoline"
-    },
-    "FzrI7J": {
+    "2XBfjT": {
       "attributes": {
         "oneWay": false
       },
       "boundary": {
-        "height": 24.5,
+        "height": 22,
         "startX": 896,
-        "startY": 140,
-        "width": 128
+        "startY": 2153,
+        "width": 68
       },
       "collision": {
-        "height": 24.5,
-        "startX": 832,
-        "startY": 1895.5,
-        "width": 128
+        "height": 22,
+        "startX": 896,
+        "startY": 2153,
+        "width": 68
       },
       "type": "platform"
     },
-    "GBcaQG": {
+    "3BySIy": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 61,
+        "startX": 963,
+        "startY": 769,
+        "width": 59
+      },
+      "collision": {
+        "height": 61,
+        "startX": 963,
+        "startY": 769,
+        "width": 59
+      },
+      "type": "coin"
+    },
+    "4M6Ytq": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 60,
+        "startX": 903,
+        "startY": 3329,
+        "width": 55
+      },
+      "collision": {
+        "height": 60,
+        "startX": 903,
+        "startY": 3329,
+        "width": 55
+      },
+      "type": "coin"
+    },
+    "5Ep67a": {
       "attributes": {
         "oneWay": false
       },
       "boundary": {
-        "height": 62,
-        "startX": 64,
-        "startY": 97,
-        "width": 128
-      },
-      "collision": {
-        "height": 62,
+        "height": 21,
         "startX": 0,
-        "startY": 1920,
-        "width": 128
-      },
-      "type": "platform"
-    },
-    "GgfOh1": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 69,
-        "startX": 672,
-        "startY": 1121,
-        "width": 197
+        "startY": 2025,
+        "width": 66
       },
       "collision": {
-        "height": 69,
-        "startX": 573,
-        "startY": 893,
-        "width": 197
+        "height": 21,
+        "startX": 0,
+        "startY": 2025,
+        "width": 66
       },
       "type": "platform"
     },
-    "H6hElL": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 63,
-        "startX": 992,
-        "startY": 1762,
-        "width": 193
-      },
-      "collision": {
-        "height": 63,
-        "startX": 895,
-        "startY": 255,
-        "width": 193
-      },
-      "type": "platform"
-    },
-    "IRBBVG": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 24,
-        "startX": 193,
-        "startY": 1184,
-        "width": 231
-      },
-      "collision": {
-        "height": 24,
-        "startX": 77,
-        "startY": 852,
-        "width": 231
-      },
-      "type": "platform"
-    },
-    "JGxj7C": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 21.5,
-        "startX": 224,
-        "startY": 461,
-        "width": 193
-      },
-      "collision": {
-        "height": 21.5,
-        "startX": 127,
-        "startY": 1576.5,
-        "width": 193
-      },
-      "type": "platform"
-    },
-    "JhII3R": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 24.5,
-        "startX": 192,
-        "startY": 780,
-        "width": 257
-      },
-      "collision": {
-        "height": 24.5,
-        "startX": 63,
-        "startY": 1255.5,
-        "width": 257
-      },
-      "type": "platform"
-    },
-    "Muxf3J": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 23,
-        "startX": 960,
-        "startY": 332,
-        "width": 128
-      },
-      "collision": {
-        "height": 23,
-        "startX": 896,
-        "startY": 1705,
-        "width": 128
-      },
-      "type": "platform"
-    },
-    "OM4jBl": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 32,
-        "startX": 679,
-        "startY": 812,
-        "width": 51
-      },
-      "collision": {
-        "height": 32,
-        "startX": 653,
-        "startY": 1220,
-        "width": 51
-      },
-      "type": "platform"
-    },
-    "P7VpTf": {
+    "67yWbA": {
       "attributes": {
         "value": 1
       },
       "boundary": {
-        "height": 67,
-        "startX": 224,
-        "startY": 674,
-        "width": 49
+        "height": 61,
+        "startX": 1160,
+        "startY": 3072,
+        "width": 52
       },
       "collision": {
-        "height": 67,
-        "startX": 199,
-        "startY": 1341,
-        "width": 49
+        "height": 61,
+        "startX": 1160,
+        "startY": 3072,
+        "width": 52
       },
       "type": "coin"
     },
-    "RWQN2V": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 24.5,
-        "startX": 1152,
-        "startY": 204,
-        "width": 128
-      },
-      "collision": {
-        "height": 24.5,
-        "startX": 1088,
-        "startY": 1831.5,
-        "width": 128
-      },
-      "type": "platform"
-    },
-    "SSyaD5": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 64.5,
-        "startX": 1120,
-        "startY": 672,
-        "width": 193
-      },
-      "collision": {
-        "height": 64.5,
-        "startX": 1023,
-        "startY": 1343.5,
-        "width": 193
-      },
-      "type": "platform"
-    },
-    "XMkJxI": {
+    "7lJmHw": {
       "attributes": {
         "value": 1
       },
       "boundary": {
-        "height": 65,
-        "startX": 100,
-        "startY": 673,
-        "width": 56
+        "height": 64,
+        "startX": 392,
+        "startY": 2240,
+        "width": 52
       },
       "collision": {
-        "height": 65,
-        "startX": 72,
-        "startY": 1343,
-        "width": 56
+        "height": 64,
+        "startX": 392,
+        "startY": 2240,
+        "width": 52
       },
       "type": "coin"
     },
-    "ZaoCEz": {
+    "8pagpi": {
       "attributes": {
         "oneWay": false
       },
       "boundary": {
-        "height": 62,
-        "startX": 545,
-        "startY": 1759,
-        "width": 322
+        "height": 66,
+        "startX": 386,
+        "startY": 1600,
+        "width": 62
       },
       "collision": {
-        "height": 62,
-        "startX": 384,
-        "startY": 258,
-        "width": 322
+        "height": 66,
+        "startX": 386,
+        "startY": 1600,
+        "width": 62
       },
       "type": "platform"
     },
-    "aTVvMh": {
+    "AmzxUG": {
       "attributes": {
-        "oneWay": false
+        "value": 1
       },
       "boundary": {
-        "height": 33,
-        "startX": 614,
-        "startY": 877,
+        "height": 61,
+        "startX": 967,
+        "startY": 3072,
         "width": 53
       },
       "collision": {
-        "height": 33,
-        "startX": 587,
-        "startY": 1155,
+        "height": 61,
+        "startX": 967,
+        "startY": 3072,
         "width": 53
-      },
-      "type": "platform"
-    },
-    "bSYldJ": {
-      "attributes": {
-        "value": 1
-      },
-      "boundary": {
-        "height": 65.5,
-        "startX": 289,
-        "startY": 673,
-        "width": 46
-      },
-      "collision": {
-        "height": 65.5,
-        "startX": 266,
-        "startY": 1342.5,
-        "width": 46
       },
       "type": "coin"
     },
-    "bU0BIs": {
+    "DZRsxM": {
       "attributes": {
         "oneWay": false
       },
       "boundary": {
-        "height": 25,
-        "startX": 800,
-        "startY": 461,
-        "width": 65
+        "height": 21,
+        "startX": 640,
+        "startY": 2535,
+        "width": 639
       },
       "collision": {
-        "height": 25,
+        "height": 21,
+        "startX": 640,
+        "startY": 2535,
+        "width": 639
+      },
+      "type": "platform"
+    },
+    "HZOvIq": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 66,
         "startX": 767,
-        "startY": 1575,
+        "startY": 1406,
         "width": 65
+      },
+      "collision": {
+        "height": 66,
+        "startX": 767,
+        "startY": 1406,
+        "width": 65
+      },
+      "type": "coin"
+    },
+    "HbsMCC": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 1,
+        "startY": 2345,
+        "width": 575
+      },
+      "collision": {
+        "height": 21,
+        "startX": 1,
+        "startY": 2345,
+        "width": 575
       },
       "type": "platform"
     },
-    "dGWGqQ": {
+    "Hz5oqC": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 59,
+        "startX": 1028,
+        "startY": 513,
+        "width": 58
+      },
+      "collision": {
+        "height": 59,
+        "startX": 1028,
+        "startY": 513,
+        "width": 58
+      },
+      "type": "coin"
+    },
+    "I94SA6": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 59,
+        "startX": 641,
+        "startY": 3649,
+        "width": 633
+      },
+      "collision": {
+        "height": 59,
+        "startX": 641,
+        "startY": 3649,
+        "width": 633
+      },
+      "type": "platform"
+    },
+    "IjwdH4": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 22,
+        "startX": 0,
+        "startY": 3817,
+        "width": 512
+      },
+      "collision": {
+        "height": 22,
+        "startX": 0,
+        "startY": 3817,
+        "width": 512
+      },
+      "type": "platform"
+    },
+    "Jak0N6": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 1153,
+        "startY": 1513,
+        "width": 125
+      },
+      "collision": {
+        "height": 21,
+        "startX": 1153,
+        "startY": 1513,
+        "width": 125
+      },
+      "type": "platform"
+    },
+    "Km0ZSk": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 69,
+        "startX": 197,
+        "startY": 3196,
+        "width": 55
+      },
+      "collision": {
+        "height": 69,
+        "startX": 197,
+        "startY": 3196,
+        "width": 55
+      },
+      "type": "coin"
+    },
+    "LEhFiA": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 63,
+        "startX": 775,
+        "startY": 3068,
+        "width": 51
+      },
+      "collision": {
+        "height": 63,
+        "startX": 775,
+        "startY": 3068,
+        "width": 51
+      },
+      "type": "coin"
+    },
+    "MIS9Nd": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 68,
+        "startX": 387,
+        "startY": 3197,
+        "width": 61
+      },
+      "collision": {
+        "height": 68,
+        "startX": 387,
+        "startY": 3197,
+        "width": 61
+      },
+      "type": "coin"
+    },
+    "MlQvQM": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 20,
+        "startX": 640,
+        "startY": 3177,
+        "width": 638
+      },
+      "collision": {
+        "height": 20,
+        "startX": 640,
+        "startY": 3177,
+        "width": 638
+      },
+      "type": "platform"
+    },
+    "NYp7va": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 642,
+        "startY": 3432,
+        "width": 635
+      },
+      "collision": {
+        "height": 21,
+        "startX": 642,
+        "startY": 3432,
+        "width": 635
+      },
+      "type": "platform"
+    },
+    "RBXjp3": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 1,
+        "startY": 489,
+        "width": 639
+      },
+      "collision": {
+        "height": 21,
+        "startX": 1,
+        "startY": 489,
+        "width": 639
+      },
+      "type": "platform"
+    },
+    "RWWDR8": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 1,
+        "startY": 808,
+        "width": 703
+      },
+      "collision": {
+        "height": 21,
+        "startX": 1,
+        "startY": 808,
+        "width": 703
+      },
+      "type": "platform"
+    },
+    "Sp3MUU": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 22,
+        "startX": 1152,
+        "startY": 4072,
+        "width": 64
+      },
+      "collision": {
+        "height": 22,
+        "startX": 1152,
+        "startY": 4072,
+        "width": 64
+      },
+      "type": "platform"
+    },
+    "XBFuX0": {
       "attributes": {
         "bounceStrength": 10
       },
       "boundary": {
         "height": 39,
-        "startX": 352,
-        "startY": 276,
-        "width": 64
+        "startX": 640,
+        "startY": 3606,
+        "width": 62
       },
       "collision": {
         "height": 39,
-        "startX": 320,
-        "startY": 1753,
-        "width": 64
+        "startX": 640,
+        "startY": 3606,
+        "width": 62
       },
       "type": "trampoline"
     },
-    "gK1MIP": {
+    "XdWwR7": {
       "attributes": {
         "oneWay": false
       },
       "boundary": {
-        "height": 22.5,
-        "startX": 768,
-        "startY": 779,
-        "width": 128
+        "height": 21,
+        "startX": 1,
+        "startY": 3561,
+        "width": 510
       },
       "collision": {
-        "height": 22.5,
-        "startX": 704,
-        "startY": 1257.5,
-        "width": 128
+        "height": 21,
+        "startX": 1,
+        "startY": 3561,
+        "width": 510
       },
       "type": "platform"
     },
-    "ghs5kB": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 63,
-        "startX": 993,
-        "startY": 1442,
-        "width": 318
-      },
-      "collision": {
-        "height": 63,
-        "startX": 834,
-        "startY": 575,
-        "width": 318
-      },
-      "type": "platform"
-    },
-    "h6hJJi": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 23,
-        "startX": 1215,
-        "startY": 332,
-        "width": 126
-      },
-      "collision": {
-        "height": 23,
-        "startX": 1152,
-        "startY": 1705,
-        "width": 126
-      },
-      "type": "platform"
-    },
-    "hjdzsp": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 64,
-        "startX": 194,
-        "startY": 1504,
-        "width": 257
-      },
-      "collision": {
-        "height": 64,
-        "startX": 65,
-        "startY": 512,
-        "width": 257
-      },
-      "type": "platform"
-    },
-    "knxVXU": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 24,
-        "startX": 608,
-        "startY": 204,
-        "width": 64
-      },
-      "collision": {
-        "height": 24,
-        "startX": 576,
-        "startY": 1832,
-        "width": 64
-      },
-      "type": "platform"
-    },
-    "mMgTHL": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 25.5,
-        "startX": 448,
-        "startY": 589,
-        "width": 256
-      },
-      "collision": {
-        "height": 25.5,
-        "startX": 320,
-        "startY": 1446.5,
-        "width": 256
-      },
-      "type": "platform"
-    },
-    "mSKU7v": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 24,
-        "startX": 481,
-        "startY": 204,
-        "width": 63
-      },
-      "collision": {
-        "height": 24,
-        "startX": 449,
-        "startY": 1832,
-        "width": 63
-      },
-      "type": "platform"
-    },
-    "rOAajl": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 23,
-        "startX": 736,
-        "startY": 204,
-        "width": 64
-      },
-      "collision": {
-        "height": 23,
-        "startX": 704,
-        "startY": 1833,
-        "width": 64
-      },
-      "type": "platform"
-    },
-    "rteNdj": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 64,
-        "startX": 63,
-        "startY": 610,
-        "width": 126
-      },
-      "collision": {
-        "height": 64,
-        "startX": 0,
-        "startY": 1406,
-        "width": 126
-      },
-      "type": "platform"
-    },
-    "sXvw8l": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 25,
-        "startX": 832,
-        "startY": 1933,
-        "width": 128
-      },
-      "collision": {
-        "height": 25,
-        "startX": 768,
-        "startY": 103,
-        "width": 128
-      },
-      "type": "platform"
-    },
-    "tGmF0H": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 62,
-        "startX": 352,
-        "startY": 225,
-        "width": 65
-      },
-      "collision": {
-        "height": 62,
-        "startX": 319,
-        "startY": 1792,
-        "width": 65
-      },
-      "type": "platform"
-    },
-    "tOdAQH": {
-      "attributes": {
-        "bounceStrength": 20
-      },
-      "boundary": {
-        "height": 39.5,
-        "startX": 96,
-        "startY": 916,
-        "width": 65
-      },
-      "collision": {
-        "height": 40,
-        "startX": 62,
-        "startY": 1112,
-        "width": 64
-      },
-      "type": "trampoline"
-    },
-    "uOo4iE": {
+    "YMyGX9": {
       "attributes": {
         "moving": {
-          "endX": 1008,
-          "endY": 1107,
+          "endX": 616,
+          "endY": 146,
           "moveType": "linear",
           "speed": 1,
-          "startX": 908,
-          "startY": 1107,
+          "startX": 716,
+          "startY": 146,
           "trigger": {
             "triggerType": "loop"
           }
@@ -663,126 +503,731 @@
         "oneWay": false
       },
       "boundary": {
-        "height": 25,
+        "height": 23,
+        "startX": 716,
+        "startY": 146,
+        "width": 168
+      },
+      "collision": {
+        "height": 23,
+        "startX": 716,
+        "startY": 146,
+        "width": 168
+      },
+      "type": "platform"
+    },
+    "ZA5T7r": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 1,
+        "startY": 1385,
+        "width": 638
+      },
+      "collision": {
+        "height": 21,
+        "startX": 1,
+        "startY": 1385,
+        "width": 638
+      },
+      "type": "platform"
+    },
+    "ZdDAbT": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 63,
+        "startX": 71,
+        "startY": 703,
+        "width": 53
+      },
+      "collision": {
+        "height": 63,
+        "startX": 71,
+        "startY": 703,
+        "width": 53
+      },
+      "type": "coin"
+    },
+    "aFZ5UP": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 640,
+        "startY": 2153,
+        "width": 191
+      },
+      "collision": {
+        "height": 21,
+        "startX": 640,
+        "startY": 2153,
+        "width": 191
+      },
+      "type": "platform"
+    },
+    "aKakCH": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 2,
+        "startY": 1705,
+        "width": 572
+      },
+      "collision": {
+        "height": 21,
+        "startX": 2,
+        "startY": 1705,
+        "width": 572
+      },
+      "type": "platform"
+    },
+    "aQqla1": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 705,
+        "startY": 1833,
+        "width": 573
+      },
+      "collision": {
+        "height": 21,
+        "startX": 705,
+        "startY": 1833,
+        "width": 573
+      },
+      "type": "platform"
+    },
+    "aZg4Z4": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 1,
+        "startY": 2793,
+        "width": 575
+      },
+      "collision": {
+        "height": 21,
+        "startX": 1,
+        "startY": 2793,
+        "width": 575
+      },
+      "type": "platform"
+    },
+    "ahxYBN": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 23,
+        "startX": 1,
+        "startY": 3304,
+        "width": 573
+      },
+      "collision": {
+        "height": 23,
+        "startX": 1,
+        "startY": 3304,
+        "width": 573
+      },
+      "type": "platform"
+    },
+    "cKBUJP": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 65,
+        "startX": 327,
+        "startY": 703,
+        "width": 53
+      },
+      "collision": {
+        "height": 65,
+        "startX": 327,
+        "startY": 703,
+        "width": 53
+      },
+      "type": "coin"
+    },
+    "cftVoc": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 64,
+        "startX": 516,
+        "startY": 704,
+        "width": 56
+      },
+      "collision": {
+        "height": 64,
+        "startX": 516,
+        "startY": 704,
+        "width": 56
+      },
+      "type": "coin"
+    },
+    "d8AnLD": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 64,
+        "startX": 897,
+        "startY": 1086,
+        "width": 61
+      },
+      "collision": {
+        "height": 64,
+        "startX": 897,
+        "startY": 1086,
+        "width": 61
+      },
+      "type": "coin"
+    },
+    "dBq6qR": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 22,
+        "startX": 641,
+        "startY": 2921,
+        "width": 597
+      },
+      "collision": {
+        "height": 22,
+        "startX": 641,
+        "startY": 2921,
+        "width": 597
+      },
+      "type": "platform"
+    },
+    "dj17gs": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 22,
+        "startX": 129,
+        "startY": 2024,
+        "width": 446
+      },
+      "collision": {
+        "height": 22,
+        "startX": 129,
+        "startY": 2024,
+        "width": 446
+      },
+      "type": "platform"
+    },
+    "i7XqBe": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 66,
+        "startX": 446,
+        "startY": 1278,
+        "width": 70
+      },
+      "collision": {
+        "height": 66,
+        "startX": 446,
+        "startY": 1278,
+        "width": 70
+      },
+      "type": "coin"
+    },
+    "iO4OZF": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 2,
+        "startY": 1064,
+        "width": 702
+      },
+      "collision": {
+        "height": 21,
+        "startX": 2,
+        "startY": 1064,
+        "width": 702
+      },
+      "type": "platform"
+    },
+    "jbGzyc": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 61,
+        "startX": 770,
+        "startY": 3328,
+        "width": 62
+      },
+      "collision": {
+        "height": 61,
+        "startX": 770,
+        "startY": 3328,
+        "width": 62
+      },
+      "type": "coin"
+    },
+    "jnacDW": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 20,
+        "startX": 834,
+        "startY": 618,
+        "width": 446
+      },
+      "collision": {
+        "height": 20,
+        "startX": 834,
+        "startY": 618,
+        "width": 446
+      },
+      "type": "platform"
+    },
+    "kdLVoR": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 38,
+        "startX": 832,
+        "startY": 1754,
+        "width": 64
+      },
+      "collision": {
+        "height": 38,
+        "startX": 832,
+        "startY": 1754,
+        "width": 64
+      },
+      "type": "platform"
+    },
+    "kkXGra": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 20,
+        "startX": 1,
+        "startY": 3113,
+        "width": 510
+      },
+      "collision": {
+        "height": 20,
+        "startX": 1,
+        "startY": 3113,
+        "width": 510
+      },
+      "type": "platform"
+    },
+    "lU1dNT": {
+      "attributes": {
+        "moving": {
+          "endX": 972,
+          "endY": 100,
+          "moveType": "linear",
+          "speed": 1,
+          "startX": 972,
+          "startY": 146,
+          "trigger": {
+            "triggerType": "loop"
+          }
+        },
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 23,
+        "startX": 972,
+        "startY": 146,
+        "width": 104
+      },
+      "collision": {
+        "height": 23,
+        "startX": 972,
+        "startY": 146,
+        "width": 104
+      },
+      "type": "platform"
+    },
+    "lVgASy": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 1,
+        "startY": 169,
+        "width": 575
+      },
+      "collision": {
+        "height": 21,
+        "startX": 1,
+        "startY": 169,
+        "width": 575
+      },
+      "type": "platform"
+    },
+    "mRCirJ": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 705,
+        "startY": 1512,
+        "width": 389
+      },
+      "collision": {
+        "height": 21,
+        "startX": 705,
+        "startY": 1512,
+        "width": 389
+      },
+      "type": "platform"
+    },
+    "nVltZA": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 20,
+        "startX": 769,
+        "startY": 4074,
+        "width": 61
+      },
+      "collision": {
+        "height": 20,
+        "startX": 769,
+        "startY": 4074,
+        "width": 61
+      },
+      "type": "platform"
+    },
+    "p39iWR": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 64,
+        "startX": 711,
+        "startY": 2048,
+        "width": 55
+      },
+      "collision": {
+        "height": 64,
+        "startX": 711,
+        "startY": 2048,
+        "width": 55
+      },
+      "type": "coin"
+    },
+    "pJXBDS": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 62,
+        "startX": 710,
+        "startY": 2432,
+        "width": 54
+      },
+      "collision": {
+        "height": 62,
+        "startX": 710,
+        "startY": 2432,
+        "width": 54
+      },
+      "type": "coin"
+    },
+    "pmnuaf": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 59,
+        "startX": 448,
+        "startY": 961,
+        "width": 60
+      },
+      "collision": {
+        "height": 59,
+        "startX": 448,
+        "startY": 961,
+        "width": 60
+      },
+      "type": "coin"
+    },
+    "q6XsOk": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 898,
+        "startY": 4073,
+        "width": 60
+      },
+      "collision": {
+        "height": 21,
+        "startX": 898,
+        "startY": 4073,
+        "width": 60
+      },
+      "type": "platform"
+    },
+    "ri5iun": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 64,
+        "startX": 390,
+        "startY": 2688,
+        "width": 56
+      },
+      "collision": {
+        "height": 64,
+        "startX": 390,
+        "startY": 2688,
+        "width": 56
+      },
+      "type": "coin"
+    },
+    "svlcmu": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 20,
+        "startX": 834,
+        "startY": 872,
+        "width": 444
+      },
+      "collision": {
+        "height": 20,
+        "startX": 834,
+        "startY": 872,
+        "width": 444
+      },
+      "type": "platform"
+    },
+    "u8mRhR": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 60,
+        "startX": 903,
+        "startY": 514,
+        "width": 55
+      },
+      "collision": {
+        "height": 60,
+        "startX": 903,
+        "startY": 514,
+        "width": 55
+      },
+      "type": "coin"
+    },
+    "uhV4Tw": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 21,
+        "startX": 641,
+        "startY": 3945,
+        "width": 638
+      },
+      "collision": {
+        "height": 21,
+        "startX": 641,
+        "startY": 3945,
+        "width": 638
+      },
+      "type": "platform"
+    },
+    "uzYeqb": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 22,
         "startX": 1024,
-        "startY": 929,
-        "width": 232
+        "startY": 4072,
+        "width": 63
       },
       "collision": {
-        "height": 25,
-        "startX": 908,
-        "startY": 1107,
-        "width": 232
+        "height": 22,
+        "startX": 1024,
+        "startY": 4072,
+        "width": 63
       },
       "type": "platform"
     },
-    "uuAsf5": {
+    "vVBqdL": {
       "attributes": {
         "value": 1
       },
       "boundary": {
-        "height": 63,
-        "startX": 481,
-        "startY": 34,
+        "height": 62,
+        "startX": 133,
+        "startY": 2688,
         "width": 55
       },
       "collision": {
-        "height": 63,
-        "startX": 453,
-        "startY": 1983,
+        "height": 62,
+        "startX": 133,
+        "startY": 2688,
         "width": 55
       },
       "type": "coin"
     },
-    "x6nWrY": {
+    "vwH6Y3": {
       "attributes": {
-        "bounceStrength": 10
+        "value": 1
       },
       "boundary": {
-        "height": 39,
-        "startX": 800,
-        "startY": 1492,
-        "width": 64
+        "height": 59,
+        "startX": 201,
+        "startY": 705,
+        "width": 47
       },
       "collision": {
-        "height": 39,
-        "startX": 768,
-        "startY": 537,
-        "width": 64
+        "height": 59,
+        "startX": 201,
+        "startY": 705,
+        "width": 47
       },
-      "type": "trampoline"
+      "type": "coin"
     },
-    "xP9Uv8": {
+    "wLez7F": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 65,
+        "startX": 1161,
+        "startY": 511,
+        "width": 49
+      },
+      "collision": {
+        "height": 65,
+        "startX": 1161,
+        "startY": 511,
+        "width": 49
+      },
+      "type": "coin"
+    },
+    "wwgRyO": {
       "attributes": {
         "value": 1
       },
       "boundary": {
         "height": 64,
-        "startX": 1186,
-        "startY": 1248,
-        "width": 61
+        "startX": 1157,
+        "startY": 3325,
+        "width": 55
       },
       "collision": {
         "height": 64,
-        "startX": 1155,
-        "startY": 768,
-        "width": 61
+        "startX": 1157,
+        "startY": 3325,
+        "width": 55
       },
       "type": "coin"
     },
-    "y1Wo6Z": {
+    "x3HMvi": {
       "attributes": {
         "oneWay": false
       },
       "boundary": {
-        "height": 32.5,
+        "height": 23,
+        "startX": 769,
+        "startY": 1193,
+        "width": 509
+      },
+      "collision": {
+        "height": 23,
+        "startX": 769,
+        "startY": 1193,
+        "width": 509
+      },
+      "type": "platform"
+    },
+    "xlLnca": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 63,
+        "startX": 454,
+        "startY": 1919,
+        "width": 56
+      },
+      "collision": {
+        "height": 63,
+        "startX": 454,
+        "startY": 1919,
+        "width": 56
+      },
+      "type": "platform"
+    },
+    "yVKNyR": {
+      "attributes": {
+        "oneWay": false
+      },
+      "boundary": {
+        "height": 22,
         "startX": 1026,
-        "startY": 560,
-        "width": 100
+        "startY": 2152,
+        "width": 252
       },
       "collision": {
-        "height": 32.5,
-        "startX": 976,
-        "startY": 1471.5,
-        "width": 100
+        "height": 22,
+        "startX": 1026,
+        "startY": 2152,
+        "width": 252
       },
       "type": "platform"
     },
-    "yP4eRK": {
+    "zHKPQJ": {
       "attributes": {
-        "oneWay": false
+        "value": 1
       },
       "boundary": {
-        "height": 24,
-        "startX": 608,
-        "startY": 396,
-        "width": 192
+        "height": 66,
+        "startX": 69,
+        "startY": 3198,
+        "width": 57
       },
       "collision": {
-        "height": 24,
-        "startX": 512,
-        "startY": 1640,
-        "width": 192
+        "height": 66,
+        "startX": 69,
+        "startY": 3198,
+        "width": 57
       },
-      "type": "platform"
-    },
-    "yfKVdV": {
-      "attributes": {
-        "oneWay": false
-      },
-      "boundary": {
-        "height": 33,
-        "startX": 1190,
-        "startY": 1197,
-        "width": 52
-      },
-      "collision": {
-        "height": 33,
-        "startX": 1164,
-        "startY": 835,
-        "width": 52
-      },
-      "type": "platform"
+      "type": "coin"
     }
   },
   "layerImages": {
@@ -791,7 +1236,7 @@
   },
   "metadata": {
     "cols": 20,
-    "rows": 32,
+    "rows": 64,
     "tileSizePx": 64
   }
 }

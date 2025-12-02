@@ -2,34 +2,37 @@
 // Copyright (c) 2025 Tingxu Chen
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Physics system module and plugin>
-use bevy::prelude::*;
 use crate::config::MyAppState;
 use crate::physics::collision::{EnemyPlayerCollisionEvent, EnemyPlatformCollisionEvent};
 
-pub mod integrate;
-pub mod gravity;
-pub mod rope_force;
 pub mod collision;
+pub mod gravity;
+pub mod integrate;
+pub mod rope_force;
 
-
+use self::gravity::gravity_system;
+use self::integrate::boundary;
 use self::integrate::clean_force_system;
 use self::integrate::integrate_force_system;
 use self::integrate::integrate_momentum_system;
 use self::integrate::integrate_velocity_system;
-use self::integrate::boundary;
-use self::gravity::gravity_system;
 use self::rope_force::clean_rope_force_system;
-use self::rope_force::rope_tension_system;
 use self::rope_force::rope_force_to_system;
+use self::rope_force::rope_tension_system;
 // use self::rope_force::debug_print_rope_mesh2d;
 // use self::rope_force::debug_print_player_world_pos;
 
+use self::collision::PlayerCollisionEvent;
+use self::collision::on_collision;
 use self::collision::platform_collider_system;
 use self::collision::player_collider_system;
 use self::collision::update_coyote_timer_system;
 use self::collision::update_wall_jump_timer_system;
-use self::collision::on_collision;
-use self::collision::PlayerCollisionEvent;
+
+#[derive(Event)]
+pub struct MaxHeightReached {
+    pub height: f32,
+}
 
 pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
@@ -39,7 +42,7 @@ impl Plugin for PhysicsPlugin {
             .add_event::<EnemyPlatformCollisionEvent>()
             .add_event::<EnemyPlayerCollisionEvent>()
             .add_systems(
-                FixedUpdate, 
+                FixedUpdate,
                 (
                     clean_force_system,
                     gravity_system,
@@ -57,8 +60,9 @@ impl Plugin for PhysicsPlugin {
                     boundary,
                     // debug_print_rope_mesh2d,
                     // debug_print_player_world_pos,
-                ).chain()
-                .run_if(in_state(MyAppState::InGame))
+                )
+                    .chain()
+                    .run_if(in_state(MyAppState::InGame)),
             );
     }
 }

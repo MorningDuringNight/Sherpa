@@ -2,8 +2,7 @@
 use bevy::prelude::*;
 use std::path::Path;
 
-
-use super::game_object_builder::{GameObject};
+use super::game_object_builder::GameObject;
 use super::mapdata::EntityKind;
 use super::util::*;
 use super::{MAP_NAME, MapFile};
@@ -30,7 +29,6 @@ pub struct MovingPlatform;
 
 #[derive(Component, Default)]
 pub struct Coin;
-
 
 #[macro_export]
 macro_rules! new_game_object {
@@ -71,24 +69,31 @@ fn game_objects(
             ..Default::default()
         };
         let transform = Transform::from_xyz(entity.boundary.start_x, entity.boundary.start_y, 0.0);
+        //         let transform = Transform::from_xyz(
+        //     entity.boundary.start_x,
+        //     (map_height as f32) - entity.boundary.start_y,
+        //     0.0,
+        // );
         let bundle = match entity.kind {
             EntityKind::Platform | EntityKind::Spikes | EntityKind::Trampoline => {
-                let collider = collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
-                if entity.attributes.moving.is_some(){
+                let collider =
+                    collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
+                if entity.attributes.moving.is_some() {
                     let eased_platform = create_eased(entity.attributes.moving.as_ref().unwrap());
                     new_game_object!(id, sprite, transform, Visibility::default())
-                    .with_collider(collider)
-                    .with_marker::<Platform>()
-                    // .with_marker::<MovingPlatform>()
-                    .with_eased(eased_platform)
-                 }else{
+                        .with_collider(collider)
+                        .with_marker::<Platform>()
+                        // .with_marker::<MovingPlatform>()
+                        .with_eased(eased_platform)
+                } else {
                     new_game_object!(id, sprite, transform, Visibility::default())
-                    .with_collider(collider)
-                    .with_marker::<Platform>()
-                 }   
+                        .with_collider(collider)
+                        .with_marker::<Platform>()
+                }
             }
             EntityKind::Coin => {
-                let collider = collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
+                let collider =
+                    collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
                 new_game_object!(id, sprite, transform, Visibility::default())
                     .with_collider(collider)
                     .with_marker::<Coin>()
@@ -145,8 +150,8 @@ pub fn load_background_layers(
 
     commands.spawn((
         Sprite::from_image(game_assets.background.clone()),
-        Transform::from_xyz(640., 360., -1.),
-        Background
+        Transform::from_xyz(640., 360., -2.),
+        Background,
     ));
 }
 
