@@ -125,6 +125,7 @@ pub fn platform_collider_system(
         &mut JumpController,
     ), With<Player>>,
     colliders: Query<(Entity, &Transform, &Collider), Without<Player>>,
+    spikes: Query<(&crate::map::SpikeDir,), With<crate::map::Spike>>,
 ) {
     let dt = time.delta_secs();
 
@@ -141,6 +142,28 @@ pub fn platform_collider_system(
                 let player_center = player_aabb.center();
                 let closest = collider_aabb.closest_point(player_center);
                 let offset = player_center - closest;
+
+                if let Ok((dir,)) = spikes.get(game_object) {
+                    let dx = offset.x;
+                    let dy = offset.y;
+                    let deadly = match dir.0 {
+                    crate::map::SpikeTip::Up => {
+                        dy < 0.0
+                            && dy.abs() > dx.abs()
+                            && velocity.0.y >= 0.0
+                    }
+                    crate::map::SpikeTip::Down => {
+                        dy > 0.0
+                            && dy.abs() > dx.abs()
+                            && velocity.0.y <= 0.0
+                    }
+                    _ => false,
+                };
+                    if deadly {
+                        // if let Some(mut go) = game_over.as_deref_mut() { go.active = true; }
+                        info!("💀 Player {:?} hit spikes {:?}", player, game_object);
+                    }
+                }
 
                 resolve_collision(
                     &mut player_pos,

@@ -60,6 +60,17 @@ pub struct EntityData {
 pub struct EntityAttrs {
     one_way: Option<bool>,
     pub moving: Option<Moving>,
+    pub tip: Option<SpikeTip>,
+}
+
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum SpikeTip {
+    #[default]
+    Up,
+    Down,
+    Left,
+    Right,
 }
 
 #[derive(Debug, Deserialize, Clone)]

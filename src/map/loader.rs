@@ -4,7 +4,7 @@ use std::path::Path;
 
 
 use super::game_object_builder::{GameObject};
-use super::mapdata::EntityKind;
+use super::mapdata::{EntityKind, SpikeTip};
 use super::util::*;
 use super::{MAP_NAME, MapFile};
 
@@ -30,6 +30,12 @@ pub struct MovingPlatform;
 
 #[derive(Component, Default)]
 pub struct Coin;
+
+#[derive(Component, Default)]
+pub struct Spike;
+
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct SpikeDir(pub SpikeTip);
 
 
 #[macro_export]
@@ -72,7 +78,7 @@ fn game_objects(
         };
         let transform = Transform::from_xyz(entity.boundary.start_x, entity.boundary.start_y, 0.0);
         let bundle = match entity.kind {
-            EntityKind::Platform | EntityKind::Spikes | EntityKind::Trampoline => {
+            EntityKind::Platform | EntityKind::Trampoline => {
                 let collider = collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
                 if entity.attributes.moving.is_some(){
                     let eased_platform = create_eased(entity.attributes.moving.as_ref().unwrap());
@@ -86,15 +92,35 @@ fn game_objects(
                     .with_collider(collider)
                     .with_marker::<Platform>()
                  }   
-            }
+            },
+            EntityKind::Spikes => {
+                let collider = collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
+
+                let dir = entity.attributes.tip.unwrap_or(SpikeTip::Down);
+
+                new_game_object!(id, sprite, transform, Visibility::default())
+                    .with_collider(collider)
+                    .with_marker::<Platform>() // spikes are also platforms for collision purposes
+                    .with_marker::<Spike>()
+                    .with_component(SpikeDir(dir))
+            },
             EntityKind::Coin => {
                 let collider = collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
                 new_game_object!(id, sprite, transform, Visibility::default())
                     .with_collider(collider)
                     .with_marker::<Coin>()
             }
+
         };
 
+            
+        // if let Some(special) = &entity.attributes.special {
+        //     if special == "spike" {
+        //         bundle = bundle.with_marker::<Spike>();
+        //         let dir = entity.attributes.tip.unwrap_or(SpikeTip::Down);
+        //         bundle = bundle.with_component(SpikeDir(dir));
+        //     }
+        // }
         // if bundle.eased_platform.is_some(){
         //     println!("{}", bundle.eased_platform.as_ref().unwrap().start);
         // }

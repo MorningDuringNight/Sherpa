@@ -8,8 +8,8 @@ use crate::config::MyAppState;
 mod platformfunction;
 
 pub use game_object_builder::Collider;
-pub use loader::Coin;
-pub use mapdata::MapFile;
+pub use loader::{Coin, Platform, Spike, SpikeDir};
+pub use mapdata::{MapFile, SpikeTip};
 
 use platformfunction::linear_move_with_easing;
 use loader::{load_background_layers, load_game_objects, load_map_data, load_render_resources};
