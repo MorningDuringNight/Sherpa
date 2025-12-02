@@ -1,22 +1,22 @@
 mod app;
 mod components;
 mod config;
+mod enemy;
 mod game_ui;
 mod map;
 mod multiplayer;
+mod observer;
 mod physics;
 mod player;
-mod util;
 mod stateMachine;
-mod observer;
-mod enemy;
-
+mod util;
 
 use std::env;
 fn main() {
     let mut player_number = None;
 
-    for arg in env::args().skip(1) { // skip binary name
+    for arg in env::args().skip(1) {
+        // skip binary name
         match arg.as_str() {
             "--p1" => {
                 player_number = Some(0);
