@@ -99,22 +99,24 @@ pub fn spawn_players(
         GameMode::LocalWithNpc(local_player_number) => {
             camera_follow_player = local_player_number;
             // insert NPC for player that isnt player_number
+            let bot = Bot::new();
+            let state_machine = StateMachine::new(BotState::idel);
             commands
-                .entity(*player_list[local_player_number])
-                .insert((wasd_controls.unwrap(), Player::Local(local_player_number)));
-
-            player_list
-                .iter()
-                .enumerate()
-                .filter(|(i, _)| *i != local_player_number)
-                .for_each(|(i, entity)| {
-                    commands.entity(**entity).insert(Player::Npc(i));
-                });
+                .entity(p1)
+                .insert((wasd_controls.unwrap(), Player::Npc(0), state_machine));
+            commands
+                .entity(p2)
+                .insert((arrow_controls.unwrap(), Player::Npc(1), bot));
         }
         GameMode::AiWithAi => {
-            player_list.iter().enumerate().for_each(|(i, entity)| {
-                commands.entity(**entity).insert(Player::Npc(i));
-            });
+            let bot = Bot::new();
+            let state_machine = StateMachine::new(BotState::idel);
+            commands
+                .entity(p1)
+                .insert((wasd_controls.unwrap(), Player::Npc(0), state_machine));
+            commands
+                .entity(p2)
+                .insert((arrow_controls.unwrap(), Player::Npc(1), bot));
         }
         GameMode::NetCoop(local_player_number) => {
             camera_follow_player = local_player_number;

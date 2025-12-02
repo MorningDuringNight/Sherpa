@@ -100,14 +100,14 @@ fn game_objects(
             EntityKind::Spike => {
                 let collider =
                     collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
-                GameObject::new(id, sprite, transform, Visibility::default())
+                new_game_object!(id, sprite, transform, Visibility::default())
                     .with_collider(collider)
                     .with_marker::<Spike>()
             }
             EntityKind::Trampoline => {
                 let collider =
                     collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
-                let mut bundle = GameObject::new(id, sprite, transform, Visibility::default())
+                let mut bundle = new_game_object!(id, sprite, transform, Visibility::default())
                     .with_collider(collider);
                 // 添加弹力强度组件
                 let bounce_strength = entity.attributes.bounce_strength.unwrap_or(1.0);

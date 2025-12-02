@@ -1,4 +1,4 @@
-use crate::app::{Background, GameAssets, GameMode};
+use crate::app::{Background, GameAssets, GameMode, ToggleBotEvent};
 use crate::config::MyAppState;
 use crate::physics::MaxHeightReached;
 use crate::player::Player;
@@ -155,6 +155,7 @@ pub fn main_menu_input(
     mut next_state: ResMut<NextState<MyAppState>>,
     mut coin_count: ResMut<TotalCoin>,
     mut height: ResMut<MaxHeight>,
+    #[cfg(feature = "client")] mut ev_toggle: EventWriter<ToggleBotEvent>,
 ) {
     let mode = if keyboard_input.just_pressed(KeyCode::Digit1) {
         info!("Pressed 1 → Starting game as net coop P1");
@@ -164,9 +165,14 @@ pub fn main_menu_input(
         Some(GameMode::NetCoop(1))
     } else if keyboard_input.just_pressed(KeyCode::Digit3) {
         info!("Pressed 3 → Starting game with npc");
+        #[cfg(feature = "client")]
+        ev_toggle.write(ToggleBotEvent);
         Some(GameMode::LocalWithNpc(0))
     } else if keyboard_input.just_pressed(KeyCode::Digit4) {
         info!("Pressed 4 → Starting game bot+bot");
+        // also send toggle event
+        #[cfg(feature = "client")]
+        ev_toggle.write(ToggleBotEvent);
         Some(GameMode::AiWithAi)
     } else if keyboard_input.just_pressed(KeyCode::KeyS) {
         info!("Pressed S → Starting game local coop");

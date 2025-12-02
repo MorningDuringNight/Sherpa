@@ -5,6 +5,7 @@
 use bevy::prelude::*;
 
 use crate::app::BotActive;
+use crate::app::GameMode;
 use crate::policy::action::RLAction;
 use crate::policy::action::RLAction2;
 use crate::policy::qtable::Action;
@@ -12,8 +13,14 @@ use crate::policy::qtable::Action;
 pub struct ControllerPlugin;
 impl Plugin for ControllerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, controller_update.run_if(|b: Res<BotActive>| b.0));
         app.add_systems(Update, controller_update2.run_if(|b: Res<BotActive>| b.0));
+
+        app.add_systems(
+            Update,
+            controller_update.run_if(|mode: Option<Res<GameMode>>, bot: Res<BotActive>| {
+                bot.0 && matches!(mode.as_deref(), Some(GameMode::AiWithAi))
+            }),
+        );
     }
 }
 

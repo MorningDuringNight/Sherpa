@@ -137,14 +137,14 @@ pub struct BotActive(pub bool);
 #[derive(Event)]
 pub struct ToggleBotEvent;
 
-fn toggle_bot_input(
-    keyboard: Res<ButtonInput<KeyCode>>,
-    mut ev_toggle: EventWriter<ToggleBotEvent>,
-) {
-    if keyboard.just_pressed(KeyCode::Space) || keyboard.just_pressed(KeyCode::KeyB) {
-        ev_toggle.send(ToggleBotEvent);
-    }
-}
+// fn toggle_bot_input(
+//     keyboard: Res<ButtonInput<KeyCode>>,
+//     mut ev_toggle: EventWriter<ToggleBotEvent>,
+// ) {
+//     if keyboard.just_pressed(KeyCode::Space) || keyboard.just_pressed(KeyCode::KeyB) {
+//         ev_toggle.write(ToggleBotEvent);
+//     }
+// }
 
 fn toggle_bot_handler(
     mut ev_toggle: EventReader<ToggleBotEvent>,
@@ -200,11 +200,8 @@ impl Plugin for BotPlugin {
                 time: Timer::new(Duration::from_secs(1), TimerMode::Repeating),
             })
             .add_event::<ToggleBotEvent>()
-            .add_systems(
-                Update,
-                (toggle_bot_input, toggle_bot_handler, bot_update)
-                    .run_if(in_state(MyAppState::InGame)),
-            );
+            .add_systems(Update, toggle_bot_handler)
+            .add_systems(Update, bot_update);
     }
 }
 
