@@ -45,8 +45,8 @@ pub fn spawn_players(
 
     #[cfg(feature = "client")]
     let (p1_img, p2_img) = (
-        Some(asset_server.load("portrait_rainey.png")),
-        Some(asset_server.load("spriteguy.png")),
+        Some(asset_server.load("fish.PNG")),
+        Some(asset_server.load("fish.PNG")),
     );
 
     let p1 = single_player(

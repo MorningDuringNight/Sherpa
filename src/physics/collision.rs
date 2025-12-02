@@ -1,5 +1,6 @@
 use crate::config::physics::{PLAYER_MOVE_FORCE, PLAYER_JUMP_FORCE, PLAYER_CONTROL_SPEED_LIMIT};
-use crate::player::PlayerCollider;
+use crate::player::{self, PlayerCollider};
+use crate::enemy::bundle::{Enemy, EnemyCollider};
 use bevy::math::bounding::{Aabb2d, AabbCast2d, BoundingVolume, RayCast2d};
 use bevy::math::{Dir2, Ray2d};
 
@@ -13,6 +14,12 @@ use crate::game_ui::ui::TotalCoin;
 pub struct PlayerCollisionEvent {
     pub player: Entity,
     pub game_object: Entity,
+}
+
+#[derive(Event, Debug)]
+pub struct EnemyCollisionEvent {
+    pub player: Entity,
+    pub enemy: Entity,
 }
 
 pub fn on_collision(
@@ -290,5 +297,41 @@ pub fn update_wall_jump_timer_system(
 ) {
     for mut jump_controller in &mut query {
         jump_controller.wall_jump_timer.tick(time.delta());
+    }
+}
+
+pub fn enemy_player_collision_system(
+    mut events: EventWriter<EnemyCollisionEvent>,
+    enemy_query: Query<(Entity, &Transform, &EnemyCollider), With<Enemy>>,
+    player_query: Query<(Entity, &Transform, &PlayerCollider), With<Player>>
+) {
+    for (enemy_entity, enemy_transform, enemy_collider) in enemy_query.iter() {
+        let enemy_pos = enemy_transform.translation.truncate();
+        let enemy_aabb = enemy_collider.aabb.translated_by(enemy_pos);
+        
+        for (player_entity, player_transform, player_collider) in player_query.iter() {
+            let player_pos = player_transform.translation.truncate();
+            let player_aabb = player_collider.aabb.translated_by(player_pos);
+        
+            if enemy_aabb.intersects(&player_aabb) {
+                events.write(EnemyCollisionEvent {
+                    player: player_entity,
+                    enemy: enemy_entity,
+                });
+            }
+        }
+    }
+}
+
+pub fn on_enemy_collision_system(
+    mut commands: Commands,
+    mut events: EventReader<EnemyCollisionEvent>,
+) {
+    for ev in events.read() {
+        println!("Player {:?} hit by enemy {:?}", ev.player, ev.enemy);
+
+        // For now just despawn the enemy
+        commands.entity(ev.enemy).despawn();
+        // Eventually transition to next state (game over)
     }
 }
