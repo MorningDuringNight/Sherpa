@@ -3,24 +3,22 @@ use bevy::prelude::*;
 pub mod enemylogic;
 pub mod bundle;
 
-use enemylogic::{spawn_enemy_system, despawn_enemy_system, update_enemy_system, EnemySpawnTimer};
+use enemylogic::{spawn_enemy_system, update_enemy_system};
 
-use crate::physics::collision::{enemy_player_collision_system, on_enemy_collision_system};
-use crate::config::MyAppState;
+use crate::physics::collision::{enemy_player_collision_system, enemy_platform_collision_system, on_enemy_player_collision_system, on_enemy_platform_collision_system};
 
 pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app
-        .init_resource::<EnemySpawnTimer>()
+        .add_systems(Startup, spawn_enemy_system)
         .add_systems(FixedUpdate, (
-            spawn_enemy_system, 
             update_enemy_system, 
-            on_enemy_collision_system,
+            on_enemy_player_collision_system,
+            on_enemy_platform_collision_system,
             enemy_player_collision_system,
-            despawn_enemy_system,
-        ).chain()
-        .run_if(in_state(MyAppState::InGame)));
+            enemy_platform_collision_system,
+        ).chain());
     }
 }

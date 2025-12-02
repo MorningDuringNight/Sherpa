@@ -3,8 +3,7 @@
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Physics system module and plugin>
 use crate::config::MyAppState;
-use crate::physics::collision::EnemyCollisionEvent;
-use bevy::prelude::*;
+use crate::physics::collision::{EnemyPlayerCollisionEvent, EnemyPlatformCollisionEvent};
 
 pub mod collision;
 pub mod gravity;
@@ -38,9 +37,10 @@ pub struct MaxHeightReached {
 pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<PlayerCollisionEvent>()
-            .add_event::<EnemyCollisionEvent>()
-            .add_event::<MaxHeightReached>()
+        app
+            .add_event::<PlayerCollisionEvent>()
+            .add_event::<EnemyPlatformCollisionEvent>()
+            .add_event::<EnemyPlayerCollisionEvent>()
             .add_systems(
                 FixedUpdate,
                 (

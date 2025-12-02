@@ -46,6 +46,7 @@ pub struct JumpController {
     pub jump_multiplier: f32,
     pub can_wall_jump: bool,
     pub wall_jump_timer: Timer,
+    pub ability_available: bool, 
 }
 
 impl Default for JumpController {
@@ -57,6 +58,7 @@ impl Default for JumpController {
             jump_multiplier: 0.30,
             can_wall_jump: true,
             wall_jump_timer: Timer::from_seconds(0.2, TimerMode::Once),
+            ability_available: true,
         }
     }
 }

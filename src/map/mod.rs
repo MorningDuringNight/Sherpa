@@ -9,6 +9,7 @@ mod platformfunction;
 
 pub use game_object_builder::Collider;
 pub use loader::Coin;
+pub use loader::Platform;
 pub use mapdata::MapFile;
 
 use platformfunction::linear_move_with_easing;

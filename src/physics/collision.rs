@@ -1,6 +1,6 @@
-use crate::config::physics::{PLAYER_CONTROL_SPEED_LIMIT, PLAYER_JUMP_FORCE, PLAYER_MOVE_FORCE};
-use crate::enemy::bundle::{Enemy, EnemyCollider};
+use crate::config::physics::{PLAYER_MOVE_FORCE, PLAYER_JUMP_FORCE, PLAYER_CONTROL_SPEED_LIMIT};
 use crate::player::{self, PlayerCollider};
+use crate::enemy::bundle::{Enemy, EnemyCollider, EnemyMovement};
 use bevy::math::bounding::{Aabb2d, AabbCast2d, BoundingVolume, RayCast2d};
 use bevy::math::{Dir2, Ray2d};
 
@@ -19,10 +19,17 @@ pub struct PlayerCollisionEvent {
 }
 
 #[derive(Event, Debug)]
-pub struct EnemyCollisionEvent {
+pub struct EnemyPlayerCollisionEvent {
     pub player: Entity,
     pub enemy: Entity,
 }
+
+#[derive(Event, Debug)]
+pub struct EnemyPlatformCollisionEvent {
+    pub enemy: Entity,
+    pub platform: Entity,
+}
+
 
 pub fn on_collision(
     mut commands: Commands,
@@ -345,7 +352,7 @@ pub fn update_wall_jump_timer_system(
 }
 
 pub fn enemy_player_collision_system(
-    mut events: EventWriter<EnemyCollisionEvent>,
+    mut events: EventWriter<EnemyPlayerCollisionEvent>,
     enemy_query: Query<(Entity, &Transform, &EnemyCollider), With<Enemy>>,
     player_query: Query<(Entity, &Transform, &PlayerCollider), With<Player>>,
 ) {
@@ -358,7 +365,7 @@ pub fn enemy_player_collision_system(
             let player_aabb = player_collider.aabb.translated_by(player_pos);
 
             if enemy_aabb.intersects(&player_aabb) {
-                events.write(EnemyCollisionEvent {
+                events.write(EnemyPlayerCollisionEvent {
                     player: player_entity,
                     enemy: enemy_entity,
                 });
@@ -367,15 +374,53 @@ pub fn enemy_player_collision_system(
     }
 }
 
-pub fn on_enemy_collision_system(
+pub fn enemy_platform_collision_system(
+    mut events: EventWriter<EnemyPlatformCollisionEvent>,
+    enemy_query: Query<(Entity, &Transform, &EnemyCollider), With<Enemy>>,
+    platform_query: Query<(Entity, &Transform, &Collider), Without<Player>>,
+) {
+    for (enemy_entity, enemy_transform, enemy_collider) in enemy_query.iter() {
+        let enemy_pos = enemy_transform.translation.truncate();
+        let enemy_aabb = enemy_collider.aabb.translated_by(enemy_pos);
+        
+        for (platform_entity, platform_transform, platform_collider) in platform_query.iter() {
+            let platform_pos = platform_transform.translation.truncate();
+            let platform_aabb = platform_collider.aabb.translated_by(platform_pos);
+        
+            if enemy_aabb.intersects(&platform_aabb) {
+                events.write(EnemyPlatformCollisionEvent {
+                    enemy: enemy_entity,
+                    platform: platform_entity,
+                });
+            }
+        }
+    }
+}
+
+pub fn on_enemy_player_collision_system(
     mut commands: Commands,
-    mut events: EventReader<EnemyCollisionEvent>,
+    mut events: EventReader<EnemyPlayerCollisionEvent>,
 ) {
     for ev in events.read() {
         println!("Player {:?} hit by enemy {:?}", ev.player, ev.enemy);
-
-        // For now just despawn the enemy
-        commands.entity(ev.enemy).despawn();
         // Eventually transition to next state (game over)
+    }
+}
+
+pub fn on_enemy_platform_collision_system(
+    mut events: EventReader<EnemyPlatformCollisionEvent>,
+    mut enemy_query: Query<(&mut EnemyMovement, &mut Transform)>,
+) {
+    for ev in events.read() {
+        if let Ok((mut enemy_movement, mut transform)) = enemy_query.get_mut(ev.enemy) {   
+            enemy_movement.down = !enemy_movement.down;
+
+            if enemy_movement.down {
+                transform.translation.y -= 5.0;
+            }
+            else {
+                transform.translation.y += 5.0;
+            }
+        }
     }
 }
