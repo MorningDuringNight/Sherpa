@@ -17,7 +17,14 @@ impl Plugin for ControllerPlugin {
     }
 }
 
-fn controller_update(mut events: EventReader<RLAction>, mut keys: ResMut<ButtonInput<KeyCode>>) {
+fn controller_update(
+    mut events: EventReader<RLAction>,
+    mut keys: ResMut<ButtonInput<KeyCode>>,
+    bot_active: Res<BotActive>,
+) {
+    if !bot_active.0 {
+        return;
+    }
     for event in events.read() {
         let action = event.action;
         // info!("Action {}", action.index());
@@ -48,7 +55,14 @@ fn controller_update(mut events: EventReader<RLAction>, mut keys: ResMut<ButtonI
     }
 }
 
-fn controller_update2(mut events: EventReader<RLAction2>, mut keys: ResMut<ButtonInput<KeyCode>>) {
+fn controller_update2(
+    mut events: EventReader<RLAction2>,
+    mut keys: ResMut<ButtonInput<KeyCode>>,
+    bot_active: Res<BotActive>,
+) {
+    if !bot_active.0 {
+        return;
+    }
     for event in events.read() {
         let action = event.action;
         // info!("Action {}", action.index());

@@ -82,7 +82,7 @@ pub fn ground() -> GameObject {
     #[cfg(feature = "client")]
     let sprite = Sprite {
         color: Color::srgb(0.3, 0.8, 0.3), // Optional debug color
-        custom_size: Some(Vec2::new(1280.0, 5.0)),
+        custom_size: Some(Vec2::new(1280.0, -10.0)),
         ..Default::default()
     };
 

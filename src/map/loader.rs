@@ -21,6 +21,12 @@ pub struct MapTextureHandles {
     pub entity: Handle<Image>,
 }
 
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct TrampolineBounce(pub f32);
+
+#[derive(Component, Default)]
+pub struct Spike;
+
 #[derive(Component, Default)]
 pub struct Platform;
 
@@ -75,7 +81,7 @@ fn game_objects(
         //     0.0,
         // );
         let bundle = match entity.kind {
-            EntityKind::Platform | EntityKind::Spikes | EntityKind::Trampoline => {
+            EntityKind::Platform => {
                 let collider =
                     collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
                 if entity.attributes.moving.is_some() {
@@ -90,6 +96,23 @@ fn game_objects(
                         .with_collider(collider)
                         .with_marker::<Platform>()
                 }
+            }
+            EntityKind::Spike => {
+                let collider =
+                    collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
+                GameObject::new(id, sprite, transform, Visibility::default())
+                    .with_collider(collider)
+                    .with_marker::<Spike>()
+            }
+            EntityKind::Trampoline => {
+                let collider =
+                    collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
+                let mut bundle = GameObject::new(id, sprite, transform, Visibility::default())
+                    .with_collider(collider);
+                // 添加弹力强度组件
+                let bounce_strength = entity.attributes.bounce_strength.unwrap_or(1.0);
+                bundle = bundle.with_component(TrampolineBounce(bounce_strength));
+                bundle
             }
             EntityKind::Coin => {
                 let collider =

@@ -180,11 +180,11 @@ pub fn qlearning_update(
         // info!("P {}", *step);
         if *step % 200 == 0 {
             info!("Update {}", *step);
-            // if let Err(e) = q.save_to_csv(path) {
-            //     eprintln!("Failed to save qtable: {e}");
-            // } else {
-            //     println!("QTable saved at step {}", *step);
-            // }
+            if let Err(e) = q.save_to_csv(path) {
+                eprintln!("Failed to save qtable: {e}");
+            } else {
+                println!("QTable saved at step {}", *step);
+            }
         }
     }
 }

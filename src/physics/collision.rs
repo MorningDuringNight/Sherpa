@@ -1,5 +1,6 @@
 use crate::config::physics::{PLAYER_CONTROL_SPEED_LIMIT, PLAYER_JUMP_FORCE, PLAYER_MOVE_FORCE};
 use crate::enemy::bundle::{Enemy, EnemyCollider};
+use crate::physics::MaxHeightReached;
 use crate::player::{self, PlayerCollider};
 use bevy::math::bounding::{Aabb2d, AabbCast2d, BoundingVolume, RayCast2d};
 use bevy::math::{Dir2, Ray2d};
@@ -40,7 +41,7 @@ pub fn on_collision(
     }
 }
 
-use crate::components::motion::{GroundState, JumpController, Momentum, Velocity};
+use crate::components::motion::{GroundState, JumpController, Mass, Momentum, Velocity};
 use crate::map::Collider;
 
 const PLATFORM_FRICTION: f32 = 0.88;
@@ -121,11 +122,15 @@ pub fn platform_collider_system(
             &mut Momentum,
             &PlayerCollider,
             &mut GroundState,
+            &Mass,
             &mut JumpController,
         ),
         With<Player>,
     >,
     colliders: Query<(Entity, &Transform, &Collider), Without<Player>>,
+    spikes: Query<(), With<crate::map::Spike>>,
+    trampolines: Query<(&crate::map::TrampolineBounce,), With<crate::map::TrampolineBounce>>,
+    mut game_over: EventWriter<MaxHeightReached>,
 ) {
     let dt = time.delta_secs();
 
@@ -136,6 +141,7 @@ pub fn platform_collider_system(
         mut momentum,
         player_collider,
         mut ground,
+        mass,
         mut jump_controller,
     ) in players.iter_mut()
     {
@@ -170,6 +176,18 @@ pub fn platform_collider_system(
                 let closest = collider_aabb.closest_point(player_center);
                 let offset = player_center - closest;
 
+                // 钉子：任何竖直方向碰撞都会游戏结束
+                if spikes.get(game_object).is_ok() {
+                    // println!("Player collided with spike! offset.y: {}, velocity.y: {}", offset.y, velocity.0.y);
+                    // println!("Spike deadly conditions met! Game over triggered.");
+                    game_over.write(super::MaxHeightReached {
+                        height: transform.translation.y,
+                    });
+                }
+
+                // 保存碰撞前的速度，用于蹦床弹力计算
+                let velocity_before_collision = velocity.0;
+
                 resolve_collision(
                     &mut player_pos,
                     &mut velocity.0,
@@ -178,6 +196,19 @@ pub fn platform_collider_system(
                     &mut jump_controller,
                     offset,
                 );
+
+                // 蹦床：玩家从上方落下时给予向上弹力（在碰撞解决后应用）
+                if let Ok((bounce_strength,)) = trampolines.get(game_object) {
+                    // println!("Player collided with trampoline! offset.y: {}, velocity_before: {}, bounce_strength: {}", offset.y, velocity_before_collision.y, bounce_strength.0);
+                    if offset.y > 0.0 && velocity_before_collision.y <= 0.0 {
+                        // println!("Trampoline conditions met! Applying bounce with strength {}.", bounce_strength.0);
+                        velocity.0.y = -velocity_before_collision.y + bounce_strength.0; // 使用碰撞前的速度
+                        momentum.0.y = velocity.0.y * mass.0; // 使用玩家的实际质量重新计算动量
+                    // println!("Applied bounce: velocity.y = {}, momentum.y = {}, mass = {}", velocity.0.y, momentum.0.y, mass.0);
+                    } else {
+                        // println!("Trampoline conditions NOT met.");
+                    }
+                }
 
                 events.write(PlayerCollisionEvent {
                     player,

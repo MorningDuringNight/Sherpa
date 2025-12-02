@@ -128,16 +128,29 @@ pub fn update_camera(
         .smooth_nudge(&bgTarget, CAMERA_DECAY_RATE, time.delta_secs());
 }
 // going to implement the replacement for the controls
-#[derive(Event)]
-struct ToggleBotEvent;
 
 #[derive(Resource)]
 pub struct BotActive(pub bool);
 
-fn bot_update_toggle(mut bot_active: ResMut<BotActive>, keyboard: Res<ButtonInput<KeyCode>>) {
-    //toggle logic
-    if keyboard.just_pressed(KeyCode::Space) {
+#[derive(Event)]
+pub struct ToggleBotEvent;
+
+fn toggle_bot_input(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut ev_toggle: EventWriter<ToggleBotEvent>,
+) {
+    if keyboard.just_pressed(KeyCode::Space) || keyboard.just_pressed(KeyCode::KeyB) {
+        ev_toggle.send(ToggleBotEvent);
+    }
+}
+
+fn toggle_bot_handler(
+    mut ev_toggle: EventReader<ToggleBotEvent>,
+    mut bot_active: ResMut<BotActive>,
+) {
+    for _ in ev_toggle.read() {
         bot_active.0 = !bot_active.0;
+        info!("Bot active: {}", bot_active.0);
     }
 }
 
@@ -149,33 +162,35 @@ fn bot_update(
     time: Res<Time>,
     obs: ResMut<ObservationState>,
 ) {
-    if botActive.0 == false {
+    if !botActive.0 {
         return;
-    } else {
-        for (entity, transform, mut Bot) in players.iter_mut() {
-            //put repeating timer
-            //if timer has not started: start timer and run function
-            //if not start return
-            //if started just finished then runfunction
-            //
-            botTimer.as_deref_mut().tick(time.delta());
-            if botTimer.time.finished() {
-                Bot.change(&time, transform, &mut keys, &obs);
-            } else {
-                return;
-            }
+    }
 
-            //players.current_state = newState;
-        }
+    botTimer.time.tick(time.delta());
+
+    if !botTimer.time.finished() {
+        return;
+    }
+
+    for (entity, transform, mut bot) in players.iter_mut() {
+        bot.change(&time, transform, &mut keys, &obs);
     }
 }
 
-fn trigger_bot_input(
-    mut toggle_events: EventWriter<ToggleBotEvent>,
-    keyboard: Res<ButtonInput<KeyCode>>,
-) {
-    if keyboard.just_pressed(KeyCode::KeyB) {
-        toggle_events.write(ToggleBotEvent);
+pub struct BotPlugin;
+
+impl Plugin for BotPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(BotActive(false))
+            .insert_resource(botTimer {
+                time: Timer::new(Duration::from_secs(1), TimerMode::Repeating),
+            })
+            .add_event::<ToggleBotEvent>()
+            .add_systems(
+                Update,
+                (toggle_bot_input, toggle_bot_handler, bot_update)
+                    .run_if(in_state(MyAppState::InGame)),
+            );
     }
 }
 
@@ -204,12 +219,9 @@ pub fn run(player_number: Option<usize>) {
 
     #[cfg(feature = "client")]
     {
+        app.init_resource::<ObservationState>();
         app.add_plugins(DefaultPlugins);
-        // app.add_systems(
-        //     Update,
-        //     (bot_update, bot_update_toggle, trigger_bot_input).run_if(in_state(MyAppState::InGame)),
-        // );
-
+        app.add_plugins(BotPlugin);
         // sets the gamemode via command line flags
         // if let Some(player_number) = player_number {
         //     app.insert_resource(GameMode::NetCoop(player_number));
@@ -275,10 +287,6 @@ pub fn run(player_number: Option<usize>) {
         .insert_resource(PlayerSpawnVelocity {
             velocity: PLAYER_INITIAL_VELOCITY,
         })
-        .insert_resource(botTimer {
-            time: Timer::new(Duration::from_secs(1), TimerMode::Repeating),
-        })
-        .insert_resource(BotActive(false))
         .insert_resource(RopeGeometry::default());
 
     app.insert_resource(Time::<Fixed>::from_hz(60.0))
@@ -296,7 +304,6 @@ pub fn run(player_number: Option<usize>) {
         .add_plugins(EnemyPlugin)
         .add_systems(Update, update_camera.run_if(in_state(MyAppState::InGame)))
         .insert_resource(RopeGeometry::default())
-        .add_event::<ToggleBotEvent>()
         .add_plugins(InGameSystems);
 
     app.run();

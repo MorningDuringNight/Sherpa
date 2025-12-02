@@ -732,6 +732,22 @@
       },
       "type": "platform"
     },
+    "ghZqfH": {
+      "attributes": {},
+      "boundary": {
+        "height": 33,
+        "startX": 399,
+        "startY": 4061,
+        "width": 177
+      },
+      "collision": {
+        "height": 33,
+        "startX": 399,
+        "startY": 4061,
+        "width": 177
+      },
+      "type": "spike"
+    },
     "i7XqBe": {
       "attributes": {
         "value": 1
