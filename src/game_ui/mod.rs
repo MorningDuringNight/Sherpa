@@ -1,8 +1,10 @@
 use bevy::prelude::*;
 use crate::config::MyAppState;
 pub mod ui;
+pub mod leaderboard;
 
 use ui::*;
+use leaderboard::*;
 
 pub struct UIPlugin;
 
@@ -28,7 +30,11 @@ impl Plugin for UIPlugin{
             .add_systems(OnExit(MyAppState::EndCredit), despawn_ui)
 
             .add_systems(Update, game_death
-                .run_if(in_state(MyAppState::InGame)));
+                .run_if(in_state(MyAppState::InGame)))
+
+            .add_systems(OnEnter(MyAppState::EndCredit), update_leaderboard)
+            .add_systems(OnEnter(MyAppState::EndCredit), load_ui_leaderboard)
+            .add_systems(OnEnter(MyAppState::EndCredit), update_end.after(load_ui_leaderboard));
     }
 }
 
