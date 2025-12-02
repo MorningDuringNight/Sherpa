@@ -23,20 +23,10 @@ impl Plugin for PolicyPlugin {
     fn build(&self, app: &mut App) {
         // let q1 = PathWay{path: "assets/qtable.csv"};
         // let q2 = PathWay{path: "assets/qtable.csv"};
-
-        app.add_event::<RLAction>()
-            .add_event::<RLAction2>()
-            .add_systems(Startup, qtable_load_system)
+        app.add_systems(Startup, qtable_load_system)
             //    .add_systems(Update, qlearning_update)
-            .add_systems(
-                Update,
-                make_qlearning_system(QTABLE_PATH.to_string(), true)
-                    .run_if(|b: Res<BotActive>| b.0),
-            )
-            .add_systems(
-                Update,
-                make_qlearning_system(QTABLE_P2.to_string(), false).run_if(|b: Res<BotActive>| b.0),
-            );
+            .add_systems(Update, make_qlearning_system(QTABLE_PATH.to_string(), true))
+            .add_systems(Update, make_qlearning_system(QTABLE_P2.to_string(), false));
     }
 }
 

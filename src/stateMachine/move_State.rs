@@ -1,4 +1,5 @@
 use super::state::*;
+use crate::app::BotActive;
 use crate::observer::state::ObservationState;
 use bevy::prelude::*;
 use calamine::*;
@@ -168,6 +169,11 @@ pub fn decide_next_patrol(
     keys.release(KeyCode::ArrowRight);
     keys.release(KeyCode::ArrowUp);
     keys.release(KeyCode::ArrowDown);
+
+    keys.release(KeyCode::KeyW);
+    keys.release(KeyCode::KeyA);
+    keys.release(KeyCode::KeyS);
+    keys.release(KeyCode::KeyD);
 
     let mut rng = rand::rng();
 

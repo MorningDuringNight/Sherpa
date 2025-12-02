@@ -12,7 +12,9 @@ pub struct ObserverPlugin;
 
 impl Plugin for ObserverPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<Observation>()
-            .add_systems(Update, update_observation_system);
+        app.add_systems(
+            Update,
+            update_observation_system.run_if(|b: Res<BotActive>| b.0),
+        );
     }
 }

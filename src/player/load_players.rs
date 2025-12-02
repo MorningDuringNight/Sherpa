@@ -185,7 +185,7 @@ pub fn reset_player(
     let mut count = 0.;
     for mut player in players {
         player.translation.x = spawn_point.position.x + (count * 300.0);
-        player.translation.y = 4.0;
+        player.translation.y = 0.0;
         count += 1.;
     }
 }

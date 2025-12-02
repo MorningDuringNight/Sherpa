@@ -6,9 +6,11 @@
 use crate::config::*;
 use crate::controller::ControllerPlugin;
 use crate::observer::state::{self, ObservationState};
+use crate::observer::system::Observation;
 use crate::physics::PhysicsPlugin;
 use crate::player::{Player, PlayerPlugin};
 use crate::policy::PolicyPlugin;
+use crate::policy::action::{RLAction, RLAction2};
 use crate::stateMachine::Bot;
 use bevy::asset::AssetPlugin;
 use bevy::prelude::*;
@@ -147,9 +149,19 @@ fn toggle_bot_input(
 fn toggle_bot_handler(
     mut ev_toggle: EventReader<ToggleBotEvent>,
     mut bot_active: ResMut<BotActive>,
+    mut keys: ResMut<ButtonInput<KeyCode>>,
 ) {
     for _ in ev_toggle.read() {
         bot_active.0 = !bot_active.0;
+
+        keys.release(KeyCode::KeyW);
+        keys.release(KeyCode::KeyA);
+        keys.release(KeyCode::KeyS);
+        keys.release(KeyCode::KeyD);
+        keys.release(KeyCode::ArrowLeft);
+        keys.release(KeyCode::ArrowRight);
+        keys.release(KeyCode::ArrowUp);
+        keys.release(KeyCode::ArrowDown);
         info!("Bot active: {}", bot_active.0);
     }
 }
@@ -173,6 +185,8 @@ fn bot_update(
     }
 
     for (entity, transform, mut bot) in players.iter_mut() {
+        // copy the bool out and pass it
+        let active = botActive.0;
         bot.change(&time, transform, &mut keys, &obs);
     }
 }
@@ -219,9 +233,18 @@ pub fn run(player_number: Option<usize>) {
 
     #[cfg(feature = "client")]
     {
-        app.init_resource::<ObservationState>();
         app.add_plugins(DefaultPlugins);
+
         app.add_plugins(BotPlugin);
+        app.add_plugins(ObserverPlugin);
+        app.add_plugins(PolicyPlugin);
+        app.add_plugins(ControllerPlugin);
+        app.init_resource::<ObservationState>();
+        app.add_event::<Observation>();
+
+        app.add_event::<RLAction>();
+        app.add_event::<RLAction2>();
+
         // sets the gamemode via command line flags
         // if let Some(player_number) = player_number {
         //     app.insert_resource(GameMode::NetCoop(player_number));

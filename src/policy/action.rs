@@ -119,10 +119,10 @@ pub fn qlearning_update(
                 q.set(s_pre[0], s_pre[1], s_pre[2], s_pre[3], *a_pre, new_q);
                 updated = true;
                 // if commit.frames_left == 0 {
-                info!(
-                    "Reward: {}, {}, {}, {}, {}",
-                    obs.coin, obs.height, obs.level, obs.is_wall, reward
-                );
+                // info!(
+                //     "Reward: {}, {}, {}, {}, {}",
+                //     obs.coin, obs.height, obs.level, obs.is_wall, reward
+                // );
                 // }
             }
         }
@@ -178,14 +178,14 @@ pub fn qlearning_update(
     if updated {
         *step += 1;
         // info!("P {}", *step);
-        if *step % 200 == 0 {
-            info!("Update {}", *step);
-            if let Err(e) = q.save_to_csv(path) {
-                eprintln!("Failed to save qtable: {e}");
-            } else {
-                println!("QTable saved at step {}", *step);
-            }
-        }
+        // if *step % 200 == 0 {
+        //     info!("Update {}", *step);
+        //     if let Err(e) = q.save_to_csv(path) {
+        //         eprintln!("Failed to save qtable: {e}");
+        //     } else {
+        //         println!("QTable saved at step {}", *step);
+        //     }
+        // }
     }
 }
 
