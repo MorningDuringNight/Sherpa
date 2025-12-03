@@ -46,6 +46,7 @@ fn dummy<T: bevy::asset::Asset>() -> Handle<T> {
 }
 
 // change usize to all: single player, single machine config data.
+// change usize to all: single player, single machine config data.
 #[derive(Resource)]
 pub enum GameMode {
     LocalCoop,           // on one computer
@@ -133,18 +134,8 @@ pub fn update_camera(
 
 #[derive(Resource)]
 pub struct BotActive(pub bool);
-
 #[derive(Event)]
 pub struct ToggleBotEvent;
-
-// fn toggle_bot_input(
-//     keyboard: Res<ButtonInput<KeyCode>>,
-//     mut ev_toggle: EventWriter<ToggleBotEvent>,
-// ) {
-//     if keyboard.just_pressed(KeyCode::Space) || keyboard.just_pressed(KeyCode::KeyB) {
-//         ev_toggle.write(ToggleBotEvent);
-//     }
-// }
 
 fn toggle_bot_handler(
     mut ev_toggle: EventReader<ToggleBotEvent>,

@@ -6,7 +6,8 @@ pub mod player_control;
 use crate::config::MyAppState;
 
 use self::player_control::{
-    PlayerInputEvent, player_input_collection_system, player_movement_input_system,
+    PlayerInputEvent, despawn_platform_system, platform_spawn_system,
+    player_input_collection_system, player_movement_input_system,
 };
 
 use crate::player::load_players::reset_player;
@@ -30,6 +31,10 @@ impl Plugin for PlayerPlugin {
         }
 
         app.add_systems(FixedUpdate, (player_movement_input_system).chain());
+        app.add_systems(
+            Update,
+            (platform_spawn_system, despawn_platform_system).run_if(in_state(MyAppState::InGame)),
+        );
         app.add_systems(OnEnter(MyAppState::InGame), reset_player);
 
         #[cfg(feature = "client")]

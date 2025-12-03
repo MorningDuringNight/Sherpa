@@ -1,10 +1,11 @@
+use bevy::prelude::*;
+
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Tingxu Chen
 // Author: Tingxu Chen <tic128@pitt.edu>
 // Description: <Physics system module and plugin>
 use crate::config::MyAppState;
-use crate::physics::collision::EnemyCollisionEvent;
-use bevy::prelude::*;
+use crate::physics::collision::{EnemyPlatformCollisionEvent, EnemyPlayerCollisionEvent};
 
 pub mod collision;
 pub mod gravity;
@@ -39,7 +40,8 @@ pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayerCollisionEvent>()
-            .add_event::<EnemyCollisionEvent>()
+            .add_event::<EnemyPlatformCollisionEvent>()
+            .add_event::<EnemyPlayerCollisionEvent>()
             .add_event::<MaxHeightReached>()
             .add_systems(
                 FixedUpdate,

@@ -482,7 +482,7 @@
     },
     "XBFuX0": {
       "attributes": {
-        "bounceStrength": 10
+        "value": 1
       },
       "boundary": {
         "height": 39,
@@ -496,7 +496,7 @@
         "startY": 3606,
         "width": 62
       },
-      "type": "trampoline"
+      "type": "coin"
     },
     "XdWwR7": {
       "attributes": {
