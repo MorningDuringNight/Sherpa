@@ -74,18 +74,17 @@ fn game_objects(
             }),
             ..Default::default()
         };
-        let transform = Transform::from_xyz(entity.boundary.start_x, entity.boundary.start_y, 0.0);
-        //         let transform = Transform::from_xyz(
-        //     entity.boundary.start_x,
-        //     (map_height as f32) - entity.boundary.start_y,
-        //     0.0,
-        // );
+        let transform = Transform::from_xyz(
+            entity.boundary.start_x,
+            entity.boundary.start_y,
+            0.0,
+        );
         let bundle = match entity.kind {
             EntityKind::Platform => {
                 let collider =
                     collider_from_boundary(entity.collision.as_ref(), &entity.boundary, map_height);
                 if entity.attributes.moving.is_some() {
-                    let eased_platform = create_eased(entity.attributes.moving.as_ref().unwrap());
+                    let eased_platform = create_eased(entity.attributes.moving.as_ref().unwrap(), map_height);
                     new_game_object!(id, sprite, transform, Visibility::default())
                         .with_collider(collider)
                         .with_marker::<Platform>()

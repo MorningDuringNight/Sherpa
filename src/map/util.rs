@@ -45,10 +45,13 @@ pub fn collider_from_boundary(
         })
 }
 
-pub fn create_eased(moving: &Moving) -> EasedPlatform {
+pub fn create_eased(moving: &Moving, map_height: u32) -> EasedPlatform {
+
+    let start_y = map_height as f32 - moving.start_y as f32;
+    let end_y   = map_height as f32 - moving.end_y as f32;
     EasedPlatform {
-        start: Vec2::new(moving.start_x as f32, moving.start_y as f32),
-        end: Vec2::new(moving.end_x as f32, moving.end_y as f32),
+        start: Vec2::new(moving.start_x as f32, start_y),
+        end: Vec2::new(moving.end_x as f32, end_y),
         t: 0.0,
         speed: moving.speed as f32,
         forward: true,
@@ -125,16 +128,18 @@ fn build_layout(
 ) -> (TextureAtlasLayout, HashMap<String, usize>) {
     let mut layout = TextureAtlasLayout::new_empty(texture_size);
 
+    println!("{:#?}", texture_size);
     let atlas_indices = map_data
         .entities
         .iter()
         .map(|(entity_id, entity)| {
             let b = &entity.boundary;
+            
             let rect = URect::new(
-                b.start_x as u32,
-                b.start_y as u32,
-                (b.start_x + b.width) as u32,
-                (b.start_y + b.height) as u32,
+                (b.start_x - b.width / 2.0) as u32,
+                (texture_size.y as f32 - (b.start_y + b.height / 2.0)) as u32,
+                (b.start_x + b.width / 2.0) as u32,
+                (texture_size.y as f32 - (b.start_y - b.height / 2.0)) as u32,
             );
             let index = layout.add_texture(rect);
             (entity_id.clone(), index)
