@@ -55,6 +55,24 @@
       },
       "type": "platform"
     },
+    "2XQ7vS": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 61,
+        "startX": 932,
+        "startY": 97,
+        "width": 49
+      },
+      "collision": {
+        "height": 61,
+        "startX": 907,
+        "startY": 3968,
+        "width": 49
+      },
+      "type": "coin"
+    },
     "3BySIy": {
       "attributes": {
         "value": 1
@@ -181,6 +199,24 @@
       },
       "type": "coin"
     },
+    "DHo7EH": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 61,
+        "startX": 866,
+        "startY": 97,
+        "width": 49
+      },
+      "collision": {
+        "height": 61,
+        "startX": 841,
+        "startY": 3969,
+        "width": 49
+      },
+      "type": "coin"
+    },
     "DZRsxM": {
       "attributes": {
         "oneWay": false
@@ -198,6 +234,24 @@
         "width": 639
       },
       "type": "platform"
+    },
+    "DyIGzt": {
+      "attributes": {
+        "bounceStrength": 10
+      },
+      "boundary": {
+        "height": 35,
+        "startX": 544,
+        "startY": 2516,
+        "width": 57
+      },
+      "collision": {
+        "height": 35,
+        "startX": 515,
+        "startY": 1563,
+        "width": 57
+      },
+      "type": "trampoline"
     },
     "HZOvIq": {
       "attributes": {
@@ -271,6 +325,24 @@
       },
       "type": "platform"
     },
+    "IhjMzi": {
+      "attributes": {
+        "bounceStrength": 10
+      },
+      "boundary": {
+        "height": 36,
+        "startX": 480,
+        "startY": 2516,
+        "width": 64
+      },
+      "collision": {
+        "height": 36,
+        "startX": 448,
+        "startY": 1562,
+        "width": 64
+      },
+      "type": "trampoline"
+    },
     "IjwdH4": {
       "attributes": {
         "oneWay": false
@@ -288,6 +360,24 @@
         "width": 512
       },
       "type": "platform"
+    },
+    "ItZ1xm": {
+      "attributes": {
+        "value": 100
+      },
+      "boundary": {
+        "height": 62,
+        "startX": 1251,
+        "startY": 97,
+        "width": 51
+      },
+      "collision": {
+        "height": 62,
+        "startX": 1225,
+        "startY": 3968,
+        "width": 51
+      },
+      "type": "coin"
     },
     "IxWJrw": {
       "attributes": {
@@ -426,6 +516,24 @@
       },
       "type": "platform"
     },
+    "Nnu59X": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 63,
+        "startX": 995,
+        "startY": 96,
+        "width": 50
+      },
+      "collision": {
+        "height": 63,
+        "startX": 970,
+        "startY": 3969,
+        "width": 50
+      },
+      "type": "coin"
+    },
     "RBXjp3": {
       "attributes": {
         "oneWay": false
@@ -480,9 +588,61 @@
       },
       "type": "platform"
     },
-    "XBFuX0": {
+    "WBK9VF": {
+      "attributes": {},
+      "boundary": {
+        "height": 26,
+        "startX": 679,
+        "startY": 17,
+        "width": 170
+      },
+      "collision": {
+        "height": 26,
+        "startX": 594,
+        "startY": 4066,
+        "width": 170
+      },
+      "type": "spike"
+    },
+    "WbMoad": {
       "attributes": {
         "value": 1
+      },
+      "boundary": {
+        "height": 62,
+        "startX": 1123,
+        "startY": 97,
+        "width": 51
+      },
+      "collision": {
+        "height": 62,
+        "startX": 1097,
+        "startY": 3968,
+        "width": 51
+      },
+      "type": "coin"
+    },
+    "X35GXg": {
+      "attributes": {
+        "value": 1
+      },
+      "boundary": {
+        "height": 61,
+        "startX": 1058,
+        "startY": 97,
+        "width": 49
+      },
+      "collision": {
+        "height": 61,
+        "startX": 1033,
+        "startY": 3969,
+        "width": 49
+      },
+      "type": "coin"
+    },
+    "XBFuX0": {
+      "attributes": {
+        "bounceStrength": 10
       },
       "boundary": {
         "height": 39,
@@ -496,7 +656,7 @@
         "startY": 3606,
         "width": 62
       },
-      "type": "coin"
+      "type": "trampoline"
     },
     "XdWwR7": {
       "attributes": {
@@ -761,21 +921,23 @@
       },
       "type": "platform"
     },
-    "ghZqfH": {
-      "attributes": {},
+    "gB8TKM": {
+      "attributes": {
+        "value": 1
+      },
       "boundary": {
-        "height": 33,
-        "startX": 488,
-        "startY": 19,
-        "width": 177
+        "height": 61,
+        "startX": 1186,
+        "startY": 97,
+        "width": 53
       },
       "collision": {
-        "height": 33,
-        "startX": 399,
-        "startY": 4061,
-        "width": 177
+        "height": 61,
+        "startX": 1159,
+        "startY": 3969,
+        "width": 53
       },
-      "type": "spike"
+      "type": "coin"
     },
     "i7XqBe": {
       "attributes": {

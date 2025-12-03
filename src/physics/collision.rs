@@ -454,9 +454,11 @@ pub fn enemy_platform_collision_system(
 pub fn on_enemy_player_collision_system(
     mut commands: Commands,
     mut events: EventReader<EnemyPlayerCollisionEvent>,
+    mut game_over: EventWriter<MaxHeightReached>,
 ) {
     for ev in events.read() {
         println!("Player {:?} hit by enemy {:?}", ev.player, ev.enemy);
+        game_over.write(super::MaxHeightReached { height: 0.0 });
         // Eventually transition to next state (game over)
     }
 }

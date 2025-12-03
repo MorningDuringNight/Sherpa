@@ -7,7 +7,7 @@ use crate::components::rope::{Rope, RopeConstraint};
 use crate::player::Player;
 use bevy::prelude::*; // 用于 query 玩家实体
 
-use crate::config::PlayerSpawnPoint;
+use crate::config::{MyAppState, PlayerSpawnPoint};
 
 use bevy::render::mesh::{Indices, Mesh2d, PrimitiveTopology};
 use bevy::render::render_asset::RenderAssetUsages;
@@ -202,6 +202,7 @@ pub fn spawn_rope_sprite(
             //     ..default()
             // },
             RopeSprite { rope_entity },
+            StateScoped(MyAppState::InGame),
         ))
         .id();
 
