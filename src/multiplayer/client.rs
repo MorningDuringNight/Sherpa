@@ -7,55 +7,92 @@ use std::time::Duration;
 
 use crate::{app::GameMode, player::Player};
 
-/// Resource to hold the client socket after handshake
-/// Resource to hold the client socket after handshake
+// -----------------------------------------------------------
+//                 CLIENT SOCKET (UDP)
+// -----------------------------------------------------------
 #[derive(Resource)]
 pub struct UdpClientSocket {
     pub socket: UdpSocket,
     pub server_addr: std::net::SocketAddr,
 }
 
-// -------- Client Prediction State --------
+// -----------------------------------------------------------
+//              INPUT HISTORY (for rollback)
+// -----------------------------------------------------------
 #[derive(Resource, Default)]
-pub struct ClientPredictionState {
-    pub last_confirmed_tick: u32,
-    pub authoritative_pos: Vec2,
-
-    // store last ~200 inputs
-    pub input_history: Vec<(u32, InputCommand)>,
+pub struct InputHistory {
+    pub entries: Vec<InputEntry>,
 }
 
+pub struct InputEntry {
+    pub tick: u32,
+    pub mask: u8,
+}
+
+const MAX_HISTORY: usize = 200;
+
+// -----------------------------------------------------------
+//             CLIENT PREDICTION STATE
+// -----------------------------------------------------------
+#[derive(Resource, Default)]
+pub struct ClientPredictionState {
+    pub last_server_tick: u32,
+    pub authoritative_pos: Vec2,
+    pub predicted_pos: Vec2,
+
+    pub input_history: Vec<(u32, u8)>,
+}
+
+// -----------------------------------------------------------
+//                  SNAPSHOT UPDATE
+// -----------------------------------------------------------
 #[derive(Debug)]
 pub struct SnapshotUpdate {
     pub tick: u32,
     pub positions: Vec<(f32, f32)>,
 }
 
-// Make a new type for sending inputs
-#[derive(Debug)]
+// -----------------------------------------------------------
+//              INPUT COMMAND (TX INTO ECS)
+// -----------------------------------------------------------
+#[derive(Debug, Clone, Copy)]
 pub struct InputCommand {
     pub seq: u32,
     pub mask: u8,
 }
 
+// -----------------------------------------------------------
+//                CHANNELS FOR CLIENT
+// -----------------------------------------------------------
 #[derive(Resource)]
 pub struct ClientNetChannels {
     pub rx_snapshots: Receiver<SnapshotUpdate>,
     pub tx_inputs: Sender<InputCommand>,
 }
 
-// send input to the socket in the main bevy ecs thread. Synchronously.
+// -----------------------------------------------------------
+//          SEND INPUT (CALLED EVERY FRAME ON CLIENT)
+// -----------------------------------------------------------
 pub fn send_input_state_system(
     mut seq: Local<u32>,
     keyboard: Res<ButtonInput<KeyCode>>,
-    // Take the "send" side of a new channel instad of udp client socket
-    channels: Option<Res<ClientNetChannels>>,
-) {
-    if channels.is_none() {
-        return;
-    }
-    let channels = channels.unwrap();
 
+    channels: Option<Res<ClientNetChannels>>,
+    mut prediction_state: Option<ResMut<ClientPredictionState>>,
+    mut history: ResMut<InputHistory>,
+
+    client: Option<Res<UdpClientSocket>>,
+) {
+    let channels = match channels {
+        Some(c) => c,
+        None => return,
+    };
+    let client = match client {
+        Some(c) => c,
+        None => return,
+    };
+
+    // -------- Construct input bitmask --------
     let mut mask = 0u8;
     if keyboard.pressed(KeyCode::KeyW) {
         mask |= 1 << 0;
@@ -71,19 +108,40 @@ pub fn send_input_state_system(
     }
 
     *seq += 1;
+
+    // -------- Store in InputHistory --------
+    history.entries.push(InputEntry { tick: *seq, mask });
+    if history.entries.len() > MAX_HISTORY {
+        history.entries.remove(0);
+    }
+
+    // -------- UDP packet --------
     let mut buf = Vec::with_capacity(5);
     buf.extend_from_slice(&seq.to_be_bytes());
     buf.push(mask);
-    // Instead of sending to socket send to channel
-    if let Err(e) = channels
-        .tx_inputs
-        .try_send(InputCommand { seq: *seq, mask })
-    {
-        eprintln!("[Client] Failed to enque input: {}", e);
+
+    if let Err(e) = client.socket.send_to(&buf, client.server_addr) {
+        eprintln!("[Client] Failed to send input state: {}", e);
+    }
+
+    // -------- Prediction local storage --------
+    if let Some(mut pred) = prediction_state.as_mut() {
+        pred.input_history.push((*seq, mask));
+        if pred.input_history.len() > MAX_HISTORY {
+            pred.input_history.remove(0);
+        }
+    }
+
+    // -------- Send to ECS input channel --------
+    let cmd = InputCommand { seq: *seq, mask };
+    if let Err(e) = channels.tx_inputs.try_send(cmd) {
+        eprintln!("[Client] Failed to enqueue input: {}", e);
     }
 }
 
-/// resource to temporarily store the server address before handshake
+// -----------------------------------------------------------
+//               CLIENT HANDSHAKE + NETWORK SETUP
+// -----------------------------------------------------------
 #[derive(Resource)]
 pub struct ServerAddress(pub String);
 
@@ -92,32 +150,15 @@ pub fn client_handshake(
     server_addr: Res<ServerAddress>,
     gamemode: Res<GameMode>,
 ) {
-    // Hostname resolution
-    // let addr_str = &server_addr.0;
-    // let mut addrs_iter = addr_str
-    //     .to_socket_addrs()
-    //     .expect("Failed to resolve hostname via DNS");
-    //
-    // let server_addr = addrs_iter
-    //     .next()
-    //     .expect("No addresses returned for server hostname");
-    let server_addr: std::net::SocketAddr = server_addr
-        .0
-        .parse()
-        .expect("Failed to parse server address");
+    let server_addr: std::net::SocketAddr = server_addr.0.parse().expect("Invalid server address");
 
-    // create client UDP socket and bind to a random available port on localhost
-    let socket = UdpSocket::bind("0.0.0.0:0").expect("Failed to bind UDP client socket");
+    let socket = UdpSocket::bind("0.0.0.0:0").expect("Failed to bind UDP client");
     socket
         .set_read_timeout(Some(Duration::from_secs(2)))
         .expect("Failed to set read timeout");
 
-    // Make a new channel, this is the receiving end (rx), tx is what the client uses to send so must be a resource
     let (tx_snapshots, rx_snapshots) = async_channel::unbounded::<SnapshotUpdate>();
     let (tx_inputs, rx_inputs) = async_channel::unbounded::<InputCommand>();
-    let tx_snapshots_clone = tx_snapshots.clone();
-
-    println!("[Client] Sending HELLO to {}", server_addr);
 
     let msg = match *gamemode {
         GameMode::NetCoop(id) if id == 0 => b"MAIN",
@@ -125,139 +166,89 @@ pub fn client_handshake(
         _ => b"ERRR",
     };
 
-    socket
-        .send_to(msg, server_addr)
-        .expect("Failed to send handshake message");
+    socket.send_to(msg, server_addr).ok();
 
+    // -------- SYN-ACK handshake --------
     let mut buf = [0u8; 1024];
-    // asynchronously recieve snapshots from the server
     match socket.recv_from(&mut buf) {
         Ok((len, addr)) => {
-            let msg = &buf[..len];
-            if msg == b"ACK" {
-                println!("[Client] Handshake successful with server {}", addr);
+            if &buf[..len] == b"ACK" {
+                println!("[Client] Handshake OK with {}", addr);
 
-                // clone socket so it can live in both sending and receiving tasks
-                // shouldn't cause race conditions because I am sending inputs and recieving
-                // positions
-                // this data should have a tick number attached so we can check if it stale or not.
-                let socket_clone = socket.try_clone().expect("Failed to clone client socket");
+                commands.insert_resource(ClientPredictionState::default());
+                commands.insert_resource(InputHistory::default());
 
-                let task_pool = IoTaskPool::get();
-                // send keys.
-                task_pool
+                // -------- SPAWN SNAPSHOT RECEIVER TASK --------
+                let sock_clone = socket.try_clone().unwrap();
+                let tx_snapshots_clone = tx_snapshots.clone();
+
+                IoTaskPool::get()
                     .spawn(async move {
                         let mut buf = [0u8; 1500];
-                        loop {
-                            match socket_clone.recv_from(&mut buf) {
-                                Ok((len, from)) => {
-                                    let snapshot = &buf[..len];
 
-                                    // parse the state out of the snapshot packet recieved from the server
-                                    if snapshot.len() < 6 {
-                                        eprintln!(
-                                            "[Client] Invalid snapshot length {}",
-                                            snapshot.len()
-                                        );
+                        loop {
+                            match sock_clone.recv_from(&mut buf) {
+                                Ok((len, _)) => {
+                                    let data = &buf[..len];
+                                    if data.len() < 6 {
                                         continue;
                                     }
 
-                                    let tick =
-                                        u32::from_be_bytes(snapshot[0..4].try_into().unwrap());
-                                    let player_count =
-                                        u16::from_be_bytes(snapshot[4..6].try_into().unwrap())
-                                            as usize;
+                                    let tick = u32::from_be_bytes(data[0..4].try_into().unwrap());
+                                    let count =
+                                        u16::from_be_bytes(data[4..6].try_into().unwrap()) as usize;
 
                                     let mut offset = 6;
-                                    // println!("Tick {} with {} players", tick, player_count);
+                                    let mut positions = Vec::with_capacity(count);
 
-                                    let mut positions = Vec::with_capacity(player_count);
-
-                                    // iterate through list of players and their positions.
-                                    for i in 0..player_count {
-                                        if offset + 8 > snapshot.len() {
-                                            eprintln!(
-                                                "[Client] Truncated snapshot for player {}",
-                                                i
-                                            );
-                                            break;
-                                        }
-
+                                    for _ in 0..count {
                                         let x = f32::from_be_bytes(
-                                            snapshot[offset..offset + 4].try_into().unwrap(),
+                                            data[offset..offset + 4].try_into().unwrap(),
                                         );
                                         let y = f32::from_be_bytes(
-                                            snapshot[offset + 4..offset + 8].try_into().unwrap(),
+                                            data[offset + 4..offset + 8].try_into().unwrap(),
                                         );
                                         offset += 8;
-
                                         positions.push((x, y));
                                     }
-                                    if let Err(e) = tx_snapshots_clone
-                                        .try_send(SnapshotUpdate { tick, positions })
-                                    {
-                                        eprintln!("[Client] Failed to enqueue snapshot: {}", e);
-                                    }
-                                }
 
-                                Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                                    std::thread::yield_now();
-                                    continue;
+                                    tx_snapshots_clone
+                                        .try_send(SnapshotUpdate { tick, positions })
+                                        .ok();
                                 }
-                                Err(e) => {
-                                    eprintln!("[Client] Snapshot recv error: {}", e);
-                                    break;
-                                }
+                                Err(_) => {}
                             }
                         }
                     })
                     .detach();
-                // Create clone of clients udp socket to send packets to server
-                let socket_for_sending = socket
-                    .try_clone()
-                    .expect("Failed to clone socket for sending");
-                let server_addr_clone = server_addr.clone();
 
-                // Receive keys from ecs, send through the channel
-                use async_io::Timer;
+                // -------- INPUT SENDER TASK --------
+                let sock_clone = socket.try_clone().unwrap();
+                let addr_clone = server_addr;
 
-                // send to server
-                task_pool
+                IoTaskPool::get()
                     .spawn(async move {
-                        let simulated_ping = Duration::from_millis(10); // e.g. 150ms fake latency
-
                         while let Ok(input) = rx_inputs.recv().await {
                             let mut buf = Vec::with_capacity(5);
                             buf.extend_from_slice(&input.seq.to_be_bytes());
                             buf.push(input.mask);
-                            let socket = socket_for_sending.try_clone().expect("clone failed");
-                            let addr = server_addr_clone;
 
-                            // Spawn a detached task to send this input after a delay
+                            let sock = sock_clone.try_clone().unwrap();
                             IoTaskPool::get()
                                 .spawn(async move {
-                                    Timer::after(simulated_ping).await;
-                                    if let Err(e) = socket.send_to(&buf, addr) {
-                                        eprintln!("[Client] send error: {}", e);
-                                    }
+                                    Timer::after(Duration::from_millis(10)).await;
+                                    sock.send_to(&buf, addr_clone).ok();
                                 })
                                 .detach();
                         }
                     })
                     .detach();
-                // insert client socket for later use; (sending inputs to the socket)
-                // commands.insert_resource(UdpClientSocket {
-                //     socket,
-                //     server_addr,
-                // });
-                // channel for receiving snapshots from the server into the main thread and
-                // processing with apply_snapshot_system
+
+                // -------- INSERT RESOURCES --------
                 commands.insert_resource(UdpClientSocket {
                     socket,
                     server_addr,
                 });
-                // channel for receiving snapshots from the server into the main thread and
-                // processing with apply_snapshot_system
                 commands.insert_resource(ClientNetChannels {
                     rx_snapshots,
                     tx_inputs,
@@ -270,38 +261,117 @@ pub fn client_handshake(
     }
 }
 
+// -----------------------------------------------------------
+//                SNAPSHOT APPLICATION + PREDICTION
+// -----------------------------------------------------------
 pub fn apply_snapshot_system(
     channels: Res<ClientNetChannels>,
     mut players: Query<(&mut Transform, &Player)>,
+    mut prediction: ResMut<ClientPredictionState>,
+    history: Res<InputHistory>,
 ) {
     while let Ok(snapshot) = channels.rx_snapshots.try_recv() {
-        if snapshot.positions.is_empty() {
+        let tick = snapshot.tick;
+
+        // Ignore stale snapshots
+        if tick <= prediction.last_server_tick {
             continue;
         }
+        prediction.last_server_tick = tick;
 
-        // iterate through all players
-        // snapshots must come back in player_number order.
+        // -----------------------------------------------------
+        // 1. APPLY AUTHORITATIVE POSITION FOR LOCAL PLAYER
+        // -----------------------------------------------------
+        let mut local_id = None;
+
+        for (_, player) in players.iter() {
+            if let Player::Local(id) = player {
+                local_id = Some(*id);
+                break;
+            }
+        }
+
+        let local_id = local_id.expect("Local player missing?!");
+
+        let (auth_x, auth_y) = snapshot.positions[local_id];
+        let authoritative = Vec2::new(auth_x, auth_y);
+
+        prediction.authoritative_pos = authoritative;
+        prediction.predicted_pos = authoritative;
+
+        // -----------------------------------------------------
+        // 2. ROLLBACK & REPLAY INPUTS FOR LOCAL PLAYER
+        // -----------------------------------------------------
+        for entry in history.entries.iter().filter(|e| e.tick > tick) {
+            simulate_input(&mut prediction.predicted_pos, entry.mask);
+        }
+
+        // -----------------------------------------------------
+        // 3. APPLY POSITIONS TO ALL PLAYERS
+        // -----------------------------------------------------
         for (mut transform, player) in players.iter_mut() {
             match player {
+                // ----------------------
+                // LOCAL PREDICTED PLAYER
+                // ----------------------
                 Player::Local(id) => {
-                    if let Some((x, y)) = snapshot.positions.get(*id) {
-                        // Local players are applied directly
-                        transform.translation.x = *x;
-                        transform.translation.y = *y;
-                    }
+                    let current = transform.translation.truncate();
+                    let target = prediction.predicted_pos;
+
+                    // smooth correction avoid snapping
+                    let blend = 0.12;
+                    let new = current + (target - current) * blend;
+
+                    transform.translation.x = new.x;
+                    transform.translation.y = new.y;
                 }
+
+                // -----------------------
+                // REMOTE NETWORK PLAYERS
+                // -----------------------
                 Player::Net(id) => {
                     if let Some((x, y)) = snapshot.positions.get(*id) {
-                        // Net players will be interpolated later
-                        // TODO: replace with interpolation logic
-                        transform.translation.x = *x;
-                        transform.translation.y = *y;
+                        let target = Vec2::new(*x, *y);
+                        let current = transform.translation.truncate();
+
+                        // Optional interpolation (looks smooth!)
+                        let blend = 0.30;
+                        let new = current + (target - current) * blend;
+
+                        transform.translation.x = new.x;
+                        transform.translation.y = new.y;
                     }
                 }
-                Player::Npc(_) => {
-                    // nothing yet.
-                }
+
+                // -----------------------
+                // NPCs ignore for now
+                // -----------------------
+                Player::Npc(_) => {}
             }
         }
     }
+}
+
+// -----------------------------------------------------------
+//            SIMULATE INPUT (placeholder prediction)
+// -----------------------------------------------------------
+fn simulate_input(pos: &mut Vec2, mask: u8) {
+    let dt = 1.0 / 60.0;
+
+    let mut vel = Vec2::ZERO;
+
+    if mask & (1 << 0) != 0 {
+        vel.y += 450.0;
+    }
+    if mask & (1 << 1) != 0 {
+        vel.x -= 300.0;
+    }
+    if mask & (1 << 2) != 0 {
+        vel.y -= 300.0;
+    }
+    if mask & (1 << 3) != 0 {
+        vel.x += 300.0;
+    }
+
+    *pos += vel * dt;
 }

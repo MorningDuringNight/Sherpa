@@ -43,9 +43,9 @@ impl Plugin for UdpClientPlugin {
             )
             .add_systems(
                 FixedUpdate,
-                (send_input_state_system,)
-                    .chain()
-                    .run_if(in_state(MyAppState::InGame)),
+                (send_input_state_system,).run_if(|mode: Option<Res<GameMode>>| {
+                    matches!(mode.as_deref(), Some(GameMode::NetCoop(_)))
+                }),
             )
             .add_systems(
                 FixedUpdate,
