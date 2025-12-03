@@ -1,7 +1,6 @@
-use crate::{
-    player::{Player, player_control::PlayerInputEvent},
-};
+use crate::player::{Player, player_control::PlayerInputEvent};
 use async_channel::{Receiver, Sender};
+use async_io::Timer;
 use bevy::prelude::*;
 use bevy::tasks::{IoTaskPool, TaskPool, TaskPoolBuilder};
 use std::{
@@ -76,10 +75,7 @@ fn custom_network_pool() -> TaskPool {
 
 // make registry
 // init async_channels
-pub fn setup_udp_server(
-    mut commands: Commands,
-    players: Query<(Entity, &Player)>,
-) {
+pub fn setup_udp_server(mut commands: Commands, players: Query<(Entity, &Player)>) {
     let socket = UdpSocket::bind("0.0.0.0:5000").expect("Failed to bind UDP socket");
     socket.set_nonblocking(false).unwrap();
     println!("[UDP Server] Listening on 0.0.0.0:5000");
@@ -98,7 +94,10 @@ pub fn setup_udp_server(
 
     let mut locals: Vec<(Entity, usize)> = players
         .iter()
-        .filter_map(|(e, p)| match p { Player::Local(id) => Some((e, *id)), _ => None })
+        .filter_map(|(e, p)| match p {
+            Player::Local(id) => Some((e, *id)),
+            _ => None,
+        })
         .collect();
 
     locals.sort_by_key(|&(_, id)| id);
@@ -120,14 +119,7 @@ pub fn setup_udp_server(
 
                         if data == b"MAIN" || data == b"PLAY" {
                             // builds client session and creates mapping in ClientRegistry
-                            handle_handshake(
-                                &recv_socket,
-                                &recv_clients,
-                                addr,
-                                data,
-                                p1,
-                                p2,
-                            );
+                            handle_handshake(&recv_socket, &recv_clients, addr, data, p1, p2);
                         } else {
                             // we received some packet which was not a hankshake acknowledgement
                             if let Some(event) = parse_input_packet(addr, data, &recv_clients) {
@@ -184,29 +176,29 @@ pub fn setup_udp_server(
                     continue;
                 }
 
-                for (i, addr) in clients_guard.keys().enumerate() {
-                    println!("  [{}] Sending snapshot tick={} to {}", i, tick, addr);
+                let addrs: Vec<SocketAddr> = clients_guard.keys().cloned().collect();
 
-                    match broadcast_socket.send_to(&msg.data, addr) {
-                        Ok(sent) => {
-                            println!(
-                                "  [{}] ✅ Sent {} bytes successfully to {}",
-                                i, sent, addr
-                            );
-                        }
-                        Err(e) => {
-                            eprintln!(
-                                "  [{}] ❌ Failed to send snapshot to {}: {}",
-                                i, addr, e
-                            );
-                        }
-                    }
+                for (i, addr) in addrs.into_iter().enumerate() {
+                    let data = msg.data.clone(); // OWNED snapshot bytes
+                    let sock = broadcast_socket.try_clone().unwrap(); // OWNED UDP socket
+
+                    let simulated_ping = Duration::from_millis(10);
+
+                    IoTaskPool::get()
+                        .spawn(async move {
+                            Timer::after(simulated_ping).await;
+
+                            if let Err(e) = sock.send_to(&data, addr) {
+                                eprintln!("[Client] send error: {}", e);
+                            }
+                        })
+                        .detach();
                 }
 
-                println!(
-                    "[Broadcast] Finished tick={} ({} clients)\n",
-                    tick, client_count
-                );
+                // println!(
+                //     "[Broadcast] Finished tick={} ({} clients)\n",
+                //     tick, client_count
+                // );
             }
 
             println!("[Thread] UDP broadcast thread exited unexpectedly!");

@@ -1,11 +1,13 @@
+use async_channel::{Receiver, Sender};
+use async_io::Timer;
 use bevy::prelude::*;
 use bevy::tasks::IoTaskPool;
 use std::net::UdpSocket;
 use std::time::Duration;
-use async_channel::{Sender, Receiver};
 
-use crate::{app::{GameMode}, player::{Player}};
+use crate::{app::GameMode, player::Player};
 
+/// Resource to hold the client socket after handshake
 /// Resource to hold the client socket after handshake
 #[derive(Resource)]
 pub struct UdpClientSocket {
@@ -13,6 +15,15 @@ pub struct UdpClientSocket {
     pub server_addr: std::net::SocketAddr,
 }
 
+// -------- Client Prediction State --------
+#[derive(Resource, Default)]
+pub struct ClientPredictionState {
+    pub last_confirmed_tick: u32,
+    pub authoritative_pos: Vec2,
+
+    // store last ~200 inputs
+    pub input_history: Vec<(u32, InputCommand)>,
+}
 
 #[derive(Debug)]
 pub struct SnapshotUpdate {
@@ -20,33 +31,55 @@ pub struct SnapshotUpdate {
     pub positions: Vec<(f32, f32)>,
 }
 
+// Make a new type for sending inputs
+#[derive(Debug)]
+pub struct InputCommand {
+    pub seq: u32,
+    pub mask: u8,
+}
+
 #[derive(Resource)]
 pub struct ClientNetChannels {
     pub rx_snapshots: Receiver<SnapshotUpdate>,
+    pub tx_inputs: Sender<InputCommand>,
 }
 
 // send input to the socket in the main bevy ecs thread. Synchronously.
 pub fn send_input_state_system(
     mut seq: Local<u32>,
     keyboard: Res<ButtonInput<KeyCode>>,
-    client: Option<Res<UdpClientSocket>>,
+    // Take the "send" side of a new channel instad of udp client socket
+    channels: Option<Res<ClientNetChannels>>,
 ) {
-    if client.is_none() { return; }
-    let client = client.unwrap();
+    if channels.is_none() {
+        return;
+    }
+    let channels = channels.unwrap();
 
     let mut mask = 0u8;
-    if keyboard.pressed(KeyCode::KeyW) { mask |= 1 << 0; }
-    if keyboard.pressed(KeyCode::KeyA) { mask |= 1 << 1; }
-    if keyboard.pressed(KeyCode::KeyS) { mask |= 1 << 2; }
-    if keyboard.pressed(KeyCode::KeyD) { mask |= 1 << 3; }
+    if keyboard.pressed(KeyCode::KeyW) {
+        mask |= 1 << 0;
+    }
+    if keyboard.pressed(KeyCode::KeyA) {
+        mask |= 1 << 1;
+    }
+    if keyboard.pressed(KeyCode::KeyS) {
+        mask |= 1 << 2;
+    }
+    if keyboard.pressed(KeyCode::KeyD) {
+        mask |= 1 << 3;
+    }
 
     *seq += 1;
     let mut buf = Vec::with_capacity(5);
     buf.extend_from_slice(&seq.to_be_bytes());
     buf.push(mask);
-
-    if let Err(e) = client.socket.send_to(&buf, client.server_addr) {
-        eprintln!("[Client] Failed to send input state: {}", e);
+    // Instead of sending to socket send to channel
+    if let Err(e) = channels
+        .tx_inputs
+        .try_send(InputCommand { seq: *seq, mask })
+    {
+        eprintln!("[Client] Failed to enque input: {}", e);
     }
 }
 
@@ -54,8 +87,11 @@ pub fn send_input_state_system(
 #[derive(Resource)]
 pub struct ServerAddress(pub String);
 
-pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>, gamemode: Res<GameMode>) {
-
+pub fn client_handshake(
+    mut commands: Commands,
+    server_addr: Res<ServerAddress>,
+    gamemode: Res<GameMode>,
+) {
     // Hostname resolution
     // let addr_str = &server_addr.0;
     // let mut addrs_iter = addr_str
@@ -76,7 +112,9 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
         .set_read_timeout(Some(Duration::from_secs(2)))
         .expect("Failed to set read timeout");
 
+    // Make a new channel, this is the receiving end (rx), tx is what the client uses to send so must be a resource
     let (tx_snapshots, rx_snapshots) = async_channel::unbounded::<SnapshotUpdate>();
+    let (tx_inputs, rx_inputs) = async_channel::unbounded::<InputCommand>();
     let tx_snapshots_clone = tx_snapshots.clone();
 
     println!("[Client] Sending HELLO to {}", server_addr);
@@ -106,66 +144,124 @@ pub fn client_handshake(mut commands: Commands, server_addr: Res<ServerAddress>,
                 let socket_clone = socket.try_clone().expect("Failed to clone client socket");
 
                 let task_pool = IoTaskPool::get();
-                // send keys. 
-                task_pool.spawn(async move {
-                    let mut buf = [0u8; 1500];
-                    loop {
-                        match socket_clone.recv_from(&mut buf) {
-                            Ok((len, from)) => {
-                                let snapshot = &buf[..len];
+                // send keys.
+                task_pool
+                    .spawn(async move {
+                        let mut buf = [0u8; 1500];
+                        loop {
+                            match socket_clone.recv_from(&mut buf) {
+                                Ok((len, from)) => {
+                                    let snapshot = &buf[..len];
 
-                                // parse the state out of the snapshot packet recieved from the server
-                                if snapshot.len() < 6 {
-                                    eprintln!("[Client] Invalid snapshot length {}", snapshot.len());
-                                    continue;
-                                }
-
-                                let tick = u32::from_be_bytes(snapshot[0..4].try_into().unwrap());
-                                let player_count = u16::from_be_bytes(snapshot[4..6].try_into().unwrap()) as usize;
-
-                                let mut offset = 6;
-                                // println!("Tick {} with {} players", tick, player_count);
-
-                                let mut positions = Vec::with_capacity(player_count);
-
-                                // iterate through list of players and their positions.
-                                for i in 0..player_count {
-                                    if offset + 8 > snapshot.len() {
-                                        eprintln!("[Client] Truncated snapshot for player {}", i);
-                                        break;
+                                    // parse the state out of the snapshot packet recieved from the server
+                                    if snapshot.len() < 6 {
+                                        eprintln!(
+                                            "[Client] Invalid snapshot length {}",
+                                            snapshot.len()
+                                        );
+                                        continue;
                                     }
 
-                                    let x = f32::from_be_bytes(snapshot[offset..offset+4].try_into().unwrap());
-                                    let y = f32::from_be_bytes(snapshot[offset+4..offset+8].try_into().unwrap());
-                                    offset += 8;
+                                    let tick =
+                                        u32::from_be_bytes(snapshot[0..4].try_into().unwrap());
+                                    let player_count =
+                                        u16::from_be_bytes(snapshot[4..6].try_into().unwrap())
+                                            as usize;
 
-                                    positions.push((x, y));
-                                }
-                                if let Err(e) = tx_snapshots_clone.try_send(SnapshotUpdate { tick, positions }) {
-                                    eprintln!("[Client] Failed to enqueue snapshot: {}", e);
-                                }
-                            }
+                                    let mut offset = 6;
+                                    // println!("Tick {} with {} players", tick, player_count);
 
-                            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                                std::thread::yield_now();
-                                continue;
-                            }
-                            Err(e) => {
-                                eprintln!("[Client] Snapshot recv error: {}", e);
-                                break;
+                                    let mut positions = Vec::with_capacity(player_count);
+
+                                    // iterate through list of players and their positions.
+                                    for i in 0..player_count {
+                                        if offset + 8 > snapshot.len() {
+                                            eprintln!(
+                                                "[Client] Truncated snapshot for player {}",
+                                                i
+                                            );
+                                            break;
+                                        }
+
+                                        let x = f32::from_be_bytes(
+                                            snapshot[offset..offset + 4].try_into().unwrap(),
+                                        );
+                                        let y = f32::from_be_bytes(
+                                            snapshot[offset + 4..offset + 8].try_into().unwrap(),
+                                        );
+                                        offset += 8;
+
+                                        positions.push((x, y));
+                                    }
+                                    if let Err(e) = tx_snapshots_clone
+                                        .try_send(SnapshotUpdate { tick, positions })
+                                    {
+                                        eprintln!("[Client] Failed to enqueue snapshot: {}", e);
+                                    }
+                                }
+
+                                Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                                    std::thread::yield_now();
+                                    continue;
+                                }
+                                Err(e) => {
+                                    eprintln!("[Client] Snapshot recv error: {}", e);
+                                    break;
+                                }
                             }
                         }
-                    }
-                }).detach();
+                    })
+                    .detach();
+                // Create clone of clients udp socket to send packets to server
+                let socket_for_sending = socket
+                    .try_clone()
+                    .expect("Failed to clone socket for sending");
+                let server_addr_clone = server_addr.clone();
 
+                // Receive keys from ecs, send through the channel
+                use async_io::Timer;
+
+                // send to server
+                task_pool
+                    .spawn(async move {
+                        let simulated_ping = Duration::from_millis(10); // e.g. 150ms fake latency
+
+                        while let Ok(input) = rx_inputs.recv().await {
+                            let mut buf = Vec::with_capacity(5);
+                            buf.extend_from_slice(&input.seq.to_be_bytes());
+                            buf.push(input.mask);
+                            let socket = socket_for_sending.try_clone().expect("clone failed");
+                            let addr = server_addr_clone;
+
+                            // Spawn a detached task to send this input after a delay
+                            IoTaskPool::get()
+                                .spawn(async move {
+                                    Timer::after(simulated_ping).await;
+                                    if let Err(e) = socket.send_to(&buf, addr) {
+                                        eprintln!("[Client] send error: {}", e);
+                                    }
+                                })
+                                .detach();
+                        }
+                    })
+                    .detach();
                 // insert client socket for later use; (sending inputs to the socket)
+                // commands.insert_resource(UdpClientSocket {
+                //     socket,
+                //     server_addr,
+                // });
+                // channel for receiving snapshots from the server into the main thread and
+                // processing with apply_snapshot_system
                 commands.insert_resource(UdpClientSocket {
                     socket,
                     server_addr,
                 });
                 // channel for receiving snapshots from the server into the main thread and
                 // processing with apply_snapshot_system
-                commands.insert_resource(ClientNetChannels { rx_snapshots });
+                commands.insert_resource(ClientNetChannels {
+                    rx_snapshots,
+                    tx_inputs,
+                });
             }
         }
         Err(e) => {

@@ -1,7 +1,7 @@
 use crate::app::FollowedPlayer;
 use crate::components::motion::{
-    ControlForce, Gravity, GroundState, JumpController, Mass, Momentum, NetForce,
-    RopeForce, Velocity,
+    ControlForce, Gravity, GroundState, JumpController, Mass, Momentum, NetForce, RopeForce,
+    Velocity,
 };
 use crate::config::player::*;
 use bevy::math::bounding::Aabb2d;
@@ -27,13 +27,15 @@ pub struct Mode {
 
 #[derive(Clone, PartialEq)]
 pub enum InputType {
-    Player,   
+    Player,
     AI,
 }
 
 impl Default for Mode {
     fn default() -> Self {
-        Self { mode: InputType::Player }
+        Self {
+            mode: InputType::Player,
+        }
     }
 }
 
@@ -75,7 +77,5 @@ impl PlayerBundle {
             jump_controller,
             ground_state,
         }
-
     }
-
 }
