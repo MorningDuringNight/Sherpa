@@ -182,7 +182,7 @@ pub fn setup_udp_server(mut commands: Commands, players: Query<(Entity, &Player)
                     let data = msg.data.clone(); // OWNED snapshot bytes
                     let sock = broadcast_socket.try_clone().unwrap(); // OWNED UDP socket
 
-                    let simulated_ping = Duration::from_millis(10);
+                    let simulated_ping = Duration::from_millis(1);
 
                     IoTaskPool::get()
                         .spawn(async move {

@@ -242,10 +242,10 @@ pub fn run(player_number: Option<usize>) {
         // }
 
         app.add_plugins(UdpClientPlugin {
-            server_addr: "127.0.0.1:5000".to_string(), // localhost
-                                                       // server_addr: "home.tailaaef65.ts.net:5000".to_string(), // hostname magic dns.
-                                                       // server_addr: "100.110.71.63:5000".to_string(), // tailscaled.
-                                                       // server_addr: "3.22.185.76:5000".to_string(),
+            // server_addr: "127.0.0.1:5000".to_string(), // localhost
+            // server_addr: "home.tailaaef65.ts.net:5000".to_string(), // hostname magic dns.
+            // server_addr: "100.110.71.63:5000".to_string(), // tailscaled.
+            server_addr: "3.22.185.76:5000".to_string(),
         });
 
         let asset_server = app.world().get_resource::<AssetServer>().unwrap().clone();

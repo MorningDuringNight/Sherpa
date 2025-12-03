@@ -236,7 +236,7 @@ pub fn client_handshake(
                             let sock = sock_clone.try_clone().unwrap();
                             IoTaskPool::get()
                                 .spawn(async move {
-                                    Timer::after(Duration::from_millis(10)).await;
+                                    Timer::after(Duration::from_millis(1)).await;
                                     sock.send_to(&buf, addr_clone).ok();
                                 })
                                 .detach();
